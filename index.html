@@ -171,11 +171,12 @@ const els = {
 /* ── เริ่มต้น ─────────────────────────────────────────────── */
 
 (async function init() {
+  // เจ้าสาวขึ้นก่อนเจ้าบ่าวทั้งชื่อเล่นและชื่อจริง — Nueng กำหนดเอง
   const G = CONFIG.couple.groom, B = CONFIG.couple.bride;
-  $('coupleName').textContent = (G.nick || G.name) + ' ♥ ' + (B.nick || B.name);
-  document.title = 'ค้นหาโต๊ะของคุณ — งานแต่ง ' + (G.nick || G.name) + ' & ' + (B.nick || B.name);
+  $('coupleName').textContent = (B.nick || B.name) + ' ♥ ' + (G.nick || G.name);
+  document.title = 'ค้นหาโต๊ะของคุณ — งานแต่ง ' + (B.nick || B.name) + ' & ' + (G.nick || G.name);
   $('venueLine').innerHTML =
-    esc(G.name) + ' &amp; ' + esc(B.name) + '<br>' +
+    esc(B.name) + ' &amp; ' + esc(G.name) + '<br>' +
     esc(CONFIG.venue + (CONFIG.weddingDate ? ' · ' + thaiDate(CONFIG.weddingDate) : ''));
 
   els.status.innerHTML = '<div class="spinner"></div>';
@@ -189,8 +190,8 @@ const els = {
     return;
   }
 
-  els.foot.textContent = 'รายชื่อทั้งหมด ' + DATA.guests.length + ' ท่าน · ' +
-                         CONFIG.totalTables + ' โต๊ะ';
+  // ไม่โชว์จำนวนรายชื่อรวมด้วยเหตุผลเดียวกับป้ายใต้ปุ่มเลือกฝั่ง
+  els.foot.textContent = CONFIG.totalTables + ' โต๊ะ · ' + CONFIG.venue;
 
   bind();
   render();
@@ -322,14 +323,19 @@ function viewHome() {
   runSearch();
 }
 
+/**
+ * ป้ายใต้ปุ่มเลือกฝั่ง
+ *
+ * จงใจไม่โชว์ "จำนวนรายชื่อในระบบ" — เพราะระหว่างที่ยังกรอกรายชื่อไม่ครบ
+ * ตัวเลขนั้นจะดูเหมือนจำนวนแขกจริงของฝั่งนั้น ซึ่งทำให้เข้าใจผิด
+ * โชว์แค่จำนวนโต๊ะ (คงที่ เชื่อถือได้) กับยอดคนที่มาถึงแล้ว (นับจากหน้างานจริง)
+ */
 function drawSidePick() {
   ['bride', 'groom'].forEach(function (side) {
     const tables = tablesOfSide(side);
-    const people = INDEX.filter(function (g) { return g.side === side; }).length;
     const arrived = tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
     $(side + 'Sub').textContent = tables.length + ' โต๊ะ' +
-      (people ? ' · ' + people + ' ท่าน' : '') +
-      (arrived ? ' · มาแล้ว ' + arrived : '');
+      (arrived ? ' · มาแล้ว ' + arrived + ' คน' : '');
   });
 
   // ยังไม่ได้ระบุฝั่งให้โต๊ะไหนเลย → ซ่อนปุ่มไว้ ดีกว่าให้กดแล้วเจอหน้าเปล่า
@@ -397,7 +403,7 @@ function viewBrowse(side) {
   chrome(false);
 
   const tables = tablesOfSide(side);
-  const people = INDEX.filter(function (g) { return g.side === side; }).length;
+  const arrived = tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
 
   const cards = tables.map(function (t) {
     const a = t.arrived || 0;
@@ -418,7 +424,7 @@ function viewBrowse(side) {
     '<div class="browse-head">' +
       '<h2>' + esc(SIDE_LABEL[side]) + '<br>' +
         '<span class="count">' + tables.length + ' โต๊ะ' +
-        (people ? ' · ' + people + ' ท่าน' : '') + '</span></h2>' +
+        (arrived ? ' · มาแล้ว ' + arrived + ' คน' : '') + '</span></h2>' +
     '</div>' +
     '<div class="group-note">กดที่โต๊ะของคุณเพื่อดูรายละเอียดและกดแจ้งว่ามาถึงแล้ว</div>' +
     '<div class="results">' + (cards || '<div class="empty-state"><p>ยังไม่มีโต๊ะในฝั่งนี้</p></div>') + '</div>';
@@ -455,7 +461,8 @@ function viewTable(no, side) {
       '<div class="counter" id="counter"></div>' +
 
       '<div class="tablemates">' +
-        '<h4>รายชื่อในโต๊ะนี้ ' + mates.length + ' ท่าน</h4>' +
+        // ไม่ขึ้น "0 ท่าน" ให้ดูเงียบ ๆ ตอนยังกรอกรายชื่อไม่ครบ
+        '<h4>รายชื่อในโต๊ะนี้' + (mates.length ? ' ' + mates.length + ' ท่าน' : '') + '</h4>' +
         (mates.length
           ? '<ul>' + mates.map(function (m) {
               return '<li>' + esc(m.fullName) + (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</li>';
