@@ -1,0 +1,509 @@
+/* ═══════════════════════════════════════════════════════════════
+   style.css — ใช้ร่วมกันทั้ง 3 หน้า
+
+   ออกแบบมาให้ใช้บนมือถือกลางงานเลี้ยงเป็นหลัก:
+     • ตัวหนังสือใหญ่ อ่านได้ในที่แสงน้อย
+     • ปุ่มใหญ่พอกดด้วยนิ้วโป้งขณะยืนถือของ
+     • หน้าเว็บล็อกเป็นโหมดสว่างเสมอ ไม่ให้มือถือที่ตั้ง dark mode
+       มาสลับสีจนอ่านชื่อบนผังไม่ออก
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light;
+
+  --cream:   #fdfaf5;
+  --paper:   #ffffff;
+  --ink:     #2f2a26;
+  --ink-soft:#7a6f66;
+  --line:    #e8ded1;
+
+  --gold:    #b08d3f;
+  --gold-lt: #f5ecd8;
+  --blush:   #c98b8b;
+  --blush-lt:#fbeeee;
+
+  --bride:   #c2748f;
+  --groom:   #4f7fa8;
+  --ok:      #3f8a5f;
+  --warn:    #c9702f;
+  --danger:  #b34747;
+
+  --radius:  14px;
+  --shadow:  0 2px 10px rgba(80, 60, 40, .07);
+  --shadow-lg: 0 8px 30px rgba(80, 60, 40, .13);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'Sarabun', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 64px; }
+.wrap-wide { max-width: 1100px; }
+
+/* ── หัวเว็บ ─────────────────────────────────────────────── */
+
+.hero { text-align: center; padding: 30px 0 18px; }
+
+.hero-mark {
+  font-size: 13px; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--gold);
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 30px; font-weight: 600; margin: 8px 0 4px;
+}
+
+.hero p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+
+.hero-rule {
+  width: 54px; height: 1px; background: var(--gold);
+  margin: 16px auto 0; opacity: .6;
+}
+
+/* หน้าที่ไม่ใช่หน้าแรก ย่อหัวเว็บลง — บนมือถือพื้นที่จอมีค่ามาก */
+.hero.compact { padding: 16px 0 8px; }
+.hero.compact h1 { font-size: 20px; }
+.hero.compact .hero-mark,
+.hero.compact p,
+.hero.compact .hero-rule { display: none; }
+
+/* ── ปุ่มย้อนกลับ ─────────────────────────────────────────── */
+
+.backbar {
+  display: inline-flex; align-items: center;
+  margin: 4px 0 2px; padding: 9px 16px 9px 12px;
+  font-family: inherit; font-size: 15px; font-weight: 600; color: var(--ink-soft);
+  background: var(--paper); border: 1.5px solid var(--line);
+  border-radius: 999px; cursor: pointer;
+  transition: border-color .12s, color .12s, transform .1s;
+}
+.backbar:hover { border-color: var(--gold); color: var(--gold); }
+.backbar:active { transform: scale(.97); }
+
+/* ── ช่องค้นหา ───────────────────────────────────────────── */
+
+.search-box { position: relative; margin: 22px 0 6px; }
+
+.search-box input {
+  width: 100%; padding: 17px 46px 17px 18px;
+  font-size: 18px; font-family: inherit; color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.search-box input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-lt);
+}
+
+.search-box .clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink-soft);
+  font-size: 20px; cursor: pointer; line-height: 1;
+}
+.search-box .clear:hover { background: var(--gold-lt); }
+
+.hint { font-size: 13px; color: var(--ink-soft); margin: 8px 2px 0; }
+
+/* ── การ์ดผลลัพธ์ ────────────────────────────────────────── */
+
+.results { margin-top: 18px; display: grid; gap: 10px; }
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.guest-card {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; text-align: left;
+  font-family: inherit; font-size: inherit; color: inherit;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+}
+.guest-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); border-color: var(--gold); }
+.guest-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.tno {
+  flex: 0 0 58px; height: 58px; border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 22px; line-height: 1;
+  background: var(--gold-lt); color: var(--gold);
+}
+.tno small { font-size: 10px; font-weight: 500; letter-spacing: .06em; opacity: .8; }
+
+.tno.bride { background: #fbeef3; color: var(--bride); }
+.tno.groom { background: #eaf2f8; color: var(--groom); }
+
+.guest-info { min-width: 0; flex: 1; }
+.guest-name { font-size: 17px; font-weight: 600; }
+.guest-name .nick { color: var(--ink-soft); font-weight: 400; font-size: 15px; }
+.guest-meta { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+
+.badge {
+  display: inline-block; padding: 1px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; vertical-align: middle;
+}
+.badge-in   { background: #e7f3ec; color: var(--ok); }
+.badge-warn { background: #fdf0e4; color: var(--warn); }
+
+/* ── เลือกฝั่งด้วยการจิ้ม (สำหรับคนที่ไม่อยากพิมพ์) ────────
+
+   ผู้ใหญ่หลายคนพิมพ์ไทยบนมือถือไม่ถนัด และแขกบางคนไม่แน่ใจว่าชื่อตัวเอง
+   ถูกบันทึกไว้ว่าอะไร ปุ่มสองปุ่มนี้จึงเป็นทางลัดที่ไม่ต้องพิมพ์เลย       */
+
+.or-line {
+  display: flex; align-items: center; gap: 12px;
+  margin: 26px 0 14px; font-size: 13px; color: var(--ink-soft);
+}
+.or-line::before, .or-line::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+
+.side-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.side-btn {
+  padding: 20px 10px; border-radius: 16px;
+  border: 1.5px solid var(--line); background: var(--paper);
+  font-family: inherit; cursor: pointer; text-align: center;
+  box-shadow: var(--shadow);
+  transition: transform .12s, box-shadow .12s, background .12s;
+}
+.side-btn:hover  { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.side-btn:active { transform: scale(.98); }
+.side-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.side-btn .ico { display: block; font-size: 30px; line-height: 1; }
+.side-btn .t   { display: block; font-size: 17px; font-weight: 700; margin-top: 7px; }
+.side-btn .s   { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+
+.side-btn.bride       { border-color: #ecd2dd; }
+.side-btn.bride .t    { color: var(--bride); }
+.side-btn.bride:hover { background: #fdf6f9; border-color: var(--bride); }
+.side-btn.groom       { border-color: #cfdfea; }
+.side-btn.groom .t    { color: var(--groom); }
+.side-btn.groom:hover { background: #f5fafd; border-color: var(--groom); }
+
+/* ── หัวข้อของหน้าไล่ดูโต๊ะ ──────────────────────────────── */
+
+.browse-head {
+  display: flex; align-items: center; gap: 10px;
+  margin: 18px 0 12px;
+}
+.browse-head h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 21px; font-weight: 600; margin: 0; flex: 1;
+}
+.browse-head .count { font-size: 13px; color: var(--ink-soft); font-weight: 400; }
+
+.group-note {
+  font-size: 13px; color: var(--ink-soft);
+  background: var(--gold-lt); padding: 10px 13px; border-radius: 10px; margin-bottom: 12px;
+}
+
+/* การ์ดโต๊ะในหน้าไล่ดู — ใช้โครงเดียวกับการ์ดผลค้นหา */
+.table-card .guest-name { font-size: 16px; }
+.table-card .seats {
+  flex: 0 0 auto; font-size: 11px; color: var(--ink-soft); text-align: right; line-height: 1.3;
+}
+.table-card .seats b { display: block; font-size: 19px; color: var(--ink); font-weight: 700; }
+.table-card .seats.is-full { color: var(--ok); }
+.table-card .seats.is-full b { color: var(--ok); }
+
+/* ── แผงนับหัว (แขกกดเองหน้างาน) ──────────────────────────
+
+   ปุ่มนี้ถูกกดขณะยืนถือของ ในที่แสงน้อย โดยคนทุกช่วงอายุ
+   จึงทำตัวเลขให้ใหญ่ที่สุดในหน้า และปุ่มสูงพอกดด้วยนิ้วโป้งได้ไม่พลาด  */
+
+.counter {
+  margin-top: 18px; padding: 18px 16px;
+  background: var(--cream); border: 1px solid var(--line); border-radius: 14px;
+}
+
+.count-head { font-size: 12px; letter-spacing: .16em; color: var(--ink-soft); }
+
+.count-big { margin: 2px 0 10px; }
+.count-big b {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 46px; font-weight: 700; color: var(--ink); line-height: 1;
+}
+.count-big span { font-size: 15px; color: var(--ink-soft); margin-left: 6px; }
+
+.count-bar {
+  height: 8px; border-radius: 999px; background: var(--line); overflow: hidden;
+}
+.count-bar i {
+  display: block; height: 100%; background: var(--gold);
+  border-radius: 999px; transition: width .3s ease;
+}
+
+.count-full {
+  margin-top: 10px; font-size: 14px; font-weight: 600; color: var(--ok);
+}
+
+.count-left { margin-top: 9px; font-size: 14px; color: var(--ink-soft); }
+
+.count-row { display: flex; gap: 8px; margin-top: 12px; align-items: stretch; }
+
+.count-row select {
+  flex: 0 0 104px;
+  padding: 12px 10px; font-family: inherit; font-size: 16px; color: var(--ink);
+  background: var(--paper); border: 1.5px solid var(--line); border-radius: 11px;
+  outline: none;
+}
+.count-row select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-lt); }
+.count-row select:disabled { opacity: .5; }
+
+.count-row .btn { flex: 1; }
+.count-row .btn-primary { min-height: 52px; font-size: 17px; }
+
+/* แถวลดจำนวนเป็นทางเลือกสำรอง — ทำให้เบากว่าแถวหลักอย่างเห็นได้ชัด
+   จะได้ไม่มีใครเผลอกดผิดแถวตอนรีบ ๆ */
+.count-row-sub { margin-top: 8px; }
+.count-row-sub select { flex: 0 0 104px; padding: 8px 10px; font-size: 14px; }
+.count-row-sub .btn { min-height: 40px; font-size: 14px; color: var(--ink-soft); }
+
+.count-note { font-size: 12px; color: var(--ink-soft); margin: 12px 0 0; }
+
+/* ── หน้าผลลัพธ์เต็มจอ (เจอชื่อแล้ว) ─────────────────────── */
+
+.found {
+  text-align: center;
+  background: var(--paper);
+  border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  padding: 26px 20px; margin-top: 18px;
+}
+
+.found .who { font-size: 15px; color: var(--ink-soft); }
+.found .who strong { color: var(--ink); font-size: 20px; display: block; margin-top: 2px; }
+
+.found .big-table {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 68px; font-weight: 700; line-height: 1;
+  margin: 14px 0 2px; color: var(--gold);
+}
+.found .big-label { font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); }
+
+.found .side-pill {
+  display: inline-block; margin-top: 14px; padding: 5px 16px;
+  border-radius: 999px; font-size: 14px; font-weight: 600;
+}
+.side-pill.bride { background: #fbeef3; color: var(--bride); }
+.side-pill.groom { background: #eaf2f8; color: var(--groom); }
+
+.wayfind {
+  margin-top: 16px; padding: 14px 16px;
+  background: var(--gold-lt); border-radius: 12px;
+  font-size: 15px; text-align: left;
+}
+.wayfind b { display: block; font-size: 12px; letter-spacing: .1em; color: var(--gold); margin-bottom: 4px; }
+
+.tablemates { margin-top: 16px; text-align: left; }
+.tablemates h4 { margin: 0 0 8px; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+.tablemates ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.tablemates li { font-size: 14px; padding: 4px 10px; background: var(--cream); border-radius: 8px; }
+.tablemates li.me { background: var(--gold-lt); font-weight: 600; }
+
+/* ── ปุ่ม ────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 20px; min-height: 46px;
+  font-family: inherit; font-size: 15px; font-weight: 600;
+  border-radius: 11px; border: 1.5px solid var(--line);
+  background: var(--paper); color: var(--ink);
+  cursor: pointer; text-decoration: none;
+  transition: background .12s, border-color .12s, transform .1s;
+}
+.btn:hover { border-color: var(--gold); }
+.btn:active { transform: scale(.985); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-primary { background: var(--gold); border-color: var(--gold); color: #fff; }
+.btn-primary:hover { background: #9c7c34; border-color: #9c7c34; }
+
+.btn-danger { color: var(--danger); border-color: #eccfcf; }
+.btn-danger:hover { background: #fbeeee; border-color: var(--danger); }
+
+.btn-lg { width: 100%; padding: 15px; font-size: 17px; }
+.btn-sm { padding: 7px 12px; min-height: 36px; font-size: 13px; }
+
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.btn-row .btn { flex: 1; min-width: 130px; }
+
+/* ── แผนผัง SVG ──────────────────────────────────────────── */
+
+.map-holder {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 12px; margin-top: 16px;
+  overflow-x: auto;
+}
+
+.seatmap { width: 100%; height: auto; display: block; min-width: 320px; }
+
+.sm-stage   { fill: #f0e6f2; stroke: #d8c4dc; stroke-width: 1.5; }
+.sm-stage-t { fill: #7d5f86; font-size: 15px; font-weight: 600; }
+
+.sm-runway   { fill: #f7f2e8; stroke: var(--line); stroke-width: 1; }
+.sm-runway-t { fill: #bfae94; font-size: 11px; letter-spacing: .18em; }
+
+.sm-side { fill: var(--ink-soft); font-size: 11px; letter-spacing: .1em; font-weight: 600; }
+
+.sm-entry   { fill: #eaf1ea; stroke: #c8dcc8; stroke-width: 1.5; }
+.sm-entry-t { fill: #4b7a52; font-size: 13px; font-weight: 600; }
+.sm-hint    { fill: var(--ink-soft); font-size: 11px; }
+
+.sm-table { cursor: pointer; }
+.sm-table circle { fill: var(--paper); stroke: var(--line); stroke-width: 1.5; transition: all .15s; }
+.sm-table text   { fill: var(--ink-soft); font-size: 14px; font-weight: 600; pointer-events: none; }
+
+/* สีของวงกลม = ฝั่งของแขก (ไม่ใช่ตำแหน่งซ้าย/ขวาบนผัง)
+   บล็อกขวามีทั้งโต๊ะเจ้าบ่าวและโต๊ะเจ้าสาวปนกัน สีจึงเป็นตัวบอกฝั่งตัวจริง */
+.sm-bride circle  { stroke: #e8c9d6; fill: #fdf6f9; }
+.sm-bride text    { fill: var(--bride); }
+.sm-groom circle  { stroke: #c9dbe8; fill: #f5fafd; }
+.sm-groom text    { fill: var(--groom); }
+.sm-noside circle { stroke: var(--line); fill: #fbfaf8; }
+.sm-noside text   { fill: var(--ink-soft); }
+
+.sm-table:hover circle,
+.sm-table:focus circle { stroke-width: 2.5; stroke: var(--gold); }
+.sm-table:focus { outline: none; }
+
+.sm-table.is-empty circle { fill: #fafafa; stroke: #e5e5e5; stroke-dasharray: 3 3; }
+.sm-table.is-empty text   { fill: #bbb; }
+
+.sm-table.is-over circle { stroke: var(--warn); stroke-width: 2.5; }
+.sm-table.is-done circle { fill: #e7f3ec; stroke: var(--ok); }
+
+.sm-table.is-hi circle {
+  fill: var(--gold); stroke: #8a6d28; stroke-width: 3; r: 24;
+  filter: drop-shadow(0 0 8px rgba(176, 141, 63, .55));
+}
+.sm-table.is-hi text { fill: #fff; font-size: 16px; }
+
+.sm-table.is-dim { opacity: .34; }
+
+.map-legend {
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+  margin-top: 10px; font-size: 12px; color: var(--ink-soft);
+}
+.map-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.map-legend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 1.5px solid; }
+.lg-bride { background: #fdf6f9; border-color: #e8c9d6; }
+.lg-groom { background: #f5fafd; border-color: #c9dbe8; }
+.lg-hi    { background: var(--gold); border-color: #8a6d28; }
+.lg-done  { background: #e7f3ec; border-color: var(--ok); }
+
+/* ── สถานะ / แจ้งเตือน ───────────────────────────────────── */
+
+.notice {
+  padding: 11px 14px; border-radius: 11px; font-size: 14px; margin: 12px 0;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.notice-info   { background: #eef4f8; color: #3a6382; }
+.notice-warn   { background: #fdf3e6; color: #8a5620; }
+.notice-error  { background: var(--blush-lt); color: var(--danger); }
+.notice-ok     { background: #e9f4ee; color: #2e6b48; }
+
+.empty-state { text-align: center; padding: 34px 20px; color: var(--ink-soft); }
+.empty-state .big { font-size: 40px; margin-bottom: 8px; }
+
+.spinner {
+  width: 22px; height: 22px; border: 2.5px solid var(--line);
+  border-top-color: var(--gold); border-radius: 50%;
+  animation: spin .7s linear infinite; margin: 20px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── ฟอร์ม ───────────────────────────────────────────────── */
+
+.field { margin-bottom: 13px; }
+.field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; }
+
+.field input, .field select, .field textarea {
+  width: 100%; padding: 11px 13px;
+  font-family: inherit; font-size: 16px; color: var(--ink);
+  background: var(--paper); border: 1.5px solid var(--line);
+  border-radius: 10px; outline: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-lt);
+}
+.field textarea { min-height: 130px; resize: vertical; font-family: ui-monospace, 'Cascadia Code', monospace; font-size: 14px; }
+
+.field-row { display: flex; gap: 10px; }
+.field-row .field { flex: 1; }
+
+/* ── ตาราง (หน้าแอดมิน) ──────────────────────────────────── */
+
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+
+table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.data th, table.data td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.data th { background: var(--cream); font-size: 12px; color: var(--ink-soft); font-weight: 600; position: sticky; top: 0; }
+table.data tr:last-child td { border-bottom: 0; }
+table.data tbody tr:hover { background: #fcfaf6; }
+
+/* ── แท็บ ────────────────────────────────────────────────── */
+
+.tabs { display: flex; gap: 6px; margin: 18px 0 14px; border-bottom: 1px solid var(--line); }
+.tabs button {
+  padding: 10px 16px; border: 0; background: none; cursor: pointer;
+  font-family: inherit; font-size: 15px; font-weight: 600; color: var(--ink-soft);
+  border-bottom: 2.5px solid transparent; margin-bottom: -1px;
+}
+.tabs button.on { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* ── หน้าล็อกอิน ─────────────────────────────────────────── */
+
+.gate { max-width: 340px; margin: 70px auto; text-align: center; }
+.gate h2 { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; margin-bottom: 6px; }
+.gate p { color: var(--ink-soft); font-size: 14px; margin-top: 0; }
+
+/* ── สรุปตัวเลข (หน้าต้อนรับ / แอดมิน) ────────────────────── */
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin: 16px 0; }
+.stat { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 13px; text-align: center; }
+.stat .n { font-size: 26px; font-weight: 700; line-height: 1.2; }
+.stat .l { font-size: 12px; color: var(--ink-soft); }
+.stat.ok .n   { color: var(--ok); }
+.stat.warn .n { color: var(--warn); }
+
+/* ── footer ──────────────────────────────────────────────── */
+
+.foot { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 34px; }
+.foot a { color: var(--gold); text-decoration: none; }
+
+.mini-nav { text-align: center; margin-top: 22px; font-size: 13px; }
+.mini-nav a { color: var(--ink-soft); text-decoration: none; margin: 0 8px; }
+.mini-nav a:hover { color: var(--gold); }
+
+/* ── การพิมพ์ (ป้ายโต๊ะ / รายชื่อให้ทีมงาน) ───────────────── */
+
+@media print {
+  body { background: #fff; }
+  .no-print, .tabs, .search-box, .btn, .mini-nav, .foot { display: none !important; }
+  .card, .table-scroll { box-shadow: none; border-color: #ccc; }
+  .print-page { page-break-after: always; }
+}
+
+@media (min-width: 700px) {
+  .hero h1 { font-size: 36px; }
+}

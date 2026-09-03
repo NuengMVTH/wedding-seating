@@ -1,0 +1,12 @@
+# ไฟล์ชั่วคราวจากสคริปต์ช่วยงาน
+*.tmp.js
+*.tmp.json
+ok.tmp
+live.tmp.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ⚠️ ห้ามใส่ ADMIN_PIN / STAFF_PIN ลงไฟล์ใด ๆ ใน repo นี้
+#    repo นี้เป็น public — รหัสอยู่ใน Script Properties ของ Apps Script เท่านั้น

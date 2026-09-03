@@ -1,0 +1,26 @@
+{
+  "name": "ผังที่นั่งงานแต่งงาน",
+  "short_name": "ที่นั่งของฉัน",
+  "description": "ค้นหาชื่อเพื่อดูว่านั่งโต๊ะไหนในงาน",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fdfaf5",
+  "theme_color": "#b08d3f",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จัดการผังที่นั่ง — แอดมิน</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .row-actions { display: flex; gap: 6px; }
+  .over-warn { color: var(--warn); font-weight: 600; }
+  .qr-box { text-align: center; padding: 20px; }
+  .qr-box canvas, .qr-box img { margin: 0 auto; display: block; }
+  .link-line { font-family: ui-monospace, monospace; font-size: 13px; word-break: break-all;
+               background: var(--cream); padding: 10px 12px; border-radius: 8px; margin: 8px 0; }
+  .tbl-editor { display: grid; gap: 8px; }
+  .tbl-editor .line { display: flex; gap: 8px; align-items: center; }
+  .tbl-editor .line .no { flex: 0 0 36px; font-weight: 700; text-align: center; }
+  .tbl-editor .line .blk { flex: 0 0 52px; font-size: 12px; color: var(--ink-soft); }
+  .tbl-editor .line input { flex: 1; min-width: 120px; padding: 8px 10px; font-size: 14px;
+                            border: 1.5px solid var(--line); border-radius: 8px; font-family: inherit; }
+  .tbl-editor .line select { flex: 0 0 96px; padding: 8px 6px; font-size: 13px;
+                             border: 1.5px solid var(--line); border-radius: 8px; font-family: inherit; }
+  .tbl-editor .line .cnt { flex: 0 0 62px; font-size: 13px; color: var(--ink-soft); text-align: right; }
+  .tbl-editor .line .arr-in { flex: 0 0 74px; font-size: 11px; color: var(--ink-soft);
+                              display: flex; align-items: center; gap: 4px; }
+  .tbl-editor .line .arr-in input { width: 48px; flex: 0 0 48px; text-align: center;
+                                    padding: 8px 4px; font-size: 14px; }
+  @media (max-width: 640px) { .tbl-editor .line { flex-wrap: wrap; } }
+
+  /* ป้ายโต๊ะสำหรับพิมพ์ — หน้าละโต๊ะ */
+  .card-print { display: none; }
+  @media print {
+    .card-print { display: block; }
+    .card-print .print-page { padding: 60px 40px; text-align: center; }
+    .card-print .n { font-family: 'Playfair Display', Georgia, serif; font-size: 150px; line-height: 1; }
+    .card-print .g { font-size: 26px; margin-top: 10px; }
+    .card-print ol { text-align: left; font-size: 18px; margin: 40px auto 0; max-width: 460px; }
+    #appView > *:not(.card-print) { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ ด่านรหัสผ่าน ══ -->
+<div class="wrap" id="gateView">
+  <div class="gate">
+    <h2>จัดการผังที่นั่ง</h2>
+    <p>สำหรับเจ้าภาพเท่านั้น</p>
+    <div class="field">
+      <input id="pin" type="password" autocomplete="off" placeholder="รหัสแอดมิน" aria-label="รหัสแอดมิน">
+    </div>
+    <button class="btn btn-primary btn-lg" id="loginBtn">เข้าสู่ระบบ</button>
+    <div id="gateMsg"></div>
+  </div>
+</div>
+
+<!-- ══ หน้าทำงาน ══ -->
+<div class="wrap wrap-wide" id="appView" hidden>
+
+  <header class="hero" style="padding-bottom:6px">
+    <div class="hero-mark">Admin</div>
+    <h1 style="font-size:24px">จัดการผังที่นั่ง</h1>
+  </header>
+
+  <div id="status"></div>
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <button class="on" data-tab="guests">รายชื่อแขก</button>
+    <button data-tab="import">นำเข้าชุด</button>
+    <button data-tab="tables">ตั้งค่าโต๊ะ</button>
+    <button data-tab="share">QR &amp; ลิงก์</button>
+    <button data-tab="print">พิมพ์</button>
+  </div>
+
+  <!-- ── รายชื่อแขก ── -->
+  <section data-panel="guests">
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin:0 0 10px;font-size:16px" id="formTitle">เพิ่มแขกใหม่</h3>
+      <input type="hidden" id="gId">
+      <div class="field-row">
+        <div class="field"><label for="gName">ชื่อ-นามสกุล *</label><input id="gName" placeholder="สมชาย ใจดี"></div>
+        <div class="field"><label for="gNick">ชื่อเล่น</label><input id="gNick" placeholder="ชาย"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="gTable">โต๊ะ *</label><select id="gTable"></select></div>
+        <div class="field"><label for="gNote">หมายเหตุ</label><input id="gNote" placeholder="เช่น มากับคุณแม่"></div>
+      </div>
+      <div class="btn-row" style="margin-top:4px">
+        <button class="btn btn-primary" id="saveBtn">บันทึก</button>
+        <button class="btn" id="cancelBtn" hidden>ยกเลิกการแก้ไข</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="search-box" style="margin-top:0">
+      <input id="q" type="search" autocomplete="off" placeholder="ค้นหาในรายชื่อ…" aria-label="ค้นหา">
+      <button class="clear" id="clearBtn" type="button" hidden>×</button>
+    </div>
+
+    <div class="table-scroll" style="margin-top:12px">
+      <table class="data">
+        <thead><tr><th>โต๊ะ</th><th>ชื่อ-นามสกุล</th><th>ชื่อเล่น</th><th>กลุ่ม</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── นำเข้าชุด ── -->
+  <section data-panel="import" hidden>
+    <div class="card">
+      <h3 style="margin:0 0 6px;font-size:16px">วางรายชื่อทีเดียวหลายคน</h3>
+      <p class="hint" style="margin-top:0">เลือกโต๊ะแล้ววางรายชื่อบรรทัดละคน หรือใส่เลขโต๊ะท้ายบรรทัดก็ได้</p>
+
+      <div class="field">
+        <label for="impTable">โต๊ะปลายทาง (ใช้กับบรรทัดที่ไม่ได้ระบุเลขโต๊ะ)</label>
+        <select id="impTable"></select>
+      </div>
+
+      <div class="field">
+        <label for="impText">รายชื่อ</label>
+        <textarea id="impText" placeholder="สมชาย ใจดี&#10;สมหญิง รักดี, หญิง&#10;วิชัย มั่นคง, ชัย, 24"></textarea>
+      </div>
+
+      <p class="hint">
+        รูปแบบต่อบรรทัด: <b>ชื่อ-นามสกุล</b> · <b>ชื่อ, ชื่อเล่น</b> · <b>ชื่อ, ชื่อเล่น, เลขโต๊ะ</b><br>
+        คั่นด้วยลูกน้ำหรือแท็บก็ได้ (วางจาก Excel ได้เลย) · บรรทัดว่างถูกข้าม
+      </p>
+
+      <div class="btn-row">
+        <button class="btn" id="previewBtn">ตรวจก่อนนำเข้า</button>
+        <button class="btn btn-primary" id="importBtn" disabled>นำเข้า</button>
+      </div>
+      <div id="impMsg"></div>
+    </div>
+  </section>
+
+  <!-- ── ตั้งค่าโต๊ะ ── -->
+  <section data-panel="tables" hidden>
+    <p class="hint">
+      <b>ชื่อกลุ่ม</b> ใช้ค้นหาได้ด้วย — แขกพิมพ์ "HONDA" แล้วเจอทั้งกลุ่ม<br>
+      <b>ฝั่ง</b> คือแขกของใคร ตั้งได้อิสระจากตำแหน่งโต๊ะ — เช่น HONDA/Thaismile นั่งฝั่งขวาแต่เป็นแขกเจ้าสาว<br>
+      <b>ซ้าย/ขวา</b> คือที่ตั้งจริงในฮอลล์ แก้ไม่ได้ (ผูกกับเลขโต๊ะตามแปลนของทางร้าน)
+    </p>
+    <div class="btn-row" style="margin-top:0;margin-bottom:12px">
+      <button class="btn btn-danger" id="resetArrivedBtn">↺ รีเซ็ตยอดนับหัวทั้งงานเป็น 0</button>
+    </div>
+    <p class="hint" style="margin-top:-6px">
+      ใช้ตอนทดสอบเสร็จแล้วก่อนเริ่มงานจริง หรือถ้ามีคนกดมั่วจนตัวเลขเพี้ยน ·
+      ทุกครั้งที่แขกกดถูกบันทึกไว้ในชีต <b>Log</b> อยู่แล้ว ย้อนดูได้
+    </p>
+    <div id="resetMsg"></div>
+
+    <div class="tbl-editor" id="tblEditor"></div>
+  </section>
+
+  <!-- ── QR & ลิงก์ ── -->
+  <section data-panel="share" hidden>
+    <div class="card">
+      <h3 style="margin:0 0 8px;font-size:16px">QR สำหรับตั้งหน้างาน</h3>
+      <p class="hint" style="margin-top:0">สั่งพิมพ์แล้วตั้งที่โต๊ะต้อนรับและซุ้มทางเข้า แขกสแกนแล้วเข้าหน้าค้นหาทันที</p>
+      <div class="link-line" id="guestUrl"></div>
+      <div class="qr-box" id="qrBox"></div>
+      <div class="btn-row">
+        <button class="btn" id="qrPrintBtn">🖨 พิมพ์ป้าย QR</button>
+        <button class="btn" id="copyUrlBtn">📋 คัดลอกลิงก์</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3 style="margin:0 0 8px;font-size:16px">ลิงก์ส่วนตัวรายคน</h3>
+      <p class="hint" style="margin-top:0">ส่งใน LINE ล่วงหน้าพร้อมการ์ด — เปิดมาเจอโต๊ะตัวเองเลย ไม่ต้องค้น</p>
+      <div class="btn-row">
+        <button class="btn" id="exportLinksBtn">⬇ ดาวน์โหลดลิงก์ทุกคน (CSV)</button>
+        <button class="btn" id="exportAllBtn">⬇ ดาวน์โหลดรายชื่อทั้งหมด (CSV)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── พิมพ์ ── -->
+  <section data-panel="print" hidden>
+    <div class="card">
+      <h3 style="margin:0 0 8px;font-size:16px">เอกสารสำหรับทีมงาน</h3>
+      <p class="hint" style="margin-top:0">เปิดหน้าต่างพิมพ์ของเบราว์เซอร์ — เลือก "บันทึกเป็น PDF" ก็ได้</p>
+      <div class="btn-row">
+        <button class="btn" id="printCardsBtn">🖨 ป้ายโต๊ะ (หน้าละโต๊ะ)</button>
+        <button class="btn" id="printListBtn">🖨 รายชื่อทั้งงาน</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="card-print" id="printArea"></div>
+
+  <div class="btn-row no-print">
+    <button class="btn" id="refreshBtn">↻ โหลดข้อมูลใหม่</button>
+    <button class="btn" id="logoutBtn">ออกจากระบบ</button>
+  </div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/seatmap.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   หน้าแอดมิน — สำหรับ Nueng คนเดียว
+
+   ทุกคำสั่งที่เปลี่ยนข้อมูลถูกตรวจรหัสซ้ำที่ GAS เสมอ
+   หน้านี้แค่ "ไม่แสดงปุ่ม" ให้คนที่ไม่มีรหัส — ซึ่งกันอะไรไม่ได้
+   ด่านจริงอยู่ที่ฝั่งเซิร์ฟเวอร์ทั้งหมด
+═══════════════════════════════════════════════════════════════ */
+
+let DATA  = { tables: [], guests: [] };
+let INDEX = [];
+let PIN   = '';
+let PENDING = [];   // รายชื่อที่ตรวจแล้วรอนำเข้า
+
+const $ = function (id) { return document.getElementById(id); };
+
+/* ── ด่านรหัส ─────────────────────────────────────────────── */
+
+const saved = sessionStorage.getItem('admin_pin');
+if (saved) verify(saved);
+
+$('loginBtn').addEventListener('click', function () { verify($('pin').value); });
+$('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') verify($('pin').value); });
+
+async function verify(pin) {
+  if (!pin) return;
+  $('gateMsg').innerHTML = '<div class="spinner"></div>';
+  try {
+    const res = await postGAS({ type: 'verifyPin', pin: pin });
+    if (res.role !== 'admin') throw new Error('รหัสนี้เป็นรหัสพนักงาน ไม่ใช่รหัสแอดมิน');
+    PIN = pin;
+    sessionStorage.setItem('admin_pin', pin);
+    $('gateView').hidden = true; $('appView').hidden = false; $('gateMsg').innerHTML = '';
+    start();
+  } catch (err) {
+    sessionStorage.removeItem('admin_pin');
+    $('gateMsg').innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
+    $('pin').value = '';
+  }
+}
+
+$('logoutBtn').addEventListener('click', function () {
+  sessionStorage.removeItem('admin_pin'); location.reload();
+});
+
+/* ── เริ่ม ────────────────────────────────────────────────── */
+
+async function start() {
+  fillTableSelects();
+  bind();
+  await refresh();
+  drawShare();
+}
+
+async function refresh() {
+  $('status').innerHTML = '<div class="spinner"></div>';
+  try {
+    // หน้าแอดมินขอข้อมูลชุดเต็ม (มี note + เวลาเช็คอิน) ผ่าน POST ที่ตรวจรหัสแล้ว
+    const res = await postGAS({ type: 'adminData', pin: PIN });
+    DATA  = { tables: res.tables, guests: res.guests, at: res.at };
+    INDEX = buildIndex(DATA.guests, DATA.tables);
+    $('status').innerHTML = '';
+    fillTableSelects();   // ชื่อกลุ่ม/ฝั่งในดรอปดาวน์ต้องตามข้อมูลล่าสุดเสมอ
+    drawStats(); drawRows(); drawTableEditor();
+  } catch (err) {
+    $('status').innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
+  }
+}
+
+/**
+ * ตัวเลือกโต๊ะ — เขียนกำกับด้วย "ชื่อกลุ่ม" ไม่ใช่ฝั่งที่เดาจากเลขโต๊ะ
+ * เรียกซ้ำได้หลังโหลดข้อมูล เพื่อให้ชื่อกลุ่มที่เพิ่งแก้ขึ้นตาม
+ */
+function fillTableSelects() {
+  const keep = { gTable: $('gTable').value, impTable: $('impTable').value };
+  let opts = '';
+
+  for (let n = 1; n <= CONFIG.totalTables; n++) {
+    const t = (DATA.tables || []).find(function (x) { return x.no === n; }) || {};
+    const tag = [SIDE_LABEL[tableSide(n, DATA.tables)], t.group].filter(Boolean).join(' · ');
+    opts += '<option value="' + n + '">โต๊ะ ' + n + (tag ? ' — ' + tag : '') + '</option>';
+  }
+
+  $('gTable').innerHTML = opts;
+  $('impTable').innerHTML = opts;
+  if (keep.gTable)   $('gTable').value = keep.gTable;
+  if (keep.impTable) $('impTable').value = keep.impTable;
+}
+
+function bind() {
+  document.querySelectorAll('.tabs button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.tabs button').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      document.querySelectorAll('[data-panel]').forEach(function (p) {
+        p.hidden = p.dataset.panel !== b.dataset.tab;
+      });
+    });
+  });
+
+  $('saveBtn').addEventListener('click', saveGuest);
+  $('cancelBtn').addEventListener('click', resetForm);
+  $('refreshBtn').addEventListener('click', refresh);
+
+  let timer = null;
+  $('q').addEventListener('input', function () {
+    $('clearBtn').hidden = !$('q').value;
+    clearTimeout(timer); timer = setTimeout(drawRows, 110);
+  });
+  $('clearBtn').addEventListener('click', function () {
+    $('q').value = ''; $('clearBtn').hidden = true; drawRows();
+  });
+
+  $('previewBtn').addEventListener('click', previewImport);
+  $('importBtn').addEventListener('click', doImport);
+
+  $('qrPrintBtn').addEventListener('click', function () { window.print(); });
+  $('copyUrlBtn').addEventListener('click', copyGuestUrl);
+  $('exportLinksBtn').addEventListener('click', function () { exportCsv('links'); });
+  $('exportAllBtn').addEventListener('click', function () { exportCsv('all'); });
+  $('printCardsBtn').addEventListener('click', function () { buildPrint('cards'); });
+  $('printListBtn').addEventListener('click', function () { buildPrint('list'); });
+  $('resetArrivedBtn').addEventListener('click', resetArrived);
+}
+
+/** รีเซ็ตยอดนับหัวทั้งงาน — ถามยืนยันก่อน เพราะกดพลาดกลางงานคือย้อนไม่ได้ทันที */
+async function resetArrived() {
+  const head = DATA.tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
+  if (!confirm('รีเซ็ตยอดนับหัวทั้ง 40 โต๊ะเป็น 0?\n\n' +
+               'ตอนนี้มียอดรวม ' + head + ' คน\n' +
+               'ประวัติการกดยังอยู่ครบในชีต Log แต่ตัวเลขบนเว็บจะกลับไปเป็น 0 ทันที')) return;
+
+  $('resetMsg').innerHTML = '<div class="spinner"></div>';
+  try {
+    const res = await postGAS({ type: 'setArrived', pin: PIN, actor: 'admin', tableNo: 'all' });
+    $('resetMsg').innerHTML = note('ok', 'รีเซ็ตแล้ว ' + res.reset + ' โต๊ะ');
+    await refresh();
+  } catch (err) {
+    $('resetMsg').innerHTML = note('error', err.message);
+  }
+}
+
+/* ── สรุปตัวเลข ───────────────────────────────────────────── */
+
+function drawStats() {
+  const c = countByTable(DATA.guests);
+  const used  = DATA.tables.filter(function (t) { return (c[t.no] || {}).total; }).length;
+  const over  = DATA.tables.filter(function (t) { return ((c[t.no] || {}).total || 0) > t.seats; }).length;
+  const seats = DATA.tables.reduce(function (s, t) { return s + t.seats; }, 0);
+
+  const head = DATA.tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
+
+  $('stats').innerHTML =
+    st(DATA.guests.length, 'รายชื่อทั้งหมด', '') +
+    st(seats - DATA.guests.length, 'ที่นั่งเหลือ', '') +
+    st(used + ' / ' + DATA.tables.length, 'โต๊ะที่มีรายชื่อ', '') +
+    st(head, 'นับหัวหน้างาน', head ? 'ok' : '') +
+    st(over, 'โต๊ะที่คนล้น', over ? 'warn' : 'ok');
+
+  $('foot').textContent = 'ข้อมูล ณ ' + (DATA.at || '-');
+}
+
+function st(n, l, cls) {
+  return '<div class="stat ' + cls + '"><div class="n">' + esc(n) + '</div><div class="l">' + esc(l) + '</div></div>';
+}
+
+/* ── ตารางรายชื่อ ─────────────────────────────────────────── */
+
+function drawRows() {
+  const q = $('q').value.trim();
+  const list = q
+    ? searchGuests(INDEX, q, 500)
+    : INDEX.slice().sort(function (a, b) {
+        return a.tableNo - b.tableNo || a.fullName.localeCompare(b.fullName, 'th');
+      });
+
+  if (!list.length) {
+    $('rows').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);padding:24px">' +
+      (q ? 'ไม่พบรายชื่อที่ค้นหา' : 'ยังไม่มีรายชื่อ — เพิ่มด้านบน หรือใช้แท็บ "นำเข้าชุด"') + '</td></tr>';
+    return;
+  }
+
+  const c = countByTable(DATA.guests);
+  $('rows').innerHTML = list.map(function (g) {
+    const t = DATA.tables.find(function (x) { return x.no === g.tableNo; }) || { seats: 10 };
+    const over = ((c[g.tableNo] || {}).total || 0) > t.seats;
+    return '<tr>' +
+      '<td' + (over ? ' class="over-warn"' : '') + '>' + g.tableNo + (over ? ' ⚠' : '') + '</td>' +
+      '<td>' + esc(g.fullName) + '</td>' +
+      '<td>' + esc(g.nickname || '-') + '</td>' +
+      '<td>' + esc(g.group || '-') + '</td>' +
+      '<td>' + (g.checkedInAt ? '<span class="badge badge-in">มาแล้ว</span>' : '-') + '</td>' +
+      '<td><span class="row-actions">' +
+        '<button class="btn btn-sm" data-edit="' + esc(g.id) + '">แก้</button>' +
+        '<button class="btn btn-sm btn-danger" data-del="' + esc(g.id) + '">ลบ</button>' +
+      '</span></td>' +
+    '</tr>';
+  }).join('');
+
+  $('rows').querySelectorAll('[data-edit]').forEach(function (b) {
+    b.addEventListener('click', function () { editGuest(b.dataset.edit); });
+  });
+  $('rows').querySelectorAll('[data-del]').forEach(function (b) {
+    b.addEventListener('click', function () { delGuest(b.dataset.del); });
+  });
+}
+
+/* ── ฟอร์มเพิ่ม/แก้ ───────────────────────────────────────── */
+
+function editGuest(id) {
+  const g = DATA.guests.find(function (x) { return x.id === id; });
+  if (!g) return;
+  $('gId').value = g.id; $('gName').value = g.fullName;
+  $('gNick').value = g.nickname || ''; $('gTable').value = g.tableNo;
+  $('gNote').value = g.note || '';
+  $('formTitle').textContent = 'แก้ไข: ' + g.fullName;
+  $('cancelBtn').hidden = false;
+  $('gName').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  ['gId', 'gName', 'gNick', 'gNote'].forEach(function (k) { $(k).value = ''; });
+  $('formTitle').textContent = 'เพิ่มแขกใหม่';
+  $('cancelBtn').hidden = true;
+  $('formMsg').innerHTML = '';
+}
+
+async function saveGuest() {
+  const name = $('gName').value.trim();
+  if (!name) { $('formMsg').innerHTML = note('error', 'ต้องกรอกชื่อ-นามสกุล'); return; }
+
+  $('saveBtn').disabled = true;
+  try {
+    await postGAS({
+      type: 'saveGuest', pin: PIN, actor: 'admin',
+      id: $('gId').value || '', fullName: name,
+      nickname: $('gNick').value.trim(), tableNo: Number($('gTable').value),
+      note: $('gNote').value.trim()
+    });
+    $('formMsg').innerHTML = note('ok', 'บันทึกแล้ว');
+    resetForm();
+    await refresh();
+  } catch (err) {
+    $('formMsg').innerHTML = note('error', err.message);
+  } finally {
+    $('saveBtn').disabled = false;
+  }
+}
+
+async function delGuest(id) {
+  const g = DATA.guests.find(function (x) { return x.id === id; });
+  if (!g) return;
+  if (!confirm('ลบ "' + g.fullName + '" ออกจากรายชื่อ?\n\nข้อมูลจะถูกเก็บไว้ในชีต Log กู้คืนได้ภายหลัง')) return;
+
+  try {
+    await postGAS({ type: 'deleteGuest', pin: PIN, actor: 'admin', id: id, confirmName: g.fullName });
+    await refresh();
+  } catch (err) {
+    alert('ลบไม่สำเร็จ: ' + err.message);
+  }
+}
+
+function note(kind, msg) {
+  return '<div class="notice notice-' + kind + '">' + esc(msg) + '</div>';
+}
+
+/* ── นำเข้าชุด ────────────────────────────────────────────── */
+
+/**
+ * แปลงข้อความที่วางมาเป็นรายการแขก
+ * รับได้ทั้งคั่นด้วยลูกน้ำ แท็บ (วางจาก Excel) หรือชื่อเปล่า ๆ บรรทัดละคน
+ */
+function parseImport(text, defaultTable) {
+  return String(text).split(/\r?\n/).map(function (line, i) {
+    const raw = line.trim();
+    if (!raw) return null;
+
+    const f = raw.split(/[\t,]/).map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+    const item = { fullName: f[0] || '', nickname: '', tableNo: defaultTable, line: i + 1, raw: raw };
+
+    // ช่องสุดท้ายถ้าเป็นตัวเลข 1-40 ให้ถือว่าเป็นเลขโต๊ะ
+    if (f.length >= 2) {
+      const last = f[f.length - 1];
+      if (/^\d{1,2}$/.test(last) && Number(last) >= 1 && Number(last) <= CONFIG.totalTables) {
+        item.tableNo = Number(last);
+        if (f.length >= 3) item.nickname = f[1];
+      } else {
+        item.nickname = f[1];
+      }
+    }
+    return item.fullName ? item : null;
+  }).filter(Boolean);
+}
+
+function previewImport() {
+  PENDING = parseImport($('impText').value, Number($('impTable').value));
+
+  if (!PENDING.length) {
+    $('impMsg').innerHTML = note('error', 'ไม่พบรายชื่อในข้อความที่วาง');
+    $('importBtn').disabled = true;
+    return;
+  }
+
+  // เตือนชื่อซ้ำกับที่มีอยู่แล้ว — กันการวางทับซ้ำสองรอบ
+  const existing = {};
+  DATA.guests.forEach(function (g) { existing[normTh(g.fullName)] = g.tableNo; });
+  const dups = PENDING.filter(function (p) { return existing[normTh(p.fullName)]; });
+
+  const byTable = {};
+  PENDING.forEach(function (p) { byTable[p.tableNo] = (byTable[p.tableNo] || 0) + 1; });
+  const summary = Object.keys(byTable).sort(function (a, b) { return a - b; })
+    .map(function (t) { return 'โต๊ะ ' + t + ': ' + byTable[t] + ' คน'; }).join(' · ');
+
+  $('impMsg').innerHTML =
+    note('info', 'พร้อมนำเข้า ' + PENDING.length + ' คน — ' + summary) +
+    (dups.length ? note('warn', 'มีชื่อซ้ำกับรายชื่อเดิม ' + dups.length + ' คน: ' +
+      dups.slice(0, 6).map(function (d) { return d.fullName; }).join(', ') +
+      (dups.length > 6 ? ' …' : '') + ' (นำเข้าได้ แต่จะกลายเป็นรายการซ้ำ)') : '');
+
+  $('importBtn').disabled = false;
+}
+
+async function doImport() {
+  if (!PENDING.length) return;
+  $('importBtn').disabled = true;
+  $('impMsg').innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const res = await postGAS({ type: 'bulkImport', pin: PIN, actor: 'admin', guests: PENDING });
+    $('impMsg').innerHTML =
+      note('ok', 'นำเข้าสำเร็จ ' + res.added + ' คน') +
+      (res.skipped && res.skipped.length
+        ? note('warn', 'ข้าม ' + res.skipped.length + ' รายการ: ' + res.skipped.slice(0, 5).join(' · '))
+        : '');
+    $('impText').value = '';
+    PENDING = [];
+    await refresh();
+  } catch (err) {
+    $('impMsg').innerHTML = note('error', err.message);
+    $('importBtn').disabled = false;
+  }
+}
+
+/* ── ตั้งค่าโต๊ะ ───────────────────────────────────────────── */
+
+function drawTableEditor() {
+  const c = countByTable(DATA.guests);
+  const SIDES = [['bride', 'เจ้าสาว'], ['groom', 'เจ้าบ่าว'], ['', 'ไม่ระบุ']];
+
+  $('tblEditor').innerHTML = DATA.tables.map(function (t) {
+    const x = c[t.no] || { total: 0 };
+    const over = x.total > t.seats;
+    const side = tableSide(t.no, DATA.tables);
+
+    return '<div class="line">' +
+      '<span class="no">' + t.no + '</span>' +
+      '<span class="blk">' + esc(BLOCK_LABEL[tablePos(t.no).block]) + '</span>' +
+      '<input value="' + esc(t.group) + '" data-tno="' + t.no + '" placeholder="ชื่อกลุ่ม">' +
+      '<select data-side="' + t.no + '">' + SIDES.map(function (s) {
+        return '<option value="' + s[0] + '"' + (s[0] === side ? ' selected' : '') + '>' + s[1] + '</option>';
+      }).join('') + '</select>' +
+      '<label class="arr-in" title="ยอดนับหัวที่แขกกดเอง">มา' +
+        '<input type="number" min="0" max="' + t.seats + '" value="' + (t.arrived || 0) +
+        '" data-arr="' + t.no + '"></label>' +
+      '<span class="cnt' + (over ? ' over-warn' : '') + '">' + x.total + '/' + t.seats + (over ? ' ⚠' : '') + '</span>' +
+      '<button class="btn btn-sm" data-savet="' + t.no + '">บันทึก</button>' +
+    '</div>';
+  }).join('');
+
+  $('tblEditor').querySelectorAll('[data-savet]').forEach(function (b) {
+    b.addEventListener('click', async function () {
+      const no = Number(b.dataset.savet);
+      const input = $('tblEditor').querySelector('[data-tno="' + no + '"]');
+      const sel   = $('tblEditor').querySelector('[data-side="' + no + '"]');
+      const arr   = $('tblEditor').querySelector('[data-arr="' + no + '"]');
+      const t = DATA.tables.find(function (x) { return x.no === no; }) || {};
+      b.disabled = true; b.textContent = '…';
+      try {
+        await postGAS({ type: 'saveTable', pin: PIN, actor: 'admin', tableNo: no,
+                        group: input.value.trim(), side: sel.value, seats: t.seats || 10 });
+
+        // ยอดนับหัวอยู่คนละคอลัมน์และคนละคำสั่ง — ส่งเฉพาะตอนที่ค่าเปลี่ยนจริง
+        if (Number(arr.value) !== (t.arrived || 0)) {
+          await postGAS({ type: 'setArrived', pin: PIN, actor: 'admin',
+                          tableNo: no, arrived: Number(arr.value) });
+        }
+        b.textContent = '✓';
+        setTimeout(function () { b.textContent = 'บันทึก'; b.disabled = false; }, 1200);
+        await refresh();
+      } catch (err) {
+        b.disabled = false; b.textContent = 'บันทึก';
+        alert('บันทึกไม่สำเร็จ: ' + err.message);
+      }
+    });
+  });
+}
+
+/* ── QR & ลิงก์ ───────────────────────────────────────────── */
+
+function guestPageUrl() {
+  return location.origin + location.pathname.replace(/admin\.html$/, 'index.html');
+}
+
+function drawShare() {
+  const url = guestPageUrl();
+  $('guestUrl').textContent = url;
+  $('qrBox').innerHTML = '';
+
+  if (window.QRCode) {
+    new QRCode($('qrBox'), { text: url, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    // โหลด library ไม่ได้ (เน็ตไม่ถึง cdn) — บอกไปตรง ๆ ดีกว่าปล่อยช่องว่าง
+    $('qrBox').innerHTML = note('warn', 'สร้าง QR ไม่ได้ตอนนี้ (โหลดไลบรารีไม่สำเร็จ) — ลองเชื่อมเน็ตแล้วรีเฟรช');
+  }
+}
+
+async function copyGuestUrl() {
+  try {
+    await navigator.clipboard.writeText(guestPageUrl());
+    $('copyUrlBtn').textContent = '✓ คัดลอกแล้ว';
+    setTimeout(function () { $('copyUrlBtn').textContent = '📋 คัดลอกลิงก์'; }, 1600);
+  } catch (e) {
+    window.prompt('คัดลอกลิงก์นี้:', guestPageUrl());
+  }
+}
+
+function exportCsv(kind) {
+  const base = guestPageUrl();
+  let rows, name;
+
+  if (kind === 'links') {
+    rows = [['ชื่อ-นามสกุล', 'ชื่อเล่น', 'โต๊ะ', 'ลิงก์ส่วนตัว']].concat(
+      DATA.guests.map(function (g) {
+        return [g.fullName, g.nickname || '', g.tableNo, base + '?g=' + encodeURIComponent(g.id)];
+      }));
+    name = 'wedding-links.csv';
+  } else {
+    rows = [['โต๊ะ', 'กลุ่ม', 'ชื่อ-นามสกุล', 'ชื่อเล่น', 'หมายเหตุ', 'เช็คอินเมื่อ']].concat(
+      INDEX.slice().sort(function (a, b) { return a.tableNo - b.tableNo; })
+        .map(function (g) {
+          return [g.tableNo, g.group || '', g.fullName, g.nickname || '', g.note || '', g.checkedInAt || ''];
+        }));
+    name = 'wedding-guests.csv';
+  }
+
+  const csv = rows.map(function (r) {
+    return r.map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\r\n');
+
+  // ﻿ (BOM) จำเป็นมาก — ไม่ใส่แล้ว Excel เปิดภาษาไทยเป็นตัวยึกยือ
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+/* ── พิมพ์ ────────────────────────────────────────────────── */
+
+function buildPrint(kind) {
+  const byTable = {};
+  INDEX.forEach(function (g) { (byTable[g.tableNo] = byTable[g.tableNo] || []).push(g); });
+
+  if (kind === 'cards') {
+    $('printArea').innerHTML = DATA.tables.map(function (t) {
+      const list = (byTable[t.no] || []).sort(function (a, b) {
+        return a.fullName.localeCompare(b.fullName, 'th');
+      });
+      return '<div class="print-page">' +
+        '<div class="n">' + t.no + '</div>' +
+        '<div class="g">' + esc(t.group || '') + '</div>' +
+        '<ol>' + list.map(function (g) {
+          return '<li>' + esc(g.fullName) + (g.nickname ? ' (' + esc(g.nickname) + ')' : '') + '</li>';
+        }).join('') + '</ol>' +
+      '</div>';
+    }).join('');
+  } else {
+    $('printArea').innerHTML = '<div class="print-page"><h2>รายชื่อแขกทั้งงาน</h2>' +
+      DATA.tables.map(function (t) {
+        const list = (byTable[t.no] || []);
+        if (!list.length) return '';
+        return '<h3>โต๊ะ ' + t.no + ' — ' + esc(t.group || '') + ' (' + list.length + ' ท่าน)</h3>' +
+          '<ol>' + list.map(function (g) { return '<li>' + esc(g.fullName) + '</li>'; }).join('') + '</ol>';
+      }).join('') + '</div>';
+  }
+
+  window.print();
+}
+</script>
+</body>
+</html>

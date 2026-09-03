@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ค้นหาโต๊ะของคุณ — งานแต่งงาน</title>
+<meta name="description" content="ค้นหาชื่อของคุณเพื่อดูว่านั่งโต๊ะไหนในงาน">
+<meta name="theme-color" content="#b08d3f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero" id="hero">
+    <div class="hero-mark">Wedding Seating</div>
+    <h1 id="coupleName">ผังที่นั่งในงาน</h1>
+    <p id="venueLine">VIVACE สาขาบางปู</p>
+    <div class="hero-rule"></div>
+  </header>
+
+  <!-- ปุ่มย้อนกลับ — โผล่ทุกหน้ายกเว้นหน้าแรก -->
+  <button class="backbar no-print" id="backBar" hidden>← ย้อนกลับ</button>
+
+  <div id="status"></div>
+
+  <!-- ══ หน้าแรก: ค้นหา + เลือกฝั่ง ══ -->
+  <section id="homeView" hidden>
+    <div class="search-box">
+      <input id="q" type="search" inputmode="search" autocomplete="off"
+             enterkeyhint="search" placeholder="พิมพ์ชื่อของคุณ…" aria-label="ค้นหาชื่อ">
+      <button class="clear" id="clearBtn" type="button" aria-label="ล้างคำค้น" hidden>×</button>
+    </div>
+    <p class="hint">พิมพ์ชื่อจริง ชื่อเล่น หรือชื่อกลุ่มก็ได้ — สะกดไม่ตรงเป๊ะก็ยังหาเจอ</p>
+
+    <div class="results" id="results"></div>
+
+    <div class="empty-state" id="idle">
+      <div class="big">💐</div>
+      <p>ยินดีต้อนรับสู่งานของเรา</p>
+    </div>
+
+    <!-- ทางเลือกสำหรับคนที่ไม่อยากพิมพ์ — จิ้มเลือกฝั่งแล้วไล่ดูโต๊ะเอา -->
+    <div id="browsePrompt">
+      <div class="or-line">หรือไม่ต้องพิมพ์ — เลือกฝั่งของคุณ</div>
+      <div class="side-pick">
+        <button class="side-btn bride" data-pick="bride">
+          <span class="ico">👰</span>
+          <span class="t">ฝั่งเจ้าสาว</span>
+          <span class="s" id="brideSub"></span>
+        </button>
+        <button class="side-btn groom" data-pick="groom">
+          <span class="ico">🤵</span>
+          <span class="t">ฝั่งเจ้าบ่าว</span>
+          <span class="s" id="groomSub"></span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="mini-nav no-print">
+      <a href="#" id="showMapLink">ดูแผนผังทั้งงาน</a>
+    </nav>
+  </section>
+
+  <!-- ══ หน้าเนื้อหา (รายการโต๊ะ / โต๊ะ / แขก) ══ -->
+  <section id="pageView" hidden></section>
+
+  <!-- ══ แผนผัง ══ -->
+  <section id="mapSection" hidden>
+    <div class="map-holder" id="mapHolder"></div>
+    <div class="map-legend">
+      <span><i class="lg-hi"></i> โต๊ะที่เลือก</span>
+      <span><i class="lg-bride"></i> ฝั่งเจ้าสาว</span>
+      <span><i class="lg-groom"></i> ฝั่งเจ้าบ่าว</span>
+      <span><i class="lg-done"></i> เต็มแล้ว</span>
+    </div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/seatmap.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   หน้าแขก
+
+   การนำทางผูกกับ URL ทั้งหมด:
+     (ว่าง)        → หน้าแรก
+     ?side=bride   → รายการโต๊ะของฝั่งนั้น
+     ?t=23         → รายละเอียดโต๊ะ
+     ?g=<id>       → ที่นั่งของแขกคนนั้น (ลิงก์ส่วนตัว)
+
+   ทำแบบนี้เพื่อให้ **ปุ่ม Back ของมือถือใช้ได้จริง** ไม่ใช่เด้งออกจากเว็บ
+   ซึ่งสำคัญมากหน้างาน เพราะแขกส่วนใหญ่กดปุ่ม Back ของเครื่องก่อนเสมอ
+   ปุ่ม "← ย้อนกลับ" บนหน้าเว็บก็เรียก history.back() ตัวเดียวกัน
+═══════════════════════════════════════════════════════════════ */
+
+let DATA  = { tables: [], guests: [] };
+let INDEX = [];
+
+const $ = function (id) { return document.getElementById(id); };
+
+const els = {
+  hero: $('hero'), back: $('backBar'), status: $('status'),
+  home: $('homeView'), page: $('pageView'),
+  q: $('q'), clear: $('clearBtn'), results: $('results'), idle: $('idle'),
+  prompt: $('browsePrompt'), mapSec: $('mapSection'), map: $('mapHolder'), foot: $('foot')
+};
+
+/* ── เริ่มต้น ─────────────────────────────────────────────── */
+
+(async function init() {
+  const G = CONFIG.couple.groom, B = CONFIG.couple.bride;
+  $('coupleName').textContent = (G.nick || G.name) + ' ♥ ' + (B.nick || B.name);
+  document.title = 'ค้นหาโต๊ะของคุณ — งานแต่ง ' + (G.nick || G.name) + ' & ' + (B.nick || B.name);
+  $('venueLine').innerHTML =
+    esc(G.name) + ' &amp; ' + esc(B.name) + '<br>' +
+    esc(CONFIG.venue + (CONFIG.weddingDate ? ' · ' + thaiDate(CONFIG.weddingDate) : ''));
+
+  els.status.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    DATA  = await loadData();
+    INDEX = buildIndex(DATA.guests, DATA.tables);
+    showSourceNote(DATA);
+  } catch (err) {
+    els.status.innerHTML = '<div class="notice notice-error">⚠️ ' + esc(err.message) + '</div>';
+    return;
+  }
+
+  els.foot.textContent = 'รายชื่อทั้งหมด ' + DATA.guests.length + ' ท่าน · ' +
+                         CONFIG.totalTables + ' โต๊ะ';
+
+  bind();
+  render();
+})();
+
+/** บอกตรง ๆ เมื่อข้อมูลที่เห็นมาจาก cache ไม่ใช่ของสด — อย่าให้แขกเข้าใจผิด */
+function showSourceNote(d) {
+  if (d.from === 'network') { els.status.innerHTML = ''; return; }
+
+  if (d.from === 'demo') {
+    els.status.innerHTML =
+      '<div class="notice notice-warn">🧪 <b>โหมดตัวอย่าง</b> — รายชื่อสมมติสำหรับดูหน้าตาเว็บ ' +
+      'ยังไม่ได้เชื่อมกับ Google Sheet</div>';
+    return;
+  }
+
+  const when = timeAgo(d.savedAt);
+  els.status.innerHTML =
+    '<div class="notice ' + (d.stale ? 'notice-warn' : 'notice-info') + '">' +
+    '📶 ตอนนี้ออฟไลน์ — แสดงข้อมูลที่บันทึกไว้' + (when ? 'เมื่อ ' + esc(when) : '') +
+    (d.stale ? ' ข้อมูลอาจไม่ใช่ล่าสุด' : '') + '</div>';
+}
+
+function thaiDate(iso) {
+  const M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.getDate() + ' ' + M[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+}
+
+/* ── การนำทาง ─────────────────────────────────────────────── */
+
+function navigate(qs, replace) {
+  const url = qs ? location.pathname + '?' + qs : location.pathname;
+  const depth = ((history.state && history.state.d) || 0) + (replace ? 0 : 1);
+  history[replace ? 'replaceState' : 'pushState']({ d: depth }, '', url);
+  render();
+}
+
+/**
+ * ย้อนกลับหนึ่งขั้น
+ * ถ้าแขกเปิดเข้ามาด้วยลิงก์ตรง (?g=... จาก LINE) จะไม่มีประวัติให้ถอย
+ * กรณีนั้นพากลับหน้าแรกแทน ไม่ใช่เด้งออกจากเว็บไปหน้าอื่น
+ */
+function goBack() {
+  if (((history.state && history.state.d) || 0) > 0) history.back();
+  else navigate('', true);
+}
+
+window.addEventListener('popstate', render);
+
+function bind() {
+  els.back.addEventListener('click', goBack);
+
+  let timer = null;
+  els.q.addEventListener('input', function () {
+    els.clear.hidden = !els.q.value;
+    clearTimeout(timer);
+    timer = setTimeout(runSearch, 110);
+  });
+  els.clear.addEventListener('click', function () {
+    els.q.value = ''; els.clear.hidden = true; els.q.focus(); runSearch();
+  });
+
+  document.querySelectorAll('[data-pick]').forEach(function (b) {
+    b.addEventListener('click', function () { navigate('side=' + b.dataset.pick); });
+  });
+
+  $('showMapLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    drawMap(0);
+    els.mapSec.hidden = false;
+    els.mapSec.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+/** อ่าน URL แล้วแสดงหน้าที่ตรงกัน — ทางเข้าเดียวของการเปลี่ยนหน้าทั้งเว็บ */
+function render() {
+  const p = new URLSearchParams(location.search);
+  const gid  = p.get('g');
+  const t    = Number(p.get('t'));
+  const side = p.get('side');
+
+  els.home.hidden = true;
+  els.page.hidden = true;
+  els.mapSec.hidden = true;
+  els.page.innerHTML = '';
+
+  if (gid) {
+    const g = INDEX.find(function (x) { return x.id === gid; });
+    if (g) return viewGuest(g);
+  }
+  if (t >= 1 && t <= CONFIG.totalTables) return viewTable(t, side);
+  if (side === 'bride' || side === 'groom') return viewBrowse(side);
+
+  return viewHome();
+}
+
+function chrome(isHome) {
+  els.back.hidden = isHome;
+  els.hero.classList.toggle('compact', !isHome);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── หน้าแรก ──────────────────────────────────────────────── */
+
+function viewHome() {
+  chrome(true);
+  els.home.hidden = false;
+  drawSidePick();
+  runSearch();
+}
+
+function drawSidePick() {
+  ['bride', 'groom'].forEach(function (side) {
+    const tables = tablesOfSide(side);
+    const people = INDEX.filter(function (g) { return g.side === side; }).length;
+    const arrived = tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
+    $(side + 'Sub').textContent = tables.length + ' โต๊ะ' +
+      (people ? ' · ' + people + ' ท่าน' : '') +
+      (arrived ? ' · มาแล้ว ' + arrived : '');
+  });
+
+  // ยังไม่ได้ระบุฝั่งให้โต๊ะไหนเลย → ซ่อนปุ่มไว้ ดีกว่าให้กดแล้วเจอหน้าเปล่า
+  els.prompt.hidden = tablesOfSide('bride').length + tablesOfSide('groom').length === 0;
+}
+
+function tablesOfSide(side) {
+  return DATA.tables.filter(function (t) { return tableSide(t.no, DATA.tables) === side; });
+}
+
+/* ── ค้นหา ────────────────────────────────────────────────── */
+
+function runSearch() {
+  const q = els.q.value.trim();
+
+  if (!q) {
+    els.results.innerHTML = '';
+    els.idle.hidden = false;
+    drawSidePick();
+    return;
+  }
+  els.idle.hidden = true;
+  els.prompt.hidden = true;
+
+  const hits = searchGuests(INDEX, q, 25);
+
+  if (!hits.length) {
+    els.results.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="big">🔍</div>' +
+        '<p>ไม่พบชื่อ "' + esc(q) + '"</p>' +
+        '<p style="font-size:13px">ลองพิมพ์แค่ชื่อจริง ชื่อเล่น หรือชื่อกลุ่มดูครับ<br>' +
+        'หรือกดเลือกฝั่งด้านล่างเพื่อไล่ดูโต๊ะเอง</p>' +
+      '</div>';
+    els.prompt.hidden = false;
+    return;
+  }
+
+  els.results.innerHTML = hits.map(guestCardHtml).join('');
+  els.results.querySelectorAll('[data-gid]').forEach(function (btn) {
+    btn.addEventListener('click', function () { navigate('g=' + encodeURIComponent(btn.dataset.gid)); });
+  });
+}
+
+function guestCardHtml(g) {
+  const meta = [];
+  if (g.side) meta.push(SIDE_LABEL[g.side]);
+  if (g.group) meta.push(g.group);
+
+  return '' +
+    '<button class="card guest-card" data-gid="' + esc(g.id) + '">' +
+      '<span class="tno ' + (g.side || '') + '"><small>โต๊ะ</small>' + (g.tableNo || '?') + '</span>' +
+      '<span class="guest-info">' +
+        '<span class="guest-name">' + esc(g.fullName) +
+          (g.nickname ? ' <span class="nick">(' + esc(g.nickname) + ')</span>' : '') +
+        '</span>' +
+        '<span class="guest-meta">' + esc(meta.join(' · ')) + '</span>' +
+      '</span>' +
+    '</button>';
+}
+
+/* ── รายการโต๊ะทีละฝั่ง ───────────────────────────────────── */
+
+function viewBrowse(side) {
+  chrome(false);
+
+  const tables = tablesOfSide(side);
+  const people = INDEX.filter(function (g) { return g.side === side; }).length;
+
+  const cards = tables.map(function (t) {
+    const a = t.arrived || 0;
+    const full = a >= t.seats;
+    return '' +
+      '<button class="card guest-card table-card" data-tbl="' + t.no + '">' +
+        '<span class="tno ' + side + '"><small>โต๊ะ</small>' + t.no + '</span>' +
+        '<span class="guest-info">' +
+          '<span class="guest-name">' + esc(t.group || 'ยังไม่ระบุกลุ่ม') + '</span>' +
+          '<span class="guest-meta">' + esc(tableSummary(t.no, DATA.tables).line) + '</span>' +
+        '</span>' +
+        '<span class="seats' + (full ? ' is-full' : '') + '">' +
+          '<b>' + a + '</b>มาแล้ว<br><small>จาก ' + t.seats + ' ที่</small></span>' +
+      '</button>';
+  }).join('');
+
+  els.page.innerHTML = '' +
+    '<div class="browse-head">' +
+      '<h2>' + esc(SIDE_LABEL[side]) + '<br>' +
+        '<span class="count">' + tables.length + ' โต๊ะ' +
+        (people ? ' · ' + people + ' ท่าน' : '') + '</span></h2>' +
+    '</div>' +
+    '<div class="group-note">กดที่โต๊ะของคุณเพื่อดูรายละเอียดและกดแจ้งว่ามาถึงแล้ว</div>' +
+    '<div class="results">' + (cards || '<div class="empty-state"><p>ยังไม่มีโต๊ะในฝั่งนี้</p></div>') + '</div>';
+
+  els.page.hidden = false;
+  els.mapSec.hidden = false;
+  drawMap(0);
+
+  els.page.querySelectorAll('[data-tbl]').forEach(function (b) {
+    b.addEventListener('click', function () { navigate('t=' + b.dataset.tbl + '&side=' + side); });
+  });
+}
+
+/* ── รายละเอียดโต๊ะ + ปุ่มนับหัว ──────────────────────────── */
+
+function viewTable(no, side) {
+  chrome(false);
+
+  const meta = DATA.tables.find(function (t) { return t.no === no; }) || { seats: 10, arrived: 0 };
+  const s = tableSide(no, DATA.tables);
+  const p = tablePos(no);
+  const mates = INDEX.filter(function (x) { return x.tableNo === no; })
+                     .sort(function (a, b) { return a.fullName.localeCompare(b.fullName, 'th'); });
+
+  els.page.innerHTML = '' +
+    '<div class="found">' +
+      '<div class="big-table">' + no + '</div>' +
+      '<div class="big-label">โต๊ะ</div>' +
+      '<div class="side-pill ' + (s || '') + '">' +
+        esc([SIDE_LABEL[s], meta.group].filter(Boolean).join(' · ') || 'โต๊ะสำรอง') + '</div>' +
+
+      (p ? '<div class="wayfind"><b>วิธีเดินไปโต๊ะ</b>' + esc(wayfinding(no)) + '</div>' : '') +
+
+      '<div class="counter" id="counter"></div>' +
+
+      '<div class="tablemates">' +
+        '<h4>รายชื่อในโต๊ะนี้ ' + mates.length + ' ท่าน</h4>' +
+        (mates.length
+          ? '<ul>' + mates.map(function (m) {
+              return '<li>' + esc(m.fullName) + (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</li>';
+            }).join('') + '</ul>'
+          : '<p style="font-size:14px;color:var(--ink-soft)">ยังไม่มีรายชื่อในโต๊ะนี้</p>') +
+      '</div>' +
+    '</div>';
+
+  els.page.hidden = false;
+  els.mapSec.hidden = false;
+  drawCounter(no);
+  drawMap(no);
+  setTimeout(function () { scrollToTable(els.map, no); }, 250);
+}
+
+/**
+ * แผงนับหัว — ส่วนที่แขกกดเองหน้างาน
+ * ตัวเลขต้องใหญ่และปุ่มต้องกดง่ายขณะยืนถือของ จึงใช้ปุ่มเต็มความกว้าง
+ */
+function drawCounter(no) {
+  const t = DATA.tables.find(function (x) { return x.no === no; }) || { seats: 10, arrived: 0 };
+  const a = t.arrived || 0;
+  const left = Math.max(0, t.seats - a);
+  const full = left === 0;
+  const pct = Math.min(100, Math.round(a / (t.seats || 10) * 100));
+
+  /* ดรอปดาวน์เลือกจำนวนแทนการกด +1 หลายครั้ง
+     แต่ละครั้งที่ยิงไป Apps Script ใช้เวลา 3-4 วินาที มากันเป็นครอบครัว 4 คน
+     ถ้ากดทีละคนคือยืนรอ 15 วินาทีกลางงาน — เลือกทีเดียวส่งครั้งเดียวจบ
+     ตัวเลือกไม่เกินที่นั่งที่เหลือจริง จะได้ไม่เลือกไปแล้วโดนปฏิเสธทีหลัง */
+  const maxAdd = Math.min(MAX_STEP, left);
+  const maxSub = Math.min(MAX_STEP, a);
+
+  const opts = function (n) {
+    let o = '';
+    for (let i = 1; i <= n; i++) o += '<option value="' + i + '">' + i + ' คน</option>';
+    return o;
+  };
+
+  $('counter').innerHTML = '' +
+    '<div class="count-head">มานั่งแล้ว</div>' +
+    '<div class="count-big"><b>' + a + '</b><span>/ ' + t.seats + ' ที่</span></div>' +
+    '<div class="count-bar"><i style="width:' + pct + '%"></i></div>' +
+    (full
+      ? '<div class="count-full">โต๊ะนี้เต็มแล้ว</div>'
+      : '<div class="count-left">เหลืออีก ' + left + ' ที่</div>') +
+
+    '<div class="count-row no-print">' +
+      '<select id="addQty" aria-label="จำนวนคนที่มาถึง"' + (full ? ' disabled' : '') + '>' +
+        opts(maxAdd) + '</select>' +
+      '<button class="btn btn-primary" id="plusBtn"' + (full ? ' disabled' : '') + '>' +
+        'มาถึงแล้ว</button>' +
+    '</div>' +
+
+    '<div class="count-row count-row-sub no-print">' +
+      '<select id="subQty" aria-label="จำนวนคนที่จะลด"' + (a <= 0 ? ' disabled' : '') + '>' +
+        opts(maxSub) + '</select>' +
+      '<button class="btn btn-sm" id="minusBtn"' + (a <= 0 ? ' disabled' : '') + '>ลดจำนวน</button>' +
+    '</div>' +
+
+    '<p class="count-note">มากันกี่คนเลือกตรงนั้นแล้วกด "มาถึงแล้ว" ครั้งเดียว — กดผิดใช้แถวล่างแก้ได้</p>' +
+    '<div id="countMsg"></div>';
+
+  if (!full) $('plusBtn').addEventListener('click', function () {
+    arrive(no, Number($('addQty').value));
+  });
+  if (a > 0) $('minusBtn').addEventListener('click', function () {
+    arrive(no, -Number($('subQty').value));
+  });
+}
+
+/**
+ * ส่งยอดนับหัวไปที่เซิร์ฟเวอร์
+ *
+ * ส่งเป็น "ขยับทีละ 1" ไม่ใช่ส่งเลขรวมไป เพราะหลายคนกดพร้อมกันได้
+ * ถ้าส่งเลขรวม คนที่กดทีหลังจะเขียนทับของคนแรกจนยอดหาย
+ */
+async function arrive(no, delta) {
+  document.querySelectorAll('#counter button, #counter select').forEach(function (el) {
+    el.disabled = true;
+  });
+  $('countMsg').innerHTML =
+    '<div class="notice notice-info">⏳ กำลังบันทึก… อาจใช้เวลาสัก 2-3 วินาที</div>';
+
+  try {
+    const res = await postGAS({ type: 'arrive', tableNo: no, delta: delta });
+
+    // เชื่อเลขที่เซิร์ฟเวอร์ตอบกลับ ไม่ใช่เลขที่เราเดาเอง — เผื่อมีคนอื่นกดพร้อมกัน
+    const t = DATA.tables.find(function (x) { return x.no === no; });
+    if (t) t.arrived = res.arrived;
+
+    drawCounter(no);
+    drawMap(no);
+
+    const n = Math.abs(res.applied);
+    let text;
+    if (res.applied > 0) {
+      text = '<div class="notice notice-ok">✓ บันทึก ' + n + ' คนแล้ว ยินดีต้อนรับครับ</div>';
+      // ที่นั่งเหลือไม่พอกับที่เลือกไว้ — ต้องบอก ไม่ใช่เงียบแล้วให้ไปงงหน้าโต๊ะ
+      if (res.applied < res.asked) {
+        text += '<div class="notice notice-warn">โต๊ะเหลือแค่ ' + n +
+                ' ที่ อีก ' + (res.asked - res.applied) +
+                ' ท่านกรุณาแจ้งโต๊ะต้อนรับเพื่อจัดที่ให้ครับ</div>';
+      }
+    } else {
+      text = '<div class="notice notice-info">ลดยอดลง ' + n + ' คนแล้ว</div>';
+    }
+    $('countMsg').innerHTML = text;
+
+    // ข้อความเตือนเรื่องที่นั่งไม่พอ ปล่อยค้างไว้ให้อ่านทัน อย่ารีบลบ
+    if (res.applied === res.asked) {
+      setTimeout(function () { const m = $('countMsg'); if (m) m.innerHTML = ''; }, 3000);
+    }
+
+  } catch (err) {
+    drawCounter(no);
+    $('countMsg').innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
+  }
+}
+
+/* ── ที่นั่งของแขกรายคน ───────────────────────────────────── */
+
+function viewGuest(g) {
+  chrome(false);
+
+  const meta = DATA.tables.find(function (t) { return t.no === g.tableNo; }) || {};
+  const side = tableSide(g.tableNo, DATA.tables);
+  const p = tablePos(g.tableNo);
+  const mates = INDEX.filter(function (x) { return x.tableNo === g.tableNo; })
+                     .sort(function (a, b) { return a.fullName.localeCompare(b.fullName, 'th'); });
+
+  els.page.innerHTML = '' +
+    '<div class="found">' +
+      '<div class="who">ที่นั่งของ<strong>' + esc(g.fullName) +
+        (g.nickname ? ' (' + esc(g.nickname) + ')' : '') + '</strong></div>' +
+
+      '<div class="big-table">' + (g.tableNo || '?') + '</div>' +
+      '<div class="big-label">โต๊ะ</div>' +
+
+      '<div class="side-pill ' + (side || '') + '">' +
+        esc([SIDE_LABEL[side], meta.group].filter(Boolean).join(' · ') || 'โต๊ะสำรอง') + '</div>' +
+
+      (p ? '<div class="wayfind"><b>วิธีเดินไปโต๊ะ</b>' + esc(wayfinding(g.tableNo)) + '</div>' : '') +
+
+      '<div class="tablemates">' +
+        '<h4>ร่วมโต๊ะกับ ' + Math.max(0, mates.length - 1) + ' ท่าน</h4>' +
+        '<ul>' + mates.map(function (m) {
+          return '<li' + (m.id === g.id ? ' class="me"' : '') + '>' + esc(m.fullName) +
+                 (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</li>';
+        }).join('') + '</ul>' +
+      '</div>' +
+
+      '<div class="btn-row no-print">' +
+        '<button class="btn" id="toTableBtn">ดูโต๊ะนี้ / แจ้งว่ามาถึง</button>' +
+        '<button class="btn btn-primary" id="copyBtn">📋 คัดลอกลิงก์ที่นั่งนี้</button>' +
+      '</div>' +
+    '</div>';
+
+  els.page.hidden = false;
+  els.mapSec.hidden = false;
+  drawMap(g.tableNo);
+  setTimeout(function () { scrollToTable(els.map, g.tableNo); }, 250);
+
+  $('toTableBtn').addEventListener('click', function () { navigate('t=' + g.tableNo); });
+  $('copyBtn').addEventListener('click', function () { copyLink(g, this); });
+}
+
+/** คัดลอกลิงก์ส่วนตัว — ส่งต่อใน LINE ให้คนที่บ้านเดียวกันได้ */
+async function copyLink(g, btn) {
+  const url = location.origin + location.pathname + '?g=' + encodeURIComponent(g.id);
+  const label = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(url);
+    btn.textContent = '✓ คัดลอกแล้ว';
+  } catch (e) {
+    // บางเบราว์เซอร์บล็อก clipboard เมื่อไม่ได้เปิดผ่าน https — บอกไปตรง ๆ
+    window.prompt('คัดลอกลิงก์นี้:', url);
+    return;
+  }
+  setTimeout(function () { btn.textContent = label; }, 1800);
+}
+
+/* ── แผนผัง ───────────────────────────────────────────────── */
+
+function drawMap(highlight) {
+  renderSeatMap(els.map, {
+    tables: DATA.tables,
+    counts: countByTable(DATA.guests),
+    highlight: highlight,
+    dim: !!highlight,
+    onPick: function (no) { navigate('t=' + no); }
+  });
+}
+
+/* ── service worker: ทำให้เปิดซ้ำได้แม้ไม่มีเน็ต ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* ไม่สำเร็จก็ยังใช้เว็บได้ปกติ */ });
+  });
+}
+</script>
+</body>
+</html>

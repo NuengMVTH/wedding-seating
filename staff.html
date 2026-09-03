@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>โต๊ะต้อนรับ — เช็คอินแขก</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#b08d3f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* หน้านี้ใช้บน tablet ที่โต๊ะต้อนรับ — ทุกอย่างต้องใหญ่กว่าหน้าแขก */
+  .guest-card { padding: 18px 16px; }
+  .guest-name { font-size: 19px; }
+  .checkin-btn { flex: 0 0 auto; }
+  .done-row { opacity: .55; }
+  .recent li { display: flex; justify-content: space-between; align-items: center;
+               gap: 10px; padding: 8px 12px; background: var(--paper);
+               border: 1px solid var(--line); border-radius: 10px; font-size: 14px; }
+  .recent ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .tbl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+  .tbl-cell { background: var(--paper); border: 1.5px solid var(--line); border-radius: 10px;
+              padding: 8px 4px; text-align: center; font-size: 13px; }
+  .tbl-cell .no { font-weight: 700; font-size: 17px; }
+  .tbl-cell .arr { font-size: 20px; font-weight: 700; line-height: 1.15; }
+  .tbl-cell .arr small { font-size: 11px; font-weight: 500; color: var(--ink-soft); }
+  .tbl-cell .chk { font-size: 10px; color: var(--ink-soft); }
+  .tbl-cell.free { border-color: var(--ok); background: #f2f9f5; }
+  .tbl-cell.over { border-color: var(--warn); background: #fdf6ee; }
+  .tbl-cell.empty { opacity: .55; border-style: dashed; }
+</style>
+</head>
+<body>
+
+<!-- ══ ด่านรหัสผ่าน ══ -->
+<div class="wrap" id="gateView">
+  <div class="gate">
+    <h2>โต๊ะต้อนรับ</h2>
+    <p>ใส่รหัสพนักงานเพื่อเริ่มเช็คอินแขก</p>
+    <div class="field">
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off"
+             placeholder="รหัสผ่าน" aria-label="รหัสผ่าน">
+    </div>
+    <button class="btn btn-primary btn-lg" id="loginBtn">เข้าสู่ระบบ</button>
+    <div id="gateMsg"></div>
+  </div>
+</div>
+
+<!-- ══ หน้าทำงาน ══ -->
+<div class="wrap wrap-wide" id="appView" hidden>
+
+  <header class="hero" style="padding-bottom:6px">
+    <div class="hero-mark">Reception</div>
+    <h1 style="font-size:24px">เช็คอินแขก</h1>
+  </header>
+
+  <div id="status"></div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <button class="on" data-tab="checkin">เช็คอิน</button>
+    <button data-tab="tables">สถานะโต๊ะ</button>
+    <button data-tab="recent">เพิ่งเช็คอิน</button>
+  </div>
+
+  <!-- ── แท็บเช็คอิน ── -->
+  <section data-panel="checkin">
+    <div class="search-box">
+      <input id="q" type="search" autocomplete="off" enterkeyhint="search"
+             placeholder="พิมพ์ชื่อแขก…" aria-label="ค้นหาชื่อแขก">
+      <button class="clear" id="clearBtn" type="button" aria-label="ล้าง" hidden>×</button>
+    </div>
+    <p class="hint">สะกดไม่ตรงก็หาเจอ · พิมพ์เลขโต๊ะเพื่อดูทั้งโต๊ะ</p>
+    <div class="results" id="results"></div>
+  </section>
+
+  <!-- ── แท็บสถานะโต๊ะ ── -->
+  <section data-panel="tables" hidden>
+    <p class="hint">ตัวเลขคือ <b>มาแล้ว / ทั้งหมด</b> · กรอบเขียว = ยังมีที่ว่าง · กรอบส้ม = คนเกินที่นั่ง</p>
+    <div class="tbl-grid" id="tblGrid"></div>
+  </section>
+
+  <!-- ── แท็บเพิ่งเช็คอิน ── -->
+  <section data-panel="recent" hidden>
+    <p class="hint">กดยกเลิกได้ถ้ากดผิดคน</p>
+    <div class="recent" id="recent"></div>
+  </section>
+
+  <div class="btn-row no-print">
+    <button class="btn" id="refreshBtn">↻ โหลดข้อมูลใหม่</button>
+    <button class="btn" id="logoutBtn">ออกจากระบบ</button>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/seatmap.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   หน้าโต๊ะต้อนรับ
+
+   งานจริงของหน้านี้: คนต่อคิวอยู่ข้างหน้า พนักงานต้องกดให้จบใน 2-3 วินาที
+   จึงออกแบบให้ "ค้น → กดปุ่มเดียว → เสร็จ" ไม่มีหน้ายืนยันซ้อน
+
+   รหัสเก็บใน sessionStorage เท่านั้น — ปิดแท็บแล้วต้องล็อกอินใหม่
+   เพื่อไม่ให้ tablet ที่วางทิ้งไว้บนโต๊ะกลายเป็นประตูเปิดค้าง
+═══════════════════════════════════════════════════════════════ */
+
+let DATA  = { tables: [], guests: [] };
+let INDEX = [];
+let PIN   = '';
+let ROLE  = '';
+const RECENT = [];   // รายการที่เพิ่งกดในเครื่องนี้ ไว้ให้กดยกเลิกได้ทันที
+
+const $ = function (id) { return document.getElementById(id); };
+
+/* ── ด่านรหัส ─────────────────────────────────────────────── */
+
+const saved = sessionStorage.getItem('staff_pin');
+if (saved) verify(saved, true);
+
+$('loginBtn').addEventListener('click', function () { verify($('pin').value, false); });
+$('pin').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') verify($('pin').value, false);
+});
+
+/**
+ * ตรวจรหัสที่ GAS เท่านั้น
+ * หน้าเว็บนี้เป็นไฟล์สาธารณะ การเทียบรหัสในนี้จึงไม่ได้กันอะไรเลย
+ */
+async function verify(pin, silent) {
+  if (!pin) return;
+  const msg = $('gateMsg');
+  if (!silent) msg.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const res = await postGAS({ type: 'verifyPin', pin: pin });
+    PIN = pin; ROLE = res.role;
+    sessionStorage.setItem('staff_pin', pin);
+    $('gateView').hidden = true;
+    $('appView').hidden = false;
+    msg.innerHTML = '';
+    start();
+  } catch (err) {
+    sessionStorage.removeItem('staff_pin');
+    msg.innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
+    $('pin').value = '';
+  }
+}
+
+$('logoutBtn').addEventListener('click', function () {
+  sessionStorage.removeItem('staff_pin');
+  location.reload();
+});
+
+/* ── โหลดข้อมูล ───────────────────────────────────────────── */
+
+async function start() {
+  bind();
+  await refresh();
+
+  // รีเฟรชเงียบ ๆ ทุก 45 วิ เผื่อแอดมินแก้ผังระหว่างงาน หรือมีอีกเครื่องเช็คอินอยู่
+  setInterval(function () { refresh(true); }, 45000);
+}
+
+async function refresh(silent) {
+  if (!silent) $('status').innerHTML = '<div class="spinner"></div>';
+  try {
+    DATA  = await loadData();
+    INDEX = buildIndex(DATA.guests, DATA.tables);
+    $('status').innerHTML = DATA.from === 'cache'
+      ? '<div class="notice notice-warn">📶 ออฟไลน์ — ข้อมูลจาก ' + esc(timeAgo(DATA.savedAt)) +
+        ' การเช็คอินจะยังส่งไม่ได้จนกว่าเน็ตจะกลับมา</div>'
+      : '';
+    drawStats();
+    drawTables();
+    if ($('q').value) runSearch();
+  } catch (err) {
+    $('status').innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
+  }
+}
+
+/* ── UI ───────────────────────────────────────────────────── */
+
+function bind() {
+  let timer = null;
+  $('q').addEventListener('input', function () {
+    $('clearBtn').hidden = !$('q').value;
+    clearTimeout(timer);
+    timer = setTimeout(runSearch, 110);
+  });
+  $('clearBtn').addEventListener('click', function () {
+    $('q').value = ''; $('clearBtn').hidden = true; $('q').focus(); runSearch();
+  });
+  $('refreshBtn').addEventListener('click', function () { refresh(false); });
+
+  document.querySelectorAll('.tabs button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.tabs button').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      document.querySelectorAll('[data-panel]').forEach(function (p) {
+        p.hidden = p.dataset.panel !== b.dataset.tab;
+      });
+      if (b.dataset.tab === 'recent') drawRecent();
+      if (b.dataset.tab === 'tables') drawTables();
+    });
+  });
+}
+
+function drawStats() {
+  const total = DATA.guests.length;
+  const inn   = DATA.guests.filter(function (g) { return g.checkedIn; }).length;
+  const head  = DATA.tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
+
+  // สองตัวเลขนี้มาคนละทาง — นับหัวคือแขกกดเอง เช็คอินคือพนักงานกดตามรายชื่อ
+  // จงใจโชว์คู่กันเพื่อให้เห็นทันทีถ้าตัวใดตัวหนึ่งเพี้ยน
+  $('stats').innerHTML =
+    stat(head, 'นับหัว (แขกกดเอง)', 'ok') +
+    stat(inn, 'เช็คอินรายชื่อ', '') +
+    stat(total, 'รายชื่อทั้งหมด', '') +
+    stat(total - inn, 'ยังไม่เช็คอิน', '');
+
+  $('foot').textContent = 'ข้อมูลเมื่อ ' + timeAgo(DATA.savedAt) + ' · สิทธิ์: ' + ROLE;
+}
+
+function stat(n, l, cls) {
+  return '<div class="stat ' + cls + '"><div class="n">' + esc(n) + '</div><div class="l">' + esc(l) + '</div></div>';
+}
+
+function drawTables() {
+  const c = countByTable(DATA.guests);
+
+  $('tblGrid').innerHTML = DATA.tables.map(function (t) {
+    const x = c[t.no] || { total: 0, checkedIn: 0 };
+    const a = t.arrived || 0;
+
+    // สีของช่องบอก "ยังรับคนได้ไหม" ซึ่งวัดจากยอดนับหัวจริง ไม่ใช่จำนวนรายชื่อ
+    const cls = a >= t.seats ? 'over' : a > 0 ? 'free' : x.total === 0 ? 'empty' : '';
+
+    return '<div class="tbl-cell ' + cls + '" title="' + esc(t.group) + '">' +
+             '<div class="no">' + t.no + '</div>' +
+             '<div class="arr">' + a + '<small>/' + t.seats + '</small></div>' +
+             '<div class="chk">รายชื่อ ' + x.checkedIn + '/' + x.total + '</div>' +
+           '</div>';
+  }).join('');
+}
+
+function drawRecent() {
+  if (!RECENT.length) {
+    $('recent').innerHTML = '<div class="empty-state"><p>ยังไม่ได้เช็คอินใครในเครื่องนี้</p></div>';
+    return;
+  }
+  $('recent').innerHTML = '<ul>' + RECENT.map(function (r, i) {
+    return '<li><span>' + esc(r.fullName) + ' · โต๊ะ ' + r.tableNo + '</span>' +
+           '<button class="btn btn-sm btn-danger" data-undo="' + i + '">ยกเลิก</button></li>';
+  }).join('') + '</ul>';
+
+  $('recent').querySelectorAll('[data-undo]').forEach(function (b) {
+    b.addEventListener('click', function () { undo(RECENT[Number(b.dataset.undo)], b); });
+  });
+}
+
+/* ── ค้นหา + เช็คอิน ──────────────────────────────────────── */
+
+function runSearch() {
+  const q = $('q').value.trim();
+  if (!q) { $('results').innerHTML = ''; return; }
+
+  const hits = searchGuests(INDEX, q, 30);
+  if (!hits.length) {
+    $('results').innerHTML =
+      '<div class="empty-state"><div class="big">🔍</div><p>ไม่พบ "' + esc(q) + '"</p>' +
+      '<p style="font-size:13px">ลองพิมพ์แค่ชื่อจริง หรือชื่อเล่น<br>ถ้าเป็นแขกที่ไม่อยู่ในลิสต์ ให้แจ้งเจ้าภาพเพิ่มชื่อในหน้าแอดมิน</p></div>';
+    return;
+  }
+
+  $('results').innerHTML = hits.map(function (g) {
+    return '<div class="card guest-card' + (g.checkedIn ? ' done-row' : '') + '">' +
+      '<span class="tno ' + (g.side || '') + '"><small>โต๊ะ</small>' + (g.tableNo || '?') + '</span>' +
+      '<span class="guest-info">' +
+        '<span class="guest-name">' + esc(g.fullName) +
+          (g.nickname ? ' <span class="nick">(' + esc(g.nickname) + ')</span>' : '') + '</span>' +
+        '<span class="guest-meta">' + esc(g.group || '') +
+          (g.checkedIn ? ' <span class="badge badge-in">มาแล้ว</span>' : '') + '</span>' +
+      '</span>' +
+      '<button class="btn btn-sm checkin-btn ' + (g.checkedIn ? 'btn-danger' : 'btn-primary') + '" ' +
+        'data-id="' + esc(g.id) + '" data-on="' + (g.checkedIn ? '1' : '0') + '">' +
+        (g.checkedIn ? 'ยกเลิก' : '✓ เช็คอิน') + '</button>' +
+    '</div>';
+  }).join('');
+
+  $('results').querySelectorAll('[data-id]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      const g = INDEX.find(function (x) { return x.id === b.dataset.id; });
+      if (!g) return;
+      if (b.dataset.on === '1') undo(g, b); else checkIn(g, b);
+    });
+  });
+}
+
+async function checkIn(g, btn) {
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = '…';
+  try {
+    await postGAS({ type: 'checkIn', pin: PIN, actor: ROLE, id: g.id });
+
+    // อัปเดตในเครื่องทันทีโดยไม่รอโหลดใหม่ — พนักงานจะได้กดคนถัดไปต่อได้เลย
+    markLocal(g.id, true);
+    RECENT.unshift({ id: g.id, fullName: g.fullName, tableNo: g.tableNo });
+    if (RECENT.length > 40) RECENT.pop();
+
+    drawStats(); drawTables(); runSearch();
+  } catch (err) {
+    btn.disabled = false; btn.textContent = label;
+    alert('เช็คอินไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function undo(g, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    await postGAS({ type: 'undoCheckIn', pin: PIN, actor: ROLE, id: g.id });
+    markLocal(g.id, false);
+    const i = RECENT.findIndex(function (r) { return r.id === g.id; });
+    if (i >= 0) RECENT.splice(i, 1);
+    drawStats(); drawTables(); drawRecent(); runSearch();
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = 'ยกเลิก'; }
+    alert('ยกเลิกไม่สำเร็จ: ' + err.message);
+  }
+}
+
+/** แก้สถานะในหน่วยความจำ + cache ให้ตรงกับที่เพิ่งส่งไป */
+function markLocal(id, on) {
+  [DATA.guests, INDEX].forEach(function (list) {
+    const g = list.find(function (x) { return x.id === id; });
+    if (g) g.checkedIn = on;
+  });
+}
+</script>
+</body>
+</html>
