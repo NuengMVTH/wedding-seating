@@ -647,8 +647,7 @@ function viewGuest(g) {
       '</div>' +
 
       '<div class="btn-row no-print">' +
-        '<button class="btn" id="toTableBtn">ดูโต๊ะนี้ / แจ้งว่ามาถึง</button>' +
-        '<button class="btn btn-primary" id="copyBtn">📋 คัดลอกลิงก์ที่นั่งนี้</button>' +
+        '<button class="btn btn-primary" id="toTableBtn">ดูโต๊ะนี้ / แจ้งว่ามาถึง</button>' +
       '</div>' +
     '</div>';
 
@@ -658,22 +657,6 @@ function viewGuest(g) {
   setTimeout(function () { scrollToTable(els.map, g.tableNo); }, 250);
 
   $('toTableBtn').addEventListener('click', function () { navigate('t=' + g.tableNo); });
-  $('copyBtn').addEventListener('click', function () { copyLink(g, this); });
-}
-
-/** คัดลอกลิงก์ส่วนตัว — ส่งต่อใน LINE ให้คนที่บ้านเดียวกันได้ */
-async function copyLink(g, btn) {
-  const url = location.origin + location.pathname + '?g=' + encodeURIComponent(g.id);
-  const label = btn.textContent;
-  try {
-    await navigator.clipboard.writeText(url);
-    btn.textContent = '✓ คัดลอกแล้ว';
-  } catch (e) {
-    // บางเบราว์เซอร์บล็อก clipboard เมื่อไม่ได้เปิดผ่าน https — บอกไปตรง ๆ
-    window.prompt('คัดลอกลิงก์นี้:', url);
-    return;
-  }
-  setTimeout(function () { btn.textContent = label; }, 1800);
 }
 
 /* ── แผนผัง ───────────────────────────────────────────────── */
