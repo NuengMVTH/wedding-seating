@@ -84,6 +84,9 @@
 
 </div>
 
+<!-- ปุ่มลอยสำหรับโหมด iPad ตั้งโชว์ — แขกคนถัดไปกดเริ่มใหม่ได้เองโดยไม่ต้องหาปุ่มย้อนกลับ -->
+<button class="restart no-print" id="restartBtn" hidden>⟲ เริ่มใหม่</button>
+
 <script src="js/core.js"></script>
 <script src="js/seatmap.js"></script>
 <script>
@@ -105,6 +108,58 @@ let DATA  = { tables: [], guests: [] };
 let INDEX = [];
 
 const $ = function (id) { return document.getElementById(id); };
+
+/* ── โหมด Kiosk (iPad ตั้งโชว์หน้างาน) ────────────────────────
+
+   เปิดครั้งเดียวด้วย ?kiosk=1 แล้วจำไว้ใน localStorage
+   (ไม่ใช้ sessionStorage เพราะ iPad ที่เพิ่มเว็บลงหน้าจอโฮมแล้วปิด-เปิดใหม่
+    sessionStorage จะหาย แล้วโหมดจะหลุดเงียบ ๆ โดยไม่มีใครรู้)
+
+   ปิดด้วย ?kiosk=0 — มือถือทีมงานที่เปิดลิงก์ปกติจะไม่โดนผลกระทบ
+
+   แก้ 2 ปัญหาของการตั้งเครื่องทิ้งไว้:
+     1. หน้าจอค้างผลของคนก่อนหน้า → ไม่มีใครแตะ 90 วิ เด้งกลับหน้าแรกเอง
+     2. จอ iPad ดับเอง → ขอ Wake Lock ไว้                                  */
+
+const KIOSK = (function () {
+  try {
+    const p = new URLSearchParams(location.search).get('kiosk');
+    if (p === '1') localStorage.setItem('kiosk', '1');
+    if (p === '0') localStorage.removeItem('kiosk');
+    // ล้าง ?kiosk ออกจาก URL ทันที ไม่ให้ไปปนกับ route จริง (?t= ?g= ?side=)
+    if (p !== null) history.replaceState({ d: 0 }, '', location.pathname);
+    return localStorage.getItem('kiosk') === '1';
+  } catch (e) {
+    return false;   // โหมดส่วนตัว/ปิด storage — ถือว่าไม่ใช่ kiosk
+  }
+})();
+
+const IDLE_MS = 90000;   // 90 วิ — พอให้อ่านรายชื่อทั้งโต๊ะจบ แต่ไม่ค้างจนคนถัดไปงง
+let idleTimer = null;
+let wakeLock = null;
+
+function armIdle() {
+  if (!KIOSK) return;
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(resetKiosk, IDLE_MS);
+}
+
+function resetKiosk() {
+  els.q.value = '';
+  els.clear.hidden = true;
+  navigate('', true);   // replace ไม่ push — ประวัติจะได้ไม่บวมตลอดงาน
+}
+
+/** กันจอ iPad ดับระหว่างงาน — ต้องขอใหม่ทุกครั้งที่กลับมาเห็นหน้าจอ */
+async function keepAwake() {
+  if (!KIOSK || !('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+  } catch (e) {
+    // เบราว์เซอร์ไม่รองรับ หรือแบตโหมดประหยัด — ไม่ใช่เรื่องคอขาดบาดตาย
+    // สำรองไว้: ตั้ง "ล็อกอัตโนมัติ: ไม่เลย" ใน Settings ของ iPad
+  }
+}
 
 const els = {
   hero: $('hero'), back: $('backBar'), status: $('status'),
@@ -190,6 +245,21 @@ window.addEventListener('popstate', render);
 function bind() {
   els.back.addEventListener('click', goBack);
 
+  if (KIOSK) {
+    document.body.classList.add('is-kiosk');
+    $('restartBtn').addEventListener('click', resetKiosk);
+
+    // นับเวลาว่างใหม่ทุกครั้งที่มีคนแตะจอ — ไม่ใช้ click เพราะปัดเลื่อนอ่านก็ถือว่ายังใช้อยู่
+    ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (ev) {
+      window.addEventListener(ev, armIdle, { passive: true });
+    });
+
+    keepAwake();
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') keepAwake();
+    });
+  }
+
   let timer = null;
   els.q.addEventListener('input', function () {
     els.clear.hidden = !els.q.value;
@@ -237,6 +307,9 @@ function render() {
 function chrome(isHome) {
   els.back.hidden = isHome;
   els.hero.classList.toggle('compact', !isHome);
+  // ปุ่ม "เริ่มใหม่" โผล่เฉพาะตอนหลงอยู่หน้าลึก ๆ — หน้าแรกไม่ต้องมีให้รก
+  $('restartBtn').hidden = !KIOSK || isHome;
+  armIdle();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 

@@ -486,6 +486,35 @@ table.data tbody tr:hover { background: #fcfaf6; }
 .stat.ok .n   { color: var(--ok); }
 .stat.warn .n { color: var(--warn); }
 
+/* ── โหมด Kiosk (iPad ตั้งโชว์หน้างาน) ─────────────────────
+
+   คนใช้ยืนห่างจากจอมากกว่าตอนถือมือถือ และมักไม่ใส่แว่นตอนไปงาน
+   จึงขยายทุกอย่างขึ้น ไม่ใช่เพื่อความสวยแต่เพื่อให้อ่านออกจริง        */
+
+.restart {
+  position: fixed; right: 18px; bottom: 18px; z-index: 50;
+  padding: 15px 26px; min-height: 56px;
+  font-family: inherit; font-size: 17px; font-weight: 700; color: #fff;
+  background: var(--gold); border: 0; border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(80, 60, 40, .28);
+  cursor: pointer;
+}
+.restart:active { transform: scale(.97); }
+
+.is-kiosk { font-size: 18px; }
+.is-kiosk .wrap { max-width: 680px; padding-bottom: 110px; }
+.is-kiosk .search-box input { padding: 22px 46px 22px 20px; font-size: 22px; }
+.is-kiosk .guest-name { font-size: 20px; }
+.is-kiosk .guest-meta { font-size: 15px; }
+.is-kiosk .tno { flex: 0 0 68px; height: 68px; font-size: 26px; }
+.is-kiosk .side-btn { padding: 26px 12px; }
+.is-kiosk .side-btn .ico { font-size: 38px; }
+.is-kiosk .side-btn .t { font-size: 20px; }
+.is-kiosk .tablemates li { font-size: 17px; padding: 7px 12px; }
+.is-kiosk .count-row .btn-primary { min-height: 60px; font-size: 19px; }
+.is-kiosk .count-row select { flex: 0 0 124px; font-size: 18px; }
+.is-kiosk .backbar { font-size: 17px; padding: 12px 20px 12px 16px; }
+
 /* ── footer ──────────────────────────────────────────────── */
 
 .foot { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 34px; }
