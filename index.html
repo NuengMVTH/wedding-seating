@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ค้นหาโต๊ะของคุณ — งานแต่งงาน</title>
 <meta name="description" content="ค้นหาชื่อของคุณเพื่อดูว่านั่งโต๊ะไหนในงาน">
-<meta name="theme-color" content="#b08d3f">
+<meta name="theme-color" content="#a88544">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Trirong:wght@400;500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -40,7 +40,38 @@
     <div class="results" id="results"></div>
 
     <div class="empty-state" id="idle">
-      <div class="big">💐</div>
+      <!-- ช่อดอกไม้เส้นทอง วาดเป็น SVG แทนอิโมจิ 💐
+           อิโมจิถูกวาดโดยผู้ผลิตมือถือแต่ละเจ้า จะคุมสีให้เข้าธีมไม่ได้เลย
+           และหน้าตาต่างกันคนละแบบระหว่าง iPhone / Android / Windows -->
+      <svg class="ornament" viewBox="0 0 100 96" aria-hidden="true">
+        <defs>
+          <linearGradient id="orn" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#c9a961"/>
+            <stop offset="1" stop-color="#8a6c2e"/>
+          </linearGradient>
+        </defs>
+        <g fill="none" stroke="url(#orn)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M50 92 V 34"/>
+          <g>
+            <path d="M50 78 C 41 77 33 70 30 61 C 40 62 48 69 50 78 Z"/>
+            <path d="M50 64 C 42 63 35 57 32 49 C 41 50 48 56 50 64 Z"/>
+            <path d="M50 51 C 44 50 38 45 36 39 C 43 40 48 45 50 51 Z"/>
+          </g>
+          <g transform="matrix(-1,0,0,1,100,0)">
+            <path d="M50 78 C 41 77 33 70 30 61 C 40 62 48 69 50 78 Z"/>
+            <path d="M50 64 C 42 63 35 57 32 49 C 41 50 48 56 50 64 Z"/>
+            <path d="M50 51 C 44 50 38 45 36 39 C 43 40 48 45 50 51 Z"/>
+          </g>
+          <g transform="translate(50,26)">
+            <ellipse rx="3.1" ry="6.3" cy="-8"/>
+            <ellipse rx="3.1" ry="6.3" cy="-8" transform="rotate(72)"/>
+            <ellipse rx="3.1" ry="6.3" cy="-8" transform="rotate(144)"/>
+            <ellipse rx="3.1" ry="6.3" cy="-8" transform="rotate(216)"/>
+            <ellipse rx="3.1" ry="6.3" cy="-8" transform="rotate(288)"/>
+            <circle r="3.4"/>
+          </g>
+        </g>
+      </svg>
       <p>ยินดีต้อนรับสู่งานของเรา</p>
     </div>
 
@@ -118,7 +149,7 @@ const $ = function (id) { return document.getElementById(id); };
    ปิดด้วย ?kiosk=0 — มือถือทีมงานที่เปิดลิงก์ปกติจะไม่โดนผลกระทบ
 
    แก้ 2 ปัญหาของการตั้งเครื่องทิ้งไว้:
-     1. หน้าจอค้างผลของคนก่อนหน้า → ไม่มีใครแตะ 90 วิ เด้งกลับหน้าแรกเอง
+     1. หน้าจอค้างผลของคนก่อนหน้า → ไม่มีใครแตะ 30 วิ เด้งกลับหน้าแรกเอง
      2. จอ iPad ดับเอง → ขอ Wake Lock ไว้                                  */
 
 const KIOSK = (function () {

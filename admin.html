@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Trirong:wght@400;500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <style>
   .row-actions { display: flex; gap: 6px; }
@@ -21,9 +21,9 @@
   .tbl-editor .line .no { flex: 0 0 36px; font-weight: 700; text-align: center; }
   .tbl-editor .line .blk { flex: 0 0 52px; font-size: 12px; color: var(--ink-soft); }
   .tbl-editor .line input { flex: 1; min-width: 120px; padding: 8px 10px; font-size: 14px;
-                            border: 1.5px solid var(--line); border-radius: 8px; font-family: inherit; }
+                            border: 1px solid var(--line); border-radius: 9px; font-family: inherit; }
   .tbl-editor .line select { flex: 0 0 96px; padding: 8px 6px; font-size: 13px;
-                             border: 1.5px solid var(--line); border-radius: 8px; font-family: inherit; }
+                             border: 1px solid var(--line); border-radius: 9px; font-family: inherit; }
   .tbl-editor .line .cnt { flex: 0 0 62px; font-size: 13px; color: var(--ink-soft); text-align: right; }
   .tbl-editor .line .arr-in { flex: 0 0 74px; font-size: 11px; color: var(--ink-soft);
                               display: flex; align-items: center; gap: 4px; }
@@ -36,7 +36,7 @@
   @media print {
     .card-print { display: block; }
     .card-print .print-page { padding: 60px 40px; text-align: center; }
-    .card-print .n { font-family: 'Playfair Display', Georgia, serif; font-size: 150px; line-height: 1; }
+    .card-print .n { font-family: var(--serif); font-size: 150px; line-height: 1; }
     .card-print .g { font-size: 26px; margin-top: 10px; }
     .card-print ol { text-align: left; font-size: 18px; margin: 40px auto 0; max-width: 460px; }
     #appView > *:not(.card-print) { display: none !important; }

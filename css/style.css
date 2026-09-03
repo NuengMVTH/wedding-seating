@@ -1,125 +1,165 @@
 /* ═══════════════════════════════════════════════════════════════
-   style.css — ใช้ร่วมกันทั้ง 3 หน้า
+   style.css — ธีม "ครีม · ทอง · น้ำตาล"
 
-   ออกแบบมาให้ใช้บนมือถือกลางงานเลี้ยงเป็นหลัก:
-     • ตัวหนังสือใหญ่ อ่านได้ในที่แสงน้อย
-     • ปุ่มใหญ่พอกดด้วยนิ้วโป้งขณะยืนถือของ
-     • หน้าเว็บล็อกเป็นโหมดสว่างเสมอ ไม่ให้มือถือที่ตั้ง dark mode
-       มาสลับสีจนอ่านชื่อบนผังไม่ออก
+   ใช้ร่วมกันทั้ง 3 หน้า: index (แขก) · staff (ต้อนรับ) · admin
+
+   หลักคิดของธีม
+     • พื้นครีมอุ่น ไม่ใช่ขาวจ้า — ดูนุ่มตาในห้องจัดเลี้ยงที่ไฟสลัว
+     • ทองใช้เป็น "เส้นและตัวอักษร" ไม่ใช่พื้นใหญ่ — ทองพื้นเยอะจะดูเชย
+     • น้ำตาลเข้มแทนสีดำทุกที่ — ตัวหนังสือดำบนครีมดูแข็งเกินงานแต่ง
+     • เงาบางมากสองชั้น (ใกล้+ไกล) แทนเงาหนาชั้นเดียว ให้ดูลอยแบบธรรมชาติ
+
+   หน้าเว็บล็อกเป็นโหมดสว่างเสมอ ไม่ให้มือถือที่ตั้ง dark mode
+   มาสลับสีจนอ่านชื่อบนผังไม่ออก
 ═══════════════════════════════════════════════════════════════ */
 
 :root {
   color-scheme: light;
 
-  --cream:   #fdfaf5;
-  --paper:   #ffffff;
-  --ink:     #2f2a26;
-  --ink-soft:#7a6f66;
-  --line:    #e8ded1;
+  /* พื้นและกระดาษ */
+  --cream:    #faf6ee;
+  --paper:    #fffdf9;
+  --sand:     #f2ebdd;
 
-  --gold:    #b08d3f;
-  --gold-lt: #f5ecd8;
-  --blush:   #c98b8b;
-  --blush-lt:#fbeeee;
+  /* ตัวอักษร — น้ำตาลเข้มแทนดำ */
+  --ink:      #2f2620;
+  --ink-soft: #8a7a68;
+  --line:     #e6dbc8;
+  --line-soft:#f0e8da;
 
-  --bride:   #c2748f;
-  --groom:   #4f7fa8;
-  --ok:      #3f8a5f;
-  --warn:    #c9702f;
-  --danger:  #b34747;
+  /* ทอง */
+  --gold:      #a88544;
+  --gold-deep: #8a6c2e;
+  --gold-lt:   #f4ecd9;
+  --gold-shine:#c9a961;
 
-  --radius:  14px;
-  --shadow:  0 2px 10px rgba(80, 60, 40, .07);
-  --shadow-lg: 0 8px 30px rgba(80, 60, 40, .13);
+  /* ฝั่งเจ้าสาว/เจ้าบ่าว — อยู่ในโทนอุ่นเดียวกับธีม ไม่ใช่ชมพู/ฟ้าสด */
+  --bride:    #b8798c;
+  --bride-lt: #fbf1f3;
+  --bride-ln: #eed9df;
+  --groom:    #7d6748;
+  --groom-lt: #f7f2e9;
+  --groom-ln: #e4d8c2;
+
+  --ok:     #5a7d5a;
+  --warn:   #b5762f;
+  --danger: #a8543f;
+
+  --radius:  16px;
+  --shadow:    0 1px 2px rgba(88, 68, 42, .05), 0 6px 18px rgba(88, 68, 42, .06);
+  --shadow-lg: 0 2px 4px rgba(88, 68, 42, .06), 0 14px 36px rgba(88, 68, 42, .12);
+
+  --serif: 'Trirong', 'Sarabun', Georgia, serif;
+  --sans:  'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * { box-sizing: border-box; }
+
+/* ต้องมี !important — ไม่งั้น class ที่ประกาศ display เอง (เช่น .backbar)
+   จะทับ attribute hidden จนซ่อนไม่ลง เคยพลาดมาแล้วตอนปุ่มย้อนกลับโผล่หน้าแรก */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
   background: var(--cream);
   color: var(--ink);
-  font-family: 'Sarabun', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--sans);
   font-size: 16px;
-  line-height: 1.65;
+  line-height: 1.7;
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
-.wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 64px; }
+.wrap { max-width: 580px; margin: 0 auto; padding: 0 18px 72px; }
 .wrap-wide { max-width: 1100px; }
 
 /* ── หัวเว็บ ─────────────────────────────────────────────── */
 
-.hero { text-align: center; padding: 30px 0 18px; }
+.hero { text-align: center; padding: 40px 0 22px; }
 
 .hero-mark {
-  font-size: 13px; letter-spacing: .28em; text-transform: uppercase;
-  color: var(--gold);
+  font-size: 11px; letter-spacing: .42em; text-transform: uppercase;
+  color: var(--gold); font-weight: 600; padding-left: .42em;
 }
 
 .hero h1 {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 30px; font-weight: 600; margin: 8px 0 4px;
+  font-family: var(--serif);
+  font-size: 38px; font-weight: 500; letter-spacing: .01em;
+  margin: 14px 0 8px; line-height: 1.25;
 }
 
-.hero p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+.hero p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.85; }
 
+/* เส้นคั่นทองพร้อมข้าวหลามตัดตรงกลาง — รายละเอียดเล็ก ๆ ที่ทำให้ดูตั้งใจ */
 .hero-rule {
-  width: 54px; height: 1px; background: var(--gold);
-  margin: 16px auto 0; opacity: .6;
+  width: 92px; height: 9px; margin: 20px auto 0; position: relative;
+}
+.hero-rule::before {
+  content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: .75;
+}
+.hero-rule::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 6px; height: 6px; margin: -3px 0 0 -3px;
+  background: var(--gold); transform: rotate(45deg);
 }
 
-/* หน้าที่ไม่ใช่หน้าแรก ย่อหัวเว็บลง — บนมือถือพื้นที่จอมีค่ามาก */
-.hero.compact { padding: 16px 0 8px; }
-.hero.compact h1 { font-size: 20px; }
+.hero.compact { padding: 20px 0 10px; }
+.hero.compact h1 { font-size: 22px; margin: 0; }
 .hero.compact .hero-mark,
 .hero.compact p,
 .hero.compact .hero-rule { display: none; }
+
+/* ── ช่อดอกไม้ SVG เส้นทอง (แทนอิโมจิ) ────────────────────── */
+
+.ornament { width: 96px; height: auto; display: block; margin: 0 auto 14px; }
 
 /* ── ปุ่มย้อนกลับ ─────────────────────────────────────────── */
 
 .backbar {
   display: inline-flex; align-items: center;
-  margin: 4px 0 2px; padding: 9px 16px 9px 12px;
-  font-family: inherit; font-size: 15px; font-weight: 600; color: var(--ink-soft);
-  background: var(--paper); border: 1.5px solid var(--line);
+  margin: 6px 0 2px; padding: 10px 20px 10px 15px;
+  font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink-soft);
+  background: var(--paper); border: 1px solid var(--line);
   border-radius: 999px; cursor: pointer;
-  transition: border-color .12s, color .12s, transform .1s;
+  box-shadow: var(--shadow);
+  transition: border-color .15s, color .15s, transform .1s;
 }
-.backbar:hover { border-color: var(--gold); color: var(--gold); }
+.backbar:hover { border-color: var(--gold); color: var(--gold-deep); }
 .backbar:active { transform: scale(.97); }
 
 /* ── ช่องค้นหา ───────────────────────────────────────────── */
 
-.search-box { position: relative; margin: 22px 0 6px; }
+.search-box { position: relative; margin: 26px 0 8px; }
 
 .search-box input {
-  width: 100%; padding: 17px 46px 17px 18px;
+  width: 100%; padding: 19px 48px 19px 20px;
   font-size: 18px; font-family: inherit; color: var(--ink);
   background: var(--paper);
-  border: 1.5px solid var(--line); border-radius: var(--radius);
+  border: 1px solid var(--line); border-radius: var(--radius);
   box-shadow: var(--shadow); outline: none;
-  transition: border-color .15s, box-shadow .15s;
+  transition: border-color .16s, box-shadow .16s;
 }
-
+.search-box input::placeholder { color: #b9a993; }
 .search-box input:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px var(--gold-lt);
+  border-color: var(--gold-shine);
+  box-shadow: var(--shadow), 0 0 0 3px var(--gold-lt);
 }
 
 .search-box .clear {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
   width: 32px; height: 32px; border: 0; border-radius: 50%;
   background: transparent; color: var(--ink-soft);
-  font-size: 20px; cursor: pointer; line-height: 1;
+  font-size: 21px; cursor: pointer; line-height: 1;
 }
-.search-box .clear:hover { background: var(--gold-lt); }
+.search-box .clear:hover { background: var(--gold-lt); color: var(--gold-deep); }
 
-.hint { font-size: 13px; color: var(--ink-soft); margin: 8px 2px 0; }
+.hint { font-size: 13px; color: var(--ink-soft); margin: 10px 2px 0; }
 
-/* ── การ์ดผลลัพธ์ ────────────────────────────────────────── */
+/* ── การ์ด ───────────────────────────────────────────────── */
 
-.results { margin-top: 18px; display: grid; gap: 10px; }
+.results { margin-top: 20px; display: grid; gap: 10px; }
 
 .card {
   background: var(--paper);
@@ -129,304 +169,360 @@ body {
 }
 
 .guest-card {
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 15px;
   width: 100%; text-align: left;
   font-family: inherit; font-size: inherit; color: inherit;
   cursor: pointer;
-  transition: transform .12s, box-shadow .12s, border-color .12s;
+  transition: transform .14s, box-shadow .14s, border-color .14s;
 }
-.guest-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); border-color: var(--gold); }
+.guest-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--gold-shine); }
 .guest-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 .tno {
-  flex: 0 0 58px; height: 58px; border-radius: 12px;
+  flex: 0 0 60px; height: 60px; border-radius: 13px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 22px; line-height: 1;
-  background: var(--gold-lt); color: var(--gold);
+  font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1;
+  background: var(--gold-lt); color: var(--gold-deep);
+  border: 1px solid var(--line-soft);
 }
-.tno small { font-size: 10px; font-weight: 500; letter-spacing: .06em; opacity: .8; }
+.tno small {
+  font-family: var(--sans); font-size: 9px; font-weight: 600;
+  letter-spacing: .16em; opacity: .75; margin-bottom: 2px;
+}
 
-.tno.bride { background: #fbeef3; color: var(--bride); }
-.tno.groom { background: #eaf2f8; color: var(--groom); }
+.tno.bride { background: var(--bride-lt); color: var(--bride); border-color: var(--bride-ln); }
+.tno.groom { background: var(--groom-lt); color: var(--groom); border-color: var(--groom-ln); }
 
 .guest-info { min-width: 0; flex: 1; }
-.guest-name { font-size: 17px; font-weight: 600; }
+.guest-name { font-size: 17px; font-weight: 600; line-height: 1.45; }
 .guest-name .nick { color: var(--ink-soft); font-weight: 400; font-size: 15px; }
-.guest-meta { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+.guest-meta { font-size: 13px; color: var(--ink-soft); margin-top: 1px; }
 
 .badge {
-  display: inline-block; padding: 1px 8px; border-radius: 999px;
+  display: inline-block; padding: 1px 9px; border-radius: 999px;
   font-size: 11px; font-weight: 600; vertical-align: middle;
 }
-.badge-in   { background: #e7f3ec; color: var(--ok); }
-.badge-warn { background: #fdf0e4; color: var(--warn); }
+.badge-in   { background: #eaf1e9; color: var(--ok); }
+.badge-warn { background: #f8eddf; color: var(--warn); }
 
-/* ── เลือกฝั่งด้วยการจิ้ม (สำหรับคนที่ไม่อยากพิมพ์) ────────
-
-   ผู้ใหญ่หลายคนพิมพ์ไทยบนมือถือไม่ถนัด และแขกบางคนไม่แน่ใจว่าชื่อตัวเอง
-   ถูกบันทึกไว้ว่าอะไร ปุ่มสองปุ่มนี้จึงเป็นทางลัดที่ไม่ต้องพิมพ์เลย       */
+/* ── เลือกฝั่งด้วยการจิ้ม ─────────────────────────────────── */
 
 .or-line {
-  display: flex; align-items: center; gap: 12px;
-  margin: 26px 0 14px; font-size: 13px; color: var(--ink-soft);
+  display: flex; align-items: center; gap: 14px;
+  margin: 30px 0 16px;
+  font-size: 12px; letter-spacing: .1em; color: var(--ink-soft);
 }
 .or-line::before, .or-line::after {
-  content: ''; flex: 1; height: 1px; background: var(--line);
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line), transparent);
 }
 
-.side-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.side-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 .side-btn {
-  padding: 20px 10px; border-radius: 16px;
-  border: 1.5px solid var(--line); background: var(--paper);
+  padding: 22px 12px; border-radius: 18px;
+  border: 1px solid var(--line); background: var(--paper);
   font-family: inherit; cursor: pointer; text-align: center;
   box-shadow: var(--shadow);
-  transition: transform .12s, box-shadow .12s, background .12s;
+  transition: transform .14s, box-shadow .14s, background .14s, border-color .14s;
 }
-.side-btn:hover  { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.side-btn:hover  { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 .side-btn:active { transform: scale(.98); }
 .side-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-.side-btn .ico { display: block; font-size: 30px; line-height: 1; }
-.side-btn .t   { display: block; font-size: 17px; font-weight: 700; margin-top: 7px; }
-.side-btn .s   { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+/* กรอบวงกลมบาง ๆ รอบไอคอน ทำให้อิโมจิกลมกลืนกับธีมเส้นทอง */
+.side-btn .ico {
+  display: flex; align-items: center; justify-content: center;
+  width: 54px; height: 54px; margin: 0 auto;
+  font-size: 26px; line-height: 1;
+  border-radius: 50%; border: 1px solid var(--line);
+  background: var(--cream);
+}
+.side-btn .t {
+  display: block; font-family: var(--serif);
+  font-size: 19px; font-weight: 600; margin-top: 11px;
+}
+.side-btn .s { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
 
-.side-btn.bride       { border-color: #ecd2dd; }
+.side-btn.bride       { border-color: var(--bride-ln); }
+.side-btn.bride .ico  { border-color: var(--bride-ln); background: var(--bride-lt); }
 .side-btn.bride .t    { color: var(--bride); }
-.side-btn.bride:hover { background: #fdf6f9; border-color: var(--bride); }
-.side-btn.groom       { border-color: #cfdfea; }
+.side-btn.bride:hover { background: var(--bride-lt); border-color: var(--bride); }
+
+.side-btn.groom       { border-color: var(--groom-ln); }
+.side-btn.groom .ico  { border-color: var(--groom-ln); background: var(--groom-lt); }
 .side-btn.groom .t    { color: var(--groom); }
-.side-btn.groom:hover { background: #f5fafd; border-color: var(--groom); }
+.side-btn.groom:hover { background: var(--groom-lt); border-color: var(--groom); }
 
-/* ── หัวข้อของหน้าไล่ดูโต๊ะ ──────────────────────────────── */
+/* ── หัวข้อหน้าไล่ดูโต๊ะ ──────────────────────────────────── */
 
-.browse-head {
-  display: flex; align-items: center; gap: 10px;
-  margin: 18px 0 12px;
-}
+.browse-head { display: flex; align-items: center; gap: 10px; margin: 20px 0 14px; }
 .browse-head h2 {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 21px; font-weight: 600; margin: 0; flex: 1;
+  font-family: var(--serif); font-size: 24px; font-weight: 500;
+  margin: 0; flex: 1; line-height: 1.4;
 }
-.browse-head .count { font-size: 13px; color: var(--ink-soft); font-weight: 400; }
+.browse-head .count {
+  font-family: var(--sans); font-size: 13px;
+  color: var(--ink-soft); font-weight: 400;
+}
 
 .group-note {
-  font-size: 13px; color: var(--ink-soft);
-  background: var(--gold-lt); padding: 10px 13px; border-radius: 10px; margin-bottom: 12px;
+  font-size: 13px; color: var(--gold-deep);
+  background: var(--gold-lt); border: 1px solid var(--line-soft);
+  padding: 11px 14px; border-radius: 12px; margin-bottom: 14px;
 }
 
-/* การ์ดโต๊ะในหน้าไล่ดู — ใช้โครงเดียวกับการ์ดผลค้นหา */
-.table-card .guest-name { font-size: 16px; }
+.table-card .guest-name { font-family: var(--serif); font-size: 18px; font-weight: 500; }
 .table-card .seats {
-  flex: 0 0 auto; font-size: 11px; color: var(--ink-soft); text-align: right; line-height: 1.3;
+  flex: 0 0 auto; font-size: 11px; color: var(--ink-soft);
+  text-align: right; line-height: 1.35;
 }
-.table-card .seats b { display: block; font-size: 19px; color: var(--ink); font-weight: 700; }
-.table-card .seats.is-full { color: var(--ok); }
+.table-card .seats b {
+  display: block; font-family: var(--serif);
+  font-size: 22px; color: var(--ink); font-weight: 600;
+}
+.table-card .seats.is-full,
 .table-card .seats.is-full b { color: var(--ok); }
 
-/* ── แผงนับหัว (แขกกดเองหน้างาน) ──────────────────────────
-
-   ปุ่มนี้ถูกกดขณะยืนถือของ ในที่แสงน้อย โดยคนทุกช่วงอายุ
-   จึงทำตัวเลขให้ใหญ่ที่สุดในหน้า และปุ่มสูงพอกดด้วยนิ้วโป้งได้ไม่พลาด  */
-
-.counter {
-  margin-top: 18px; padding: 18px 16px;
-  background: var(--cream); border: 1px solid var(--line); border-radius: 14px;
-}
-
-.count-head { font-size: 12px; letter-spacing: .16em; color: var(--ink-soft); }
-
-.count-big { margin: 2px 0 10px; }
-.count-big b {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 46px; font-weight: 700; color: var(--ink); line-height: 1;
-}
-.count-big span { font-size: 15px; color: var(--ink-soft); margin-left: 6px; }
-
-.count-bar {
-  height: 8px; border-radius: 999px; background: var(--line); overflow: hidden;
-}
-.count-bar i {
-  display: block; height: 100%; background: var(--gold);
-  border-radius: 999px; transition: width .3s ease;
-}
-
-.count-full {
-  margin-top: 10px; font-size: 14px; font-weight: 600; color: var(--ok);
-}
-
-.count-left { margin-top: 9px; font-size: 14px; color: var(--ink-soft); }
-
-.count-row { display: flex; gap: 8px; margin-top: 12px; align-items: stretch; }
-
-.count-row select {
-  flex: 0 0 104px;
-  padding: 12px 10px; font-family: inherit; font-size: 16px; color: var(--ink);
-  background: var(--paper); border: 1.5px solid var(--line); border-radius: 11px;
-  outline: none;
-}
-.count-row select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-lt); }
-.count-row select:disabled { opacity: .5; }
-
-.count-row .btn { flex: 1; }
-.count-row .btn-primary { min-height: 52px; font-size: 17px; }
-
-/* แถวลดจำนวนเป็นทางเลือกสำรอง — ทำให้เบากว่าแถวหลักอย่างเห็นได้ชัด
-   จะได้ไม่มีใครเผลอกดผิดแถวตอนรีบ ๆ */
-.count-row-sub { margin-top: 8px; }
-.count-row-sub select { flex: 0 0 104px; padding: 8px 10px; font-size: 14px; }
-.count-row-sub .btn { min-height: 40px; font-size: 14px; color: var(--ink-soft); }
-
-.count-note { font-size: 12px; color: var(--ink-soft); margin: 12px 0 0; }
-
-/* ── หน้าผลลัพธ์เต็มจอ (เจอชื่อแล้ว) ─────────────────────── */
+/* ── หน้าผลลัพธ์ ─────────────────────────────────────────── */
 
 .found {
   text-align: center;
   background: var(--paper);
-  border: 1px solid var(--line); border-radius: 18px;
+  border: 1px solid var(--line); border-radius: 20px;
   box-shadow: var(--shadow-lg);
-  padding: 26px 20px; margin-top: 18px;
+  padding: 30px 22px; margin-top: 18px;
 }
 
-.found .who { font-size: 15px; color: var(--ink-soft); }
-.found .who strong { color: var(--ink); font-size: 20px; display: block; margin-top: 2px; }
+.found .who { font-size: 14px; color: var(--ink-soft); }
+.found .who strong {
+  color: var(--ink); font-family: var(--serif);
+  font-size: 23px; font-weight: 500; display: block; margin-top: 4px;
+}
 
 .found .big-table {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 68px; font-weight: 700; line-height: 1;
-  margin: 14px 0 2px; color: var(--gold);
+  font-family: var(--serif);
+  font-size: 82px; font-weight: 500; line-height: 1;
+  margin: 18px 0 4px;
+  color: var(--gold-deep);
 }
-.found .big-label { font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); }
 
-.found .side-pill {
-  display: inline-block; margin-top: 14px; padding: 5px 16px;
-  border-radius: 999px; font-size: 14px; font-weight: 600;
+/* ทองไล่เฉดบนตัวเลข — ใส่ใน @supports โดยตั้งใจ
+   ถ้าเบราว์เซอร์ไม่รองรับ background-clip:text แล้วเราเขียนแบบไม่ป้องกัน
+   พื้นหลังไล่เฉดจะทับกล่องทั้งกล่องพร้อมตัวอักษรโปร่งใส = เลขโต๊ะหายไปเลย
+   ซึ่งเป็นข้อมูลชิ้นสำคัญที่สุดในหน้านี้ ยอมเสียลูกเล่นดีกว่าเสี่ยงให้แขกอ่านไม่ได้ */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .found .big-table {
+    background: linear-gradient(160deg, var(--gold-shine), var(--gold-deep));
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
-.side-pill.bride { background: #fbeef3; color: var(--bride); }
-.side-pill.groom { background: #eaf2f8; color: var(--groom); }
+.found .big-label {
+  font-size: 11px; letter-spacing: .36em; text-transform: uppercase;
+  color: var(--ink-soft); padding-left: .36em;
+}
+
+.side-pill {
+  display: inline-block; margin-top: 16px; padding: 6px 18px;
+  border-radius: 999px; font-size: 14px; font-weight: 600;
+  border: 1px solid transparent;
+}
+.side-pill.bride { background: var(--bride-lt); color: var(--bride); border-color: var(--bride-ln); }
+.side-pill.groom { background: var(--groom-lt); color: var(--groom); border-color: var(--groom-ln); }
 
 .wayfind {
-  margin-top: 16px; padding: 14px 16px;
-  background: var(--gold-lt); border-radius: 12px;
-  font-size: 15px; text-align: left;
+  margin-top: 18px; padding: 15px 17px;
+  background: var(--gold-lt); border: 1px solid var(--line-soft);
+  border-radius: 13px; font-size: 15px; text-align: left; line-height: 1.75;
 }
-.wayfind b { display: block; font-size: 12px; letter-spacing: .1em; color: var(--gold); margin-bottom: 4px; }
+.wayfind b {
+  display: block; font-size: 11px; letter-spacing: .16em;
+  color: var(--gold-deep); margin-bottom: 5px; text-transform: uppercase;
+}
 
-.tablemates { margin-top: 16px; text-align: left; }
-.tablemates h4 { margin: 0 0 8px; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
-.tablemates ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
-.tablemates li { font-size: 14px; padding: 4px 10px; background: var(--cream); border-radius: 8px; }
-.tablemates li.me { background: var(--gold-lt); font-weight: 600; }
+.tablemates { margin-top: 20px; text-align: left; }
+.tablemates h4 {
+  margin: 0 0 10px; font-size: 11px; letter-spacing: .14em;
+  color: var(--ink-soft); font-weight: 600; text-transform: uppercase;
+}
+.tablemates ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.tablemates li {
+  font-size: 15px; padding: 7px 13px;
+  background: var(--cream); border-radius: 9px;
+}
+.tablemates li.me {
+  background: var(--gold-lt); font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+/* ── แผงนับหัว ───────────────────────────────────────────── */
+
+.counter {
+  margin-top: 20px; padding: 20px 18px;
+  background: var(--cream); border: 1px solid var(--line); border-radius: 15px;
+}
+
+.count-head {
+  font-size: 11px; letter-spacing: .2em; color: var(--ink-soft);
+  text-transform: uppercase; padding-left: .2em;
+}
+
+.count-big { margin: 4px 0 12px; }
+.count-big b {
+  font-family: var(--serif); font-size: 50px; font-weight: 500;
+  color: var(--ink); line-height: 1;
+}
+.count-big span { font-size: 15px; color: var(--ink-soft); margin-left: 7px; }
+
+.count-bar { height: 7px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.count-bar i {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold-shine), var(--gold));
+  transition: width .35s ease;
+}
+
+.count-full { margin-top: 11px; font-size: 14px; font-weight: 600; color: var(--ok); }
+.count-left { margin-top: 10px; font-size: 14px; color: var(--ink-soft); }
+
+.count-row { display: flex; gap: 9px; margin-top: 14px; align-items: stretch; }
+.count-row select {
+  flex: 0 0 106px;
+  padding: 12px 10px; font-family: inherit; font-size: 16px; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 11px;
+  outline: none;
+}
+.count-row select:focus { border-color: var(--gold-shine); box-shadow: 0 0 0 3px var(--gold-lt); }
+.count-row select:disabled { opacity: .45; }
+.count-row .btn { flex: 1; }
+.count-row .btn-primary { min-height: 54px; font-size: 17px; }
+
+/* แถวลดจำนวนเป็นทางเลือกสำรอง — ทำให้เบากว่าแถวหลักอย่างเห็นได้ชัด
+   จะได้ไม่มีใครเผลอกดผิดแถวตอนรีบ ๆ */
+.count-row-sub { margin-top: 9px; }
+.count-row-sub select { flex: 0 0 106px; padding: 9px 10px; font-size: 14px; }
+.count-row-sub .btn { min-height: 42px; font-size: 14px; color: var(--ink-soft); }
+
+.count-note { font-size: 12px; color: var(--ink-soft); margin: 13px 0 0; line-height: 1.65; }
 
 /* ── ปุ่ม ────────────────────────────────────────────────── */
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 12px 20px; min-height: 46px;
+  padding: 12px 22px; min-height: 48px;
   font-family: inherit; font-size: 15px; font-weight: 600;
-  border-radius: 11px; border: 1.5px solid var(--line);
+  border-radius: 12px; border: 1px solid var(--line);
   background: var(--paper); color: var(--ink);
   cursor: pointer; text-decoration: none;
-  transition: background .12s, border-color .12s, transform .1s;
+  transition: background .14s, border-color .14s, transform .1s, box-shadow .14s;
 }
-.btn:hover { border-color: var(--gold); }
+.btn:hover { border-color: var(--gold-shine); box-shadow: var(--shadow); }
 .btn:active { transform: scale(.985); }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
 
-.btn-primary { background: var(--gold); border-color: var(--gold); color: #fff; }
-.btn-primary:hover { background: #9c7c34; border-color: #9c7c34; }
+.btn-primary {
+  background: linear-gradient(160deg, var(--gold-shine), var(--gold));
+  border-color: var(--gold); color: #fff;
+  box-shadow: 0 2px 10px rgba(168, 133, 68, .3);
+}
+.btn-primary:hover {
+  background: linear-gradient(160deg, var(--gold), var(--gold-deep));
+  border-color: var(--gold-deep);
+}
 
-.btn-danger { color: var(--danger); border-color: #eccfcf; }
-.btn-danger:hover { background: #fbeeee; border-color: var(--danger); }
+.btn-danger { color: var(--danger); border-color: #e8d3cd; }
+.btn-danger:hover { background: #fbf0ed; border-color: var(--danger); }
 
-.btn-lg { width: 100%; padding: 15px; font-size: 17px; }
-.btn-sm { padding: 7px 12px; min-height: 36px; font-size: 13px; }
+.btn-lg { width: 100%; padding: 16px; font-size: 17px; }
+.btn-sm { padding: 8px 14px; min-height: 38px; font-size: 13px; }
 
-.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-.btn-row .btn { flex: 1; min-width: 130px; }
+.btn-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 18px; }
+.btn-row .btn { flex: 1; min-width: 140px; }
 
 /* ── แผนผัง SVG ──────────────────────────────────────────── */
 
 .map-holder {
   background: var(--paper); border: 1px solid var(--line);
   border-radius: var(--radius); box-shadow: var(--shadow);
-  padding: 12px; margin-top: 16px;
+  padding: 14px; margin-top: 18px;
   overflow-x: auto;
 }
 
 .seatmap { width: 100%; height: auto; display: block; min-width: 320px; }
 
-.sm-stage   { fill: #f0e6f2; stroke: #d8c4dc; stroke-width: 1.5; }
-.sm-stage-t { fill: #7d5f86; font-size: 15px; font-weight: 600; }
+.sm-stage   { fill: #f3ecdf; stroke: var(--line); stroke-width: 1; }
+.sm-stage-t { fill: var(--gold-deep); font-size: 15px; font-weight: 600; }
 
-.sm-runway   { fill: #f7f2e8; stroke: var(--line); stroke-width: 1; }
-.sm-runway-t { fill: #bfae94; font-size: 11px; letter-spacing: .18em; }
+.sm-runway   { fill: #faf5ea; stroke: var(--line-soft); stroke-width: 1; }
+.sm-runway-t { fill: #c3b193; font-size: 11px; letter-spacing: .2em; }
 
-.sm-side { fill: var(--ink-soft); font-size: 11px; letter-spacing: .1em; font-weight: 600; }
+.sm-side { fill: var(--ink-soft); font-size: 11px; letter-spacing: .12em; font-weight: 600; }
 
-.sm-entry   { fill: #eaf1ea; stroke: #c8dcc8; stroke-width: 1.5; }
-.sm-entry-t { fill: #4b7a52; font-size: 13px; font-weight: 600; }
+.sm-entry   { fill: #eef1e9; stroke: #d5ddc9; stroke-width: 1; }
+.sm-entry-t { fill: #5a7d5a; font-size: 13px; font-weight: 600; }
 .sm-hint    { fill: var(--ink-soft); font-size: 11px; }
 
 .sm-table { cursor: pointer; }
-.sm-table circle { fill: var(--paper); stroke: var(--line); stroke-width: 1.5; transition: all .15s; }
+.sm-table circle { fill: var(--paper); stroke: var(--line); stroke-width: 1.2; transition: all .16s; }
 .sm-table text   { fill: var(--ink-soft); font-size: 14px; font-weight: 600; pointer-events: none; }
 
 /* สีของวงกลม = ฝั่งของแขก (ไม่ใช่ตำแหน่งซ้าย/ขวาบนผัง)
    บล็อกขวามีทั้งโต๊ะเจ้าบ่าวและโต๊ะเจ้าสาวปนกัน สีจึงเป็นตัวบอกฝั่งตัวจริง */
-.sm-bride circle  { stroke: #e8c9d6; fill: #fdf6f9; }
+.sm-bride circle  { stroke: var(--bride-ln); fill: var(--bride-lt); }
 .sm-bride text    { fill: var(--bride); }
-.sm-groom circle  { stroke: #c9dbe8; fill: #f5fafd; }
+.sm-groom circle  { stroke: var(--groom-ln); fill: var(--groom-lt); }
 .sm-groom text    { fill: var(--groom); }
-.sm-noside circle { stroke: var(--line); fill: #fbfaf8; }
+.sm-noside circle { stroke: var(--line); fill: #fbf9f5; }
 .sm-noside text   { fill: var(--ink-soft); }
 
 .sm-table:hover circle,
-.sm-table:focus circle { stroke-width: 2.5; stroke: var(--gold); }
+.sm-table:focus circle { stroke-width: 2.4; stroke: var(--gold); }
 .sm-table:focus { outline: none; }
 
-.sm-table.is-empty circle { fill: #fafafa; stroke: #e5e5e5; stroke-dasharray: 3 3; }
-.sm-table.is-empty text   { fill: #bbb; }
+.sm-table.is-empty circle { fill: #fbf9f5; stroke: #ebe3d5; stroke-dasharray: 3 3; }
+.sm-table.is-empty text   { fill: #c6b8a4; }
 
-.sm-table.is-over circle { stroke: var(--warn); stroke-width: 2.5; }
-.sm-table.is-done circle { fill: #e7f3ec; stroke: var(--ok); }
+.sm-table.is-over circle { stroke: var(--warn); stroke-width: 2.4; }
+.sm-table.is-done circle { fill: #eaf1e9; stroke: var(--ok); }
 
 .sm-table.is-hi circle {
-  fill: var(--gold); stroke: #8a6d28; stroke-width: 3; r: 24;
-  filter: drop-shadow(0 0 8px rgba(176, 141, 63, .55));
+  fill: var(--gold); stroke: var(--gold-deep); stroke-width: 2.5; r: 24;
+  filter: drop-shadow(0 0 9px rgba(168, 133, 68, .5));
 }
 .sm-table.is-hi text { fill: #fff; font-size: 16px; }
 
-.sm-table.is-dim { opacity: .34; }
+.sm-table.is-dim { opacity: .3; }
 
 .map-legend {
-  display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
-  margin-top: 10px; font-size: 12px; color: var(--ink-soft);
+  display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;
+  margin-top: 12px; font-size: 12px; color: var(--ink-soft);
 }
-.map-legend span { display: inline-flex; align-items: center; gap: 5px; }
-.map-legend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 1.5px solid; }
-.lg-bride { background: #fdf6f9; border-color: #e8c9d6; }
-.lg-groom { background: #f5fafd; border-color: #c9dbe8; }
-.lg-hi    { background: var(--gold); border-color: #8a6d28; }
-.lg-done  { background: #e7f3ec; border-color: var(--ok); }
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.map-legend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 1px solid; }
+.lg-bride { background: var(--bride-lt); border-color: var(--bride-ln); }
+.lg-groom { background: var(--groom-lt); border-color: var(--groom-ln); }
+.lg-hi    { background: var(--gold); border-color: var(--gold-deep); }
+.lg-done  { background: #eaf1e9; border-color: var(--ok); }
 
 /* ── สถานะ / แจ้งเตือน ───────────────────────────────────── */
 
 .notice {
-  padding: 11px 14px; border-radius: 11px; font-size: 14px; margin: 12px 0;
-  display: flex; align-items: flex-start; gap: 8px;
+  padding: 12px 15px; border-radius: 12px; font-size: 14px; margin: 12px 0;
+  display: flex; align-items: flex-start; gap: 8px; line-height: 1.65;
+  border: 1px solid transparent;
 }
-.notice-info   { background: #eef4f8; color: #3a6382; }
-.notice-warn   { background: #fdf3e6; color: #8a5620; }
-.notice-error  { background: var(--blush-lt); color: var(--danger); }
-.notice-ok     { background: #e9f4ee; color: #2e6b48; }
+.notice-info  { background: #eef2f4; color: #4a6674; border-color: #dde5e9; }
+.notice-warn  { background: #faf0e2; color: #8a5a24; border-color: #eeddc4; }
+.notice-error { background: #fbf0ed; color: var(--danger); border-color: #eed9d2; }
+.notice-ok    { background: #eaf1e9; color: #3f5f3f; border-color: #d7e3d5; }
 
-.empty-state { text-align: center; padding: 34px 20px; color: var(--ink-soft); }
-.empty-state .big { font-size: 40px; margin-bottom: 8px; }
+.empty-state { text-align: center; padding: 38px 20px; color: var(--ink-soft); }
+.empty-state .big { font-size: 40px; margin-bottom: 10px; }
+.empty-state p { line-height: 1.8; }
 
 .spinner {
-  width: 22px; height: 22px; border: 2.5px solid var(--line);
+  width: 22px; height: 22px; border: 2px solid var(--line);
   border-top-color: var(--gold); border-radius: 50%;
   animation: spin .7s linear infinite; margin: 20px auto;
 }
@@ -434,54 +530,73 @@ body {
 
 /* ── ฟอร์ม ───────────────────────────────────────────────── */
 
-.field { margin-bottom: 13px; }
-.field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; }
+.field { margin-bottom: 14px; }
+.field label {
+  display: block; font-size: 12px; font-weight: 600; letter-spacing: .05em;
+  color: var(--ink-soft); margin-bottom: 6px;
+}
 
 .field input, .field select, .field textarea {
-  width: 100%; padding: 11px 13px;
+  width: 100%; padding: 12px 14px;
   font-family: inherit; font-size: 16px; color: var(--ink);
-  background: var(--paper); border: 1.5px solid var(--line);
-  border-radius: 10px; outline: none;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 11px; outline: none;
 }
 .field input:focus, .field select:focus, .field textarea:focus {
-  border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-lt);
+  border-color: var(--gold-shine); box-shadow: 0 0 0 3px var(--gold-lt);
 }
-.field textarea { min-height: 130px; resize: vertical; font-family: ui-monospace, 'Cascadia Code', monospace; font-size: 14px; }
+.field textarea {
+  min-height: 140px; resize: vertical;
+  font-family: ui-monospace, 'Cascadia Code', monospace; font-size: 14px;
+}
 
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; }
 
 /* ── ตาราง (หน้าแอดมิน) ──────────────────────────────────── */
 
-.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+.table-scroll {
+  overflow-x: auto; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--paper);
+}
 
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
-table.data th, table.data td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
-table.data th { background: var(--cream); font-size: 12px; color: var(--ink-soft); font-weight: 600; position: sticky; top: 0; }
+table.data th, table.data td {
+  padding: 10px 13px; text-align: left;
+  border-bottom: 1px solid var(--line-soft); white-space: nowrap;
+}
+table.data th {
+  background: var(--cream); font-size: 11px; letter-spacing: .08em;
+  color: var(--ink-soft); font-weight: 600; position: sticky; top: 0;
+}
 table.data tr:last-child td { border-bottom: 0; }
-table.data tbody tr:hover { background: #fcfaf6; }
+table.data tbody tr:hover { background: #fdfbf6; }
 
 /* ── แท็บ ────────────────────────────────────────────────── */
 
-.tabs { display: flex; gap: 6px; margin: 18px 0 14px; border-bottom: 1px solid var(--line); }
+.tabs { display: flex; gap: 4px; margin: 20px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
 .tabs button {
-  padding: 10px 16px; border: 0; background: none; cursor: pointer;
+  padding: 11px 17px; border: 0; background: none; cursor: pointer; white-space: nowrap;
   font-family: inherit; font-size: 15px; font-weight: 600; color: var(--ink-soft);
-  border-bottom: 2.5px solid transparent; margin-bottom: -1px;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
 }
-.tabs button.on { color: var(--gold); border-bottom-color: var(--gold); }
+.tabs button:hover { color: var(--ink); }
+.tabs button.on { color: var(--gold-deep); border-bottom-color: var(--gold); }
 
 /* ── หน้าล็อกอิน ─────────────────────────────────────────── */
 
-.gate { max-width: 340px; margin: 70px auto; text-align: center; }
-.gate h2 { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; margin-bottom: 6px; }
+.gate { max-width: 350px; margin: 80px auto; text-align: center; }
+.gate h2 { font-family: var(--serif); font-size: 26px; font-weight: 500; margin-bottom: 8px; }
 .gate p { color: var(--ink-soft); font-size: 14px; margin-top: 0; }
 
-/* ── สรุปตัวเลข (หน้าต้อนรับ / แอดมิน) ────────────────────── */
+/* ── สรุปตัวเลข ──────────────────────────────────────────── */
 
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin: 16px 0; }
-.stat { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 13px; text-align: center; }
-.stat .n { font-size: 26px; font-weight: 700; line-height: 1.2; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 10px; margin: 18px 0; }
+.stat {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 13px; padding: 15px 12px; text-align: center;
+}
+.stat .n { font-family: var(--serif); font-size: 28px; font-weight: 500; line-height: 1.2; }
 .stat .l { font-size: 12px; color: var(--ink-soft); }
 .stat.ok .n   { color: var(--ok); }
 .stat.warn .n { color: var(--warn); }
@@ -492,47 +607,51 @@ table.data tbody tr:hover { background: #fcfaf6; }
    จึงขยายทุกอย่างขึ้น ไม่ใช่เพื่อความสวยแต่เพื่อให้อ่านออกจริง        */
 
 .restart {
-  position: fixed; right: 18px; bottom: 18px; z-index: 50;
-  padding: 15px 26px; min-height: 56px;
+  position: fixed; right: 20px; bottom: 20px; z-index: 50;
+  padding: 16px 28px; min-height: 58px;
   font-family: inherit; font-size: 17px; font-weight: 700; color: #fff;
-  background: var(--gold); border: 0; border-radius: 999px;
-  box-shadow: 0 6px 20px rgba(80, 60, 40, .28);
+  background: linear-gradient(160deg, var(--gold-shine), var(--gold-deep));
+  border: 0; border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(122, 96, 46, .35);
   cursor: pointer;
 }
 .restart:active { transform: scale(.97); }
 
 .is-kiosk { font-size: 18px; }
-.is-kiosk .wrap { max-width: 680px; padding-bottom: 110px; }
-.is-kiosk .search-box input { padding: 22px 46px 22px 20px; font-size: 22px; }
+.is-kiosk .wrap { max-width: 700px; padding-bottom: 120px; }
+.is-kiosk .hero h1 { font-size: 46px; }
+.is-kiosk .ornament { width: 118px; }
+.is-kiosk .search-box input { padding: 23px 48px 23px 22px; font-size: 22px; }
 .is-kiosk .guest-name { font-size: 20px; }
 .is-kiosk .guest-meta { font-size: 15px; }
-.is-kiosk .tno { flex: 0 0 68px; height: 68px; font-size: 26px; }
-.is-kiosk .side-btn { padding: 26px 12px; }
-.is-kiosk .side-btn .ico { font-size: 38px; }
-.is-kiosk .side-btn .t { font-size: 20px; }
-.is-kiosk .tablemates li { font-size: 17px; padding: 7px 12px; }
-.is-kiosk .count-row .btn-primary { min-height: 60px; font-size: 19px; }
-.is-kiosk .count-row select { flex: 0 0 124px; font-size: 18px; }
-.is-kiosk .backbar { font-size: 17px; padding: 12px 20px 12px 16px; }
+.is-kiosk .tno { flex: 0 0 70px; height: 70px; font-size: 28px; }
+.is-kiosk .side-btn { padding: 28px 12px; }
+.is-kiosk .side-btn .ico { width: 66px; height: 66px; font-size: 32px; }
+.is-kiosk .side-btn .t { font-size: 22px; }
+.is-kiosk .tablemates li { font-size: 17px; padding: 9px 14px; }
+.is-kiosk .count-row .btn-primary { min-height: 62px; font-size: 19px; }
+.is-kiosk .count-row select { flex: 0 0 128px; font-size: 18px; }
+.is-kiosk .backbar { font-size: 16px; padding: 13px 22px 13px 17px; }
+.is-kiosk .found .big-table { font-size: 100px; }
 
 /* ── footer ──────────────────────────────────────────────── */
 
-.foot { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 34px; }
-.foot a { color: var(--gold); text-decoration: none; }
+.foot { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 38px; }
+.foot a { color: var(--gold-deep); text-decoration: none; }
 
-.mini-nav { text-align: center; margin-top: 22px; font-size: 13px; }
+.mini-nav { text-align: center; margin-top: 26px; font-size: 13px; }
 .mini-nav a { color: var(--ink-soft); text-decoration: none; margin: 0 8px; }
-.mini-nav a:hover { color: var(--gold); }
+.mini-nav a:hover { color: var(--gold-deep); }
 
 /* ── การพิมพ์ (ป้ายโต๊ะ / รายชื่อให้ทีมงาน) ───────────────── */
 
 @media print {
   body { background: #fff; }
-  .no-print, .tabs, .search-box, .btn, .mini-nav, .foot { display: none !important; }
+  .no-print, .tabs, .search-box, .btn, .mini-nav, .foot, .restart, .backbar { display: none !important; }
   .card, .table-scroll { box-shadow: none; border-color: #ccc; }
   .print-page { page-break-after: always; }
 }
 
 @media (min-width: 700px) {
-  .hero h1 { font-size: 36px; }
+  .hero h1 { font-size: 44px; }
 }
