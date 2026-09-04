@@ -103,12 +103,10 @@
   <!-- ══ แผนผัง ══ -->
   <section id="mapSection" hidden>
     <div class="map-holder" id="mapHolder"></div>
-    <div class="map-legend">
-      <span><i class="lg-hi"></i> โต๊ะที่เลือก</span>
-      <span><i class="lg-bride"></i> ฝั่งเจ้าสาว</span>
-      <span><i class="lg-groom"></i> ฝั่งเจ้าบ่าว</span>
-      <span><i class="lg-done"></i> เต็มแล้ว</span>
-    </div>
+    <!-- เดิมเป็นแค่คำอธิบายสี แต่มันหน้าตาเหมือนปุ่มจนคนพยายามกด
+         เลยทำให้กดได้จริงเป็นตัวกรองแทน — ของที่ดูกดได้ต้องกดได้ -->
+    <div class="map-filters" id="mapFilters"></div>
+    <p class="map-filter-hint">แตะเพื่อกรองโต๊ะบนแผนผัง · แตะซ้ำเพื่อยกเลิก</p>
   </section>
 
   <p class="foot" id="foot"></p>
@@ -137,6 +135,9 @@
 
 let DATA  = { tables: [], guests: [] };
 let INDEX = [];
+
+let MAP_FILTER = '';   // '' | 'bride' | 'groom' | 'free' | 'full'
+let MAP_HI     = 0;    // เลขโต๊ะที่ไฮไลต์อยู่ ใช้วาดแผนผังซ้ำตอนสลับตัวกรอง
 
 const $ = function (id) { return document.getElementById(id); };
 
@@ -350,6 +351,7 @@ function chrome(isHome) {
 function viewHome() {
   chrome(true);
   els.home.hidden = false;
+  MAP_FILTER = '';   // กลับหน้าแรกแล้วเริ่มใหม่หมด ไม่ให้ตัวกรองของคนก่อนค้าง
   drawSidePick();
   runSearch();
 }
@@ -662,12 +664,47 @@ function viewGuest(g) {
 /* ── แผนผัง ───────────────────────────────────────────────── */
 
 function drawMap(highlight) {
+  MAP_HI = Number(highlight) || 0;
   renderSeatMap(els.map, {
     tables: DATA.tables,
     counts: countByTable(DATA.guests),
-    highlight: highlight,
-    dim: !!highlight,
+    highlight: MAP_HI,
+    dim: !!MAP_HI,
+    filter: MAP_FILTER,
     onPick: function (no) { navigate('t=' + no); }
+  });
+  drawFilters();
+}
+
+/**
+ * แถบตัวกรองใต้แผนผัง
+ *
+ * "ยังมีที่ว่าง" คือตัวที่มีค่าที่สุดหน้างานจริง — เวลามีแขกมาเกิน มาผิดโต๊ะ
+ * หรือมากันเป็นครอบครัวใหญ่กว่าที่จดไว้ คนที่ต้องหาที่ให้เขาจะกดปุ่มเดียวเห็นเลย
+ * ไม่ต้องไล่เปิดดูทีละโต๊ะจากทั้ง 40 โต๊ะ
+ */
+function drawFilters() {
+  const t = DATA.tables;
+  const n = function (fn) { return t.filter(fn).length; };
+
+  const chips = [
+    ['bride', 'ฝั่งเจ้าสาว',  'lg-bride', n(function (x) { return tableSide(x.no, t) === 'bride'; })],
+    ['groom', 'ฝั่งเจ้าบ่าว', 'lg-groom', n(function (x) { return tableSide(x.no, t) === 'groom'; })],
+    ['free',  'ยังมีที่ว่าง', 'lg-free',  n(function (x) { return (x.arrived || 0) < x.seats; })],
+    ['full',  'เต็มแล้ว',     'lg-done',  n(function (x) { return (x.arrived || 0) >= x.seats; })]
+  ];
+
+  $('mapFilters').innerHTML = chips.map(function (c) {
+    return '<button class="chip' + (MAP_FILTER === c[0] ? ' on' : '') + '" data-f="' + c[0] + '">' +
+             '<i class="' + c[2] + '"></i>' + esc(c[1]) + '<b>' + c[3] + '</b>' +
+           '</button>';
+  }).join('');
+
+  $('mapFilters').querySelectorAll('[data-f]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      MAP_FILTER = (MAP_FILTER === b.dataset.f) ? '' : b.dataset.f;   // แตะซ้ำ = ยกเลิก
+      drawMap(MAP_HI);
+    });
   });
 }
 

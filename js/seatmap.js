@@ -35,6 +35,7 @@ function tableXY(no) {
  *   counts,            // { [tableNo]: {total, checkedIn} } — ไว้ระบายสีตามความเต็ม
  *   highlight,         // เลขโต๊ะที่ต้องเด่นที่สุด
  *   dim,               // true = โต๊ะอื่นจางลง เน้นเฉพาะโต๊ะที่ไฮไลต์
+ *   filter,            // '' | 'bride' | 'groom' | 'free' | 'full' — โต๊ะที่ไม่เข้าเงื่อนไขจะจางลง
  *   onPick             // callback(tableNo) เมื่อกดโต๊ะ
  * }
  */
@@ -43,6 +44,7 @@ function renderSeatMap(el, opts) {
   const tables = opts.tables || [];
   const counts = opts.counts || {};
   const hi = Number(opts.highlight) || 0;
+  const filter = opts.filter || '';
   const groupOf = {};
   tables.forEach(function (t) { groupOf[t.no] = t.group || ''; });
 
@@ -91,7 +93,17 @@ function renderSeatMap(el, opts) {
 
     // สีบอก "ฝั่งของแขก" · ตำแหน่งบอก "ที่ตั้งจริงในฮอลล์" — คนละเรื่องกัน
     const cls = ['sm-table', side ? 'sm-' + side : 'sm-noside'];
+
+    // ตัวกรองมาก่อนการไฮไลต์ แต่โต๊ะที่เลือกไว้จะไม่จางไม่ว่ากรองอะไรอยู่
+    // ไม่งั้นแขกกดกรองแล้วโต๊ะตัวเองหายไปจากสายตา ซึ่งน่าตกใจกว่ามีประโยชน์
+    const pass = !filter ||
+      (filter === 'bride' ? side === 'bride' :
+       filter === 'groom' ? side === 'groom' :
+       filter === 'free'  ? arrived < seats  :
+       filter === 'full'  ? arrived >= seats : true);
+
     if (hi && no === hi) cls.push('is-hi');
+    else if (filter) { if (!pass) cls.push('is-dim'); }
     else if (hi && opts.dim) cls.push('is-dim');
 
     // ความ "เต็ม" วัดจากยอดนับหัวที่แขกกดเอง ไม่ใช่จำนวนรายชื่อในลิสต์
