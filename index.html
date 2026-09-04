@@ -110,6 +110,10 @@
   </section>
 
   <p class="foot" id="foot"></p>
+  <p class="foot sync no-print">
+    <span id="syncInfo"></span>
+    <button type="button" class="linkbtn" id="reloadBtn">โหลดใหม่</button>
+  </p>
 
 </div>
 
@@ -138,6 +142,23 @@ let INDEX = [];
 
 let MAP_FILTER = '';   // '' | 'bride' | 'groom' | 'free' | 'full'
 let MAP_HI     = 0;    // เลขโต๊ะที่ไฮไลต์อยู่ ใช้วาดแผนผังซ้ำตอนสลับตัวกรอง
+
+/* ── ดึงข้อมูลใหม่ระหว่างงาน ──────────────────────────────────
+
+   เดิมหน้านี้โหลดข้อมูลครั้งเดียวตอนเปิด ซึ่งพังกับวิธีใช้จริง:
+   iPad ที่ตั้งไว้ตั้งแต่ 17:00 จะยังโชว์ยอดของ 17:00 ไปทั้งงาน
+   ทีมงานกดนับหัวจากมือถือ iPad ก็ไม่รู้เรื่อง · เจ้าภาพเพิ่มชื่อแขก
+   ที่มาเซอร์ไพรส์ iPad ก็ยังหาไม่เจอ · สองเครื่องโชว์เลขไม่ตรงกัน
+
+   จึงดึงใหม่เงียบ ๆ ทุก 60 วิ โดยมีกติกา:
+     • ไม่ดึงตอนมีคำสั่งเขียนค้างอยู่ (กันยอดกระพริบกลับไปค่าเก่า)
+     • ไม่ดึงตอนแท็บถูกซ่อน (ประหยัดโควตาและแบต)
+     • เทียบลายนิ้วมือข้อมูลก่อนวาดใหม่ — ข้อมูลเหมือนเดิมก็ไม่ต้องแตะหน้าจอ
+     • ล้มเหลวก็เงียบ ใช้ของเดิมต่อ แขกไม่ต้องเห็น error ที่ทำอะไรไม่ได้อยู่ดี   */
+
+const REFRESH_MS = 60000;
+let BUSY = false;      // มีคำสั่งเขียนค้างอยู่
+let LAST_SIG = '';     // ลายนิ้วมือข้อมูลชุดล่าสุดที่วาดไปแล้ว
 
 const $ = function (id) { return document.getElementById(id); };
 
@@ -225,9 +246,82 @@ const els = {
   // ไม่โชว์จำนวนรายชื่อรวมด้วยเหตุผลเดียวกับป้ายใต้ปุ่มเลือกฝั่ง
   els.foot.textContent = CONFIG.totalTables + ' โต๊ะ · ' + CONFIG.venue;
 
+  LAST_SIG = dataSignature(DATA);
+  markSynced(DATA);
+
   bind();
   render();
+
+  setInterval(autoRefresh, REFRESH_MS);
+  // กลับมามองจอเมื่อไหร่ให้ดึงทันที ไม่ต้องรอครบรอบ —
+  // เคสจริงคือ iPad ถูกปลุกขึ้นมาแล้วแขกใช้เลย
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') autoRefresh();
+  });
 })();
+
+/** ลายนิ้วมือของข้อมูล — เอาไว้ดูว่ามีอะไรเปลี่ยนจริงไหมก่อนวาดหน้าจอใหม่ */
+function dataSignature(d) {
+  return (d.tables || []).map(function (t) {
+    return t.no + ':' + (t.arrived || 0) + ':' + t.group + ':' + t.side + ':' + t.seats;
+  }).join('|') + '#' + (d.guests || []).length;
+}
+
+function markSynced(d) {
+  const el = $('syncInfo');
+  if (!el) return;
+  const when = timeAgo(d.savedAt) || 'เมื่อสักครู่';
+  el.textContent = d.from === 'network'
+    ? 'ข้อมูลอัปเดต ' + when + ' · '
+    : '📶 ออฟไลน์ — ข้อมูลจาก ' + when + ' · ';
+}
+
+async function autoRefresh() {
+  if (BUSY || document.visibilityState !== 'visible') return;
+
+  try {
+    const fresh = await loadData({ timeout: 9000 });
+    markSynced(fresh);
+
+    // ได้ cache กลับมาแปลว่าเน็ตไม่ติด — ของเดิมบนจอใหม่กว่าหรือเท่ากันอยู่แล้ว
+    if (fresh.from !== 'network') return;
+
+    const sig = dataSignature(fresh);
+    if (sig === LAST_SIG) return;
+
+    LAST_SIG = sig;
+    DATA  = fresh;
+    INDEX = buildIndex(DATA.guests, DATA.tables);
+    refreshView();
+  } catch (err) {
+    // เงียบโดยตั้งใจ — แขกที่ยืนอยู่หน้า iPad ทำอะไรกับ error นี้ไม่ได้อยู่แล้ว
+  }
+}
+
+/**
+ * วาดเฉพาะส่วนที่ผูกกับข้อมูล โดยไม่เด้งจอกลับขึ้นบนและไม่รีเซ็ตสิ่งที่แขกกำลังทำ
+ * (ถ้าเรียก render() ตรง ๆ หน้าจอจะกระโดดกลางคันทุกนาที ซึ่งน่ารำคาญกว่าข้อมูลเก่า)
+ */
+function refreshView() {
+  const p = new URLSearchParams(location.search);
+  const t = Number(p.get('t'));
+  const side = p.get('side');
+  const gid = p.get('g');
+
+  if (t >= 1 && t <= CONFIG.totalTables) {
+    // ถ้าแขกกำลังเลือกดรอปดาวน์อยู่ อย่าเพิ่งวาดทับ — รอรอบหน้า
+    const busyEl = document.activeElement;
+    const inCounter = busyEl && busyEl.closest && busyEl.closest('#counter');
+    if (!inCounter) drawCounter(t);
+    drawMap(t);
+    return;
+  }
+  if (gid) { drawMap(MAP_HI); return; }
+  if (side === 'bride' || side === 'groom') { viewBrowse(side, true); return; }
+
+  drawSidePick();
+  runSearch();
+}
 
 /** บอกตรง ๆ เมื่อข้อมูลที่เห็นมาจาก cache ไม่ใช่ของสด — อย่าให้แขกเข้าใจผิด */
 function showSourceNote(d) {
@@ -313,6 +407,14 @@ function bind() {
     els.mapSec.hidden = false;
     els.mapSec.scrollIntoView({ behavior: 'smooth' });
   });
+
+  $('reloadBtn').addEventListener('click', async function () {
+    const b = this, label = b.textContent;
+    b.disabled = true; b.textContent = 'กำลังโหลด…';
+    LAST_SIG = '';              // บังคับให้วาดใหม่ แม้ข้อมูลจะเหมือนเดิม
+    await autoRefresh();
+    b.disabled = false; b.textContent = label;
+  });
 }
 
 /** อ่าน URL แล้วแสดงหน้าที่ตรงกัน — ทางเข้าเดียวของการเปลี่ยนหน้าทั้งเว็บ */
@@ -337,13 +439,16 @@ function render() {
   return viewHome();
 }
 
-function chrome(isHome) {
+/** quiet = วาดใหม่จาก auto-refresh — ห้ามเด้งจอกลับขึ้นบนกลางที่แขกกำลังอ่าน */
+function chrome(isHome, quiet) {
   els.back.hidden = isHome;
   els.hero.classList.toggle('compact', !isHome);
   // ปุ่ม "เริ่มใหม่" โผล่เฉพาะตอนหลงอยู่หน้าลึก ๆ — หน้าแรกไม่ต้องมีให้รก
   $('restartBtn').hidden = !KIOSK || isHome;
-  armIdle();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!quiet) {
+    armIdle();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 /* ── หน้าแรก ──────────────────────────────────────────────── */
@@ -432,8 +537,8 @@ function guestCardHtml(g) {
 
 /* ── รายการโต๊ะทีละฝั่ง ───────────────────────────────────── */
 
-function viewBrowse(side) {
-  chrome(false);
+function viewBrowse(side, quiet) {
+  chrome(false, quiet);
 
   const tables = tablesOfSide(side);
   const arrived = tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
@@ -574,6 +679,7 @@ function drawCounter(no) {
  * ถ้าส่งเลขรวม คนที่กดทีหลังจะเขียนทับของคนแรกจนยอดหาย
  */
 async function arrive(no, delta) {
+  BUSY = true;   // กัน auto-refresh มาวาดทับยอดเก่าระหว่างที่คำสั่งยังไม่ถึงเซิร์ฟเวอร์
   document.querySelectorAll('#counter button, #counter select').forEach(function (el) {
     el.disabled = true;
   });
@@ -613,6 +719,11 @@ async function arrive(no, delta) {
   } catch (err) {
     drawCounter(no);
     $('countMsg').innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
+  } finally {
+    // ต้องอยู่ใน finally — ถ้าปลดใน try แล้วยิงพลาด BUSY จะค้าง true
+    // แล้ว auto-refresh จะตายไปทั้งงานโดยไม่มีใครรู้
+    BUSY = false;
+    LAST_SIG = dataSignature(DATA);
   }
 }
 

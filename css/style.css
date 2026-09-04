@@ -676,6 +676,18 @@ table.data tbody tr:hover { background: #fdfbf6; }
 .foot { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 38px; }
 .foot a { color: var(--gold-deep); text-decoration: none; }
 
+.foot.sync { margin-top: 6px; }
+
+/* ปุ่มที่หน้าตาเป็นลิงก์ — ใช้ <button> เพราะมันทำงานจริง ไม่ใช่การไปที่ไหน
+   (ถ้าใช้ <a href="#"> โปรแกรมอ่านหน้าจอจะบอกผู้ใช้ผิดว่านี่คือลิงก์) */
+.linkbtn {
+  background: none; border: 0; padding: 0;
+  font-family: inherit; font-size: inherit; color: var(--gold-deep);
+  text-decoration: underline; cursor: pointer;
+}
+.linkbtn:hover { color: var(--gold); }
+.linkbtn:disabled { color: var(--ink-soft); text-decoration: none; cursor: default; }
+
 .mini-nav { text-align: center; margin-top: 26px; font-size: 13px; }
 .mini-nav a { color: var(--ink-soft); text-decoration: none; margin: 0 8px; }
 .mini-nav a:hover { color: var(--gold-deep); }
