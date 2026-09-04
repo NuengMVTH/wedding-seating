@@ -33,14 +33,15 @@
   --gold-lt:   #f4ecd9;
   --gold-shine:#c9a961;
 
-  /* ฝั่งเจ้าสาว/เจ้าบ่าว — อยู่ในโทนอุ่นเดียวกับธีม ไม่ใช่ชมพู/ฟ้าสด
+  /* ฝั่งเจ้าสาว = โรสโกลด์ (ชมพูอมทองแดง) · เจ้าบ่าว = น้ำตาลทอง
+     ทั้งคู่อยู่ในตระกูลอุ่นเดียวกับธีมครีม-ทอง-น้ำตาล ไม่หลุดออกไปเป็นชมพู/ฟ้าสด
      ชุด -lt / -ln ใช้กับชิปและป้ายใน UI ทั่วไป ต้องนุ่มไม่แย่งสายตา */
-  --bride:    #a8506a;
-  --bride-lt: #fbf1f3;
-  --bride-ln: #e8ccd4;
-  --groom:    #6f5a2e;
-  --groom-lt: #f7f2e9;
-  --groom-ln: #ddcfae;
+  --bride:    #a85f4a;
+  --bride-lt: #fbf0ec;
+  --bride-ln: #ecd2c8;
+  --groom:    #8a6a2e;
+  --groom-lt: #f8f3e8;
+  --groom-ln: #e0d0ab;
 
   /* ชุด -map ใช้เฉพาะวงกลมบนแผนผัง — เข้มกว่าตั้งใจ
      เพราะบนผังต้องแยกฝั่งให้ออกภายในเสี้ยววินาทีจากระยะยืนห่างจอ
@@ -49,12 +50,12 @@
      เคยตั้งชมพูอ่อนคู่กับครีมเข้มที่สว่างเท่ากันเป๊ะ (ต่างกัน 1.01:1)
      ผลคือในที่แสงน้อย บนจอสะท้อนแสง หรือกับคนตาบอดสี สองฝั่งดูเหมือนกันสนิท
      ตอนนี้เจ้าสาวชมพูอ่อน / เจ้าบ่าวบรอนซ์เข้ม ต่างกัน 2.00:1 */
-  --bride-map:    #fadfe6;
-  --bride-map-ln: #c4708d;
-  --bride-map-tx: #8a2f4a;
-  --groom-map:    #bfa05c;
-  --groom-map-ln: #7d6631;
-  --groom-map-tx: #2e2410;
+  --bride-map:    #f3cec0;
+  --bride-map-ln: #b5705a;
+  --bride-map-tx: #7c3625;
+  --groom-map:    #b8934f;
+  --groom-map-ln: #7d6027;
+  --groom-map-tx: #2b2109;
 
   --ok:     #5a7d5a;
   --warn:   #b5762f;
@@ -499,9 +500,12 @@ body {
 .sm-table.is-done circle { fill: #cfe3cd; stroke: var(--ok); }
 .sm-table.is-done text   { fill: #2e5230; }
 
+/* โต๊ะที่เลือก: น้ำตาลเข้มเกือบดำ + วงขาวคั่น
+   เพราะฝั่งเจ้าบ่าวเป็นน้ำตาลทอง ถ้าใช้ทองเข้มเฉย ๆ จะกลืนกับโต๊ะข้าง ๆ
+   วงขาวคั่นทำให้มันเด้งออกมาไม่ว่าอยู่ท่ามกลางสีอะไร */
 .sm-table.is-hi circle {
-  fill: var(--gold-deep); stroke: #5c451a; stroke-width: 3; r: 24;
-  filter: drop-shadow(0 0 10px rgba(168, 133, 68, .6));
+  fill: #5a4420; stroke: var(--paper); stroke-width: 3.5; r: 24;
+  filter: drop-shadow(0 2px 7px rgba(74, 56, 26, .55));
 }
 .sm-table.is-hi text { fill: #fff; font-size: 16px; }
 
