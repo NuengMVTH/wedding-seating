@@ -33,13 +33,28 @@
   --gold-lt:   #f4ecd9;
   --gold-shine:#c9a961;
 
-  /* ฝั่งเจ้าสาว/เจ้าบ่าว — อยู่ในโทนอุ่นเดียวกับธีม ไม่ใช่ชมพู/ฟ้าสด */
-  --bride:    #b8798c;
+  /* ฝั่งเจ้าสาว/เจ้าบ่าว — อยู่ในโทนอุ่นเดียวกับธีม ไม่ใช่ชมพู/ฟ้าสด
+     ชุด -lt / -ln ใช้กับชิปและป้ายใน UI ทั่วไป ต้องนุ่มไม่แย่งสายตา */
+  --bride:    #a8506a;
   --bride-lt: #fbf1f3;
-  --bride-ln: #eed9df;
-  --groom:    #7d6748;
+  --bride-ln: #e8ccd4;
+  --groom:    #6f5a2e;
   --groom-lt: #f7f2e9;
-  --groom-ln: #e4d8c2;
+  --groom-ln: #ddcfae;
+
+  /* ชุด -map ใช้เฉพาะวงกลมบนแผนผัง — เข้มกว่าตั้งใจ
+     เพราะบนผังต้องแยกฝั่งให้ออกภายในเสี้ยววินาทีจากระยะยืนห่างจอ
+
+     ⚠️ สองฝั่งต้องต่างกันทั้ง "สี" และ "ความสว่าง" ไม่ใช่แค่สี
+     เคยตั้งชมพูอ่อนคู่กับครีมเข้มที่สว่างเท่ากันเป๊ะ (ต่างกัน 1.01:1)
+     ผลคือในที่แสงน้อย บนจอสะท้อนแสง หรือกับคนตาบอดสี สองฝั่งดูเหมือนกันสนิท
+     ตอนนี้เจ้าสาวชมพูอ่อน / เจ้าบ่าวบรอนซ์เข้ม ต่างกัน 2.00:1 */
+  --bride-map:    #fadfe6;
+  --bride-map-ln: #c4708d;
+  --bride-map-tx: #8a2f4a;
+  --groom-map:    #bfa05c;
+  --groom-map-ln: #7d6631;
+  --groom-map-tx: #2e2410;
 
   --ok:     #5a7d5a;
   --warn:   #b5762f;
@@ -190,8 +205,8 @@ body {
   letter-spacing: .16em; opacity: .75; margin-bottom: 2px;
 }
 
-.tno.bride { background: var(--bride-lt); color: var(--bride); border-color: var(--bride-ln); }
-.tno.groom { background: var(--groom-lt); color: var(--groom); border-color: var(--groom-ln); }
+.tno.bride { background: var(--bride-lt); color: var(--bride); border-color: var(--bride-map-ln); }
+.tno.groom { background: var(--groom-lt); color: var(--groom); border-color: var(--groom-map-ln); }
 
 .guest-info { min-width: 0; flex: 1; }
 .guest-name { font-size: 17px; font-weight: 600; line-height: 1.45; }
@@ -464,35 +479,36 @@ body {
 .sm-hint    { fill: var(--ink-soft); font-size: 11px; }
 
 .sm-table { cursor: pointer; }
-.sm-table circle { fill: var(--paper); stroke: var(--line); stroke-width: 1.2; transition: all .16s; }
-.sm-table text   { fill: var(--ink-soft); font-size: 14px; font-weight: 600; pointer-events: none; }
+.sm-table circle { fill: var(--paper); stroke: var(--line); stroke-width: 1.8; transition: all .18s; }
+.sm-table text   { fill: var(--ink-soft); font-size: 14px; font-weight: 700; pointer-events: none; }
 
 /* สีของวงกลม = ฝั่งของแขก (ไม่ใช่ตำแหน่งซ้าย/ขวาบนผัง)
    บล็อกขวามีทั้งโต๊ะเจ้าบ่าวและโต๊ะเจ้าสาวปนกัน สีจึงเป็นตัวบอกฝั่งตัวจริง */
-.sm-bride circle  { stroke: var(--bride-ln); fill: var(--bride-lt); }
-.sm-bride text    { fill: var(--bride); }
-.sm-groom circle  { stroke: var(--groom-ln); fill: var(--groom-lt); }
-.sm-groom text    { fill: var(--groom); }
-.sm-noside circle { stroke: var(--line); fill: #fbf9f5; }
+.sm-bride circle  { stroke: var(--bride-map-ln); fill: var(--bride-map); }
+.sm-bride text    { fill: var(--bride-map-tx); }
+.sm-groom circle  { stroke: var(--groom-map-ln); fill: var(--groom-map); }
+.sm-groom text    { fill: var(--groom-map-tx); }
+.sm-noside circle { stroke: var(--line); fill: #fbf9f5; stroke-dasharray: 3 3; }
 .sm-noside text   { fill: var(--ink-soft); }
 
 .sm-table:hover circle,
-.sm-table:focus circle { stroke-width: 2.4; stroke: var(--gold); }
+.sm-table:focus circle { stroke-width: 3; stroke: var(--gold-deep); }
 .sm-table:focus { outline: none; }
 
-.sm-table.is-empty circle { fill: #fbf9f5; stroke: #ebe3d5; stroke-dasharray: 3 3; }
-.sm-table.is-empty text   { fill: #c6b8a4; }
-
-.sm-table.is-over circle { stroke: var(--warn); stroke-width: 2.4; }
-.sm-table.is-done circle { fill: #eaf1e9; stroke: var(--ok); }
+.sm-table.is-over circle { stroke: var(--warn); stroke-width: 3; }
+.sm-table.is-done circle { fill: #cfe3cd; stroke: var(--ok); }
+.sm-table.is-done text   { fill: #2e5230; }
 
 .sm-table.is-hi circle {
-  fill: var(--gold); stroke: var(--gold-deep); stroke-width: 2.5; r: 24;
-  filter: drop-shadow(0 0 9px rgba(168, 133, 68, .5));
+  fill: var(--gold-deep); stroke: #5c451a; stroke-width: 3; r: 24;
+  filter: drop-shadow(0 0 10px rgba(168, 133, 68, .6));
 }
 .sm-table.is-hi text { fill: #fff; font-size: 16px; }
 
-.sm-table.is-dim { opacity: .3; }
+/* ตอนเปิดตัวกรอง: ตัวที่เข้าเงื่อนไขเส้นหนาขึ้น · ตัวที่ไม่เข้าจางลงมาก
+   จางแค่ครึ่งเดียวไม่พอ ตายังไล่มองทุกวงอยู่ดี ต้องจางจนสมองข้ามไปเอง */
+.sm-table.is-match circle { stroke-width: 3.2; }
+.sm-table.is-dim { opacity: .14; }
 
 /* ── ตัวกรองใต้แผนผัง ─────────────────────────────────────
 
@@ -537,10 +553,10 @@ body {
   margin: 9px 0 0;
 }
 
-.lg-bride { background: var(--bride-lt); border-color: var(--bride); }
-.lg-groom { background: var(--groom-lt); border-color: var(--groom); }
-.lg-free  { background: var(--paper);    border-color: var(--ink-soft); }
-.lg-done  { background: #eaf1e9;         border-color: var(--ok); }
+.lg-bride { background: var(--bride-map); border-color: var(--bride-map-ln); }
+.lg-groom { background: var(--groom-map); border-color: var(--groom-map-ln); }
+.lg-free  { background: var(--paper);     border-color: var(--ink-soft); }
+.lg-done  { background: #cfe3cd;          border-color: var(--ok); }
 
 /* ── สถานะ / แจ้งเตือน ───────────────────────────────────── */
 
