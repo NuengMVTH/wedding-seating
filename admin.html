@@ -172,10 +172,11 @@
     </div>
 
     <div class="card" style="margin-top:14px">
-      <h3 style="margin:0 0 8px;font-size:16px">ลิงก์ส่วนตัวรายคน</h3>
-      <p class="hint" style="margin-top:0">ส่งใน LINE ล่วงหน้าพร้อมการ์ด — เปิดมาเจอโต๊ะตัวเองเลย ไม่ต้องค้น</p>
+      <h3 style="margin:0 0 8px;font-size:16px">สำรองข้อมูล</h3>
+      <p class="hint" style="margin-top:0">
+        ดาวน์โหลดรายชื่อทั้งหมดเก็บไว้ — เปิดด้วย Excel หรือ Google Sheets ได้เลย
+      </p>
       <div class="btn-row">
-        <button class="btn" id="exportLinksBtn">⬇ ดาวน์โหลดลิงก์ทุกคน (CSV)</button>
         <button class="btn" id="exportAllBtn">⬇ ดาวน์โหลดรายชื่อทั้งหมด (CSV)</button>
       </div>
     </div>
@@ -323,8 +324,7 @@ function bind() {
 
   $('qrPrintBtn').addEventListener('click', function () { window.print(); });
   $('copyUrlBtn').addEventListener('click', copyGuestUrl);
-  $('exportLinksBtn').addEventListener('click', function () { exportCsv('links'); });
-  $('exportAllBtn').addEventListener('click', function () { exportCsv('all'); });
+  $('exportAllBtn').addEventListener('click', exportCsv);
   $('printCardsBtn').addEventListener('click', function () { buildPrint('cards'); });
   $('printListBtn').addEventListener('click', function () { buildPrint('list'); });
   $('resetArrivedBtn').addEventListener('click', resetArrived);
@@ -632,24 +632,14 @@ async function copyGuestUrl() {
   }
 }
 
-function exportCsv(kind) {
-  const base = guestPageUrl();
-  let rows, name;
-
-  if (kind === 'links') {
-    rows = [['ชื่อ-นามสกุล', 'ชื่อเล่น', 'โต๊ะ', 'ลิงก์ส่วนตัว']].concat(
-      DATA.guests.map(function (g) {
-        return [g.fullName, g.nickname || '', g.tableNo, base + '?g=' + encodeURIComponent(g.id)];
+/** สำรองรายชื่อทั้งหมดเป็น CSV — เรียงตามเลขโต๊ะให้อ่านง่ายในตาราง */
+function exportCsv() {
+  const rows = [['โต๊ะ', 'กลุ่ม', 'ชื่อ-นามสกุล', 'ชื่อเล่น', 'หมายเหตุ', 'เช็คอินเมื่อ']].concat(
+    INDEX.slice().sort(function (a, b) { return a.tableNo - b.tableNo; })
+      .map(function (g) {
+        return [g.tableNo, g.group || '', g.fullName, g.nickname || '', g.note || '', g.checkedInAt || ''];
       }));
-    name = 'wedding-links.csv';
-  } else {
-    rows = [['โต๊ะ', 'กลุ่ม', 'ชื่อ-นามสกุล', 'ชื่อเล่น', 'หมายเหตุ', 'เช็คอินเมื่อ']].concat(
-      INDEX.slice().sort(function (a, b) { return a.tableNo - b.tableNo; })
-        .map(function (g) {
-          return [g.tableNo, g.group || '', g.fullName, g.nickname || '', g.note || '', g.checkedInAt || ''];
-        }));
-    name = 'wedding-guests.csv';
-  }
+  const name = 'wedding-guests.csv';
 
   const csv = rows.map(function (r) {
     return r.map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
