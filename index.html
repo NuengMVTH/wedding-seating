@@ -235,7 +235,11 @@ const els = {
 (async function init() {
   // เจ้าสาวขึ้นก่อนเจ้าบ่าวทั้งชื่อเล่นและชื่อจริง — Nueng กำหนดเอง
   const G = CONFIG.couple.groom, B = CONFIG.couple.bride;
-  $('coupleName').textContent = (B.nick || B.name) + ' ♥ ' + (G.nick || G.name);
+
+  // แยกหัวใจออกมาเป็น element ของตัวเอง เพื่อทำสีทองแยกจากชื่อได้
+  // (ใช้ textContent ทั้งก้อนแบบเดิมจะย้อมสีเฉพาะหัวใจไม่ได้)
+  $('coupleName').innerHTML =
+    esc(B.nick || B.name) + ' <span class="heart">♥</span> ' + esc(G.nick || G.name);
   document.title = 'ค้นหาโต๊ะของคุณ — งานแต่ง ' + (B.nick || B.name) + ' & ' + (G.nick || G.name);
   $('venueLine').innerHTML =
     esc(B.name) + ' &amp; ' + esc(G.name) + '<br>' +
