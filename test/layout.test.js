@@ -16,18 +16,23 @@ const raw = src.match(/const MAP = \{[\s\S]*?\n\};/);
 if (!raw) { console.log('❌ หา MAP ใน js/seatmap.js ไม่เจอ'); process.exit(1); }
 const MAP = eval('(' + raw[0].replace(/^const MAP = /, '').replace(/;$/, '') + ')');
 
-const FONT   = 11;   // .sm-side font-size ใน css/style.css
-const STAGE  = { y: 24, h: 52 };
-const ENTRY  = { off: 52, h: 44 };
-const HINT   = 66;   // ระยะจาก entryY ถึงบรรทัด "คุณเดินเข้ามาจากตรงนี้"
+const FONT  = 11;   // .sm-side font-size ใน css/style.css
+const STAGE = { y: 24, h: 52 };
+const ENTRY = { h: 44 };
+const HINT  = 66;   // ระยะจาก entryY ถึงบรรทัด "คุณเดินเข้ามาจากตรงนี้"
+
+// ดึงฟังก์ชันคำนวณแถวล่างจากไฟล์จริง จะได้เทสต์ค่าเดียวกับที่วาดออกมาเป๊ะ ๆ
+const rowsRaw = src.match(/function bottomRows\(\)[\s\S]*?\n\}/);
+const bottomRows = eval('(' + rowsRaw[0].replace('function bottomRows()', 'function ()') + ')');
+const ROWS = bottomRows();
 
 const circleTop    = MAP.rowY0 - MAP.r;
 const labelTop     = MAP.labelY - FONT;
 const labelBottom  = MAP.labelY + 2;
 const stageBottom  = STAGE.y + STAGE.h;
-const lastRowBottom = MAP.rowY0 + 9 * MAP.rowGap + MAP.r;
-const entryY       = MAP.rowY0 + 9 * MAP.rowGap + ENTRY.off;
-const runwayEnd    = MAP.runway.y + MAP.runway.h;
+const lastRowBottom = ROWS.lastBottom;
+const entryY        = ROWS.entryY;
+const runwayEnd     = MAP.runway.y + MAP.runway.h;
 
 /* จุดสังเกตต้องไม่ทับวงกลมโต๊ะ และไม่ล้นออกนอกกรอบ
    วางผิดที่ = ชี้ทางแขกผิด ซึ่งแย่กว่าไม่มีจุดสังเกตเลย */
@@ -55,6 +60,8 @@ const checks = [
   ['ป้ายฝั่งไม่ทับวงกลมแถวแรก',    circleTop - labelBottom,       8],
   ['รันเวย์เริ่มหลังเวที',          MAP.runway.y - stageBottom,    0],
   ['รันเวย์ยาวถึงแถวสุดท้าย',      runwayEnd - lastRowBottom,     0],
+  ['แถวจุดสังเกตไม่ทับแถวโต๊ะสุดท้าย', ROWS.markY - lastRowBottom,   8],
+  ['ทางขึ้นฮอลล์อยู่คนละบรรทัดกับจุดสังเกต', entryY - (ROWS.markY + MAP.markH), 8],
   ['ทางขึ้นฮอลล์ไม่ทับแถวสุดท้าย', entryY - lastRowBottom,        8],
   ['ข้อความล่างสุดอยู่ในกรอบ',     MAP.h - (entryY + HINT),      10],
   ['วงกลมไม่ล้นขอบซ้าย',           MAP.colX.leftOuter - MAP.r,    0],

@@ -13,14 +13,26 @@
    เพราะลืมว่าวงกลมกินพื้นที่ขึ้นไปข้างบนอีก r พิกเซลจากจุดศูนย์กลาง
    กติกา: labelY ต้องน้อยกว่า (rowY0 - r) อย่างน้อยสัก 10 px */
 const MAP = {
-  w: 470, h: 730,
+  w: 470, h: 760,
   cx: 235,                       // กึ่งกลางแนวนอน ใช้จัดเวที รันเวย์ ทางเข้า
   colX: { leftOuter: 93, leftAisle: 161, rightAisle: 309, rightOuter: 377 },
   labelY: 94,
   rowY0: 130, rowGap: 50, r: 21,
   runway: { x: 203, w: 64, y: 106, h: 496 },
-  stage:  { x: 153, w: 164, y: 24, h: 52 }
+  stage:  { x: 153, w: 164, y: 24, h: 52 },
+
+  // แถวล่างของผัง เรียงจากบนลงล่างตามที่แขกเดินเข้ามาจริง:
+  //   แถวโต๊ะสุดท้าย → แถวจุดสังเกต (ลงทะเบียน/ถ่ายรูป) → ทางขึ้นฮอลล์
+  markGap: 16, markH: 40, entryGap: 18
 };
+
+/** พิกัดแนวตั้งของแถวล่าง — คำนวณที่เดียว ใช้ทั้งตอนวาดและตอนเทสต์ */
+function bottomRows() {
+  const lastBottom = MAP.rowY0 + 9 * MAP.rowGap + MAP.r;
+  const markY  = lastBottom + MAP.markGap;
+  const entryY = markY + MAP.markH + MAP.entryGap;
+  return { lastBottom: lastBottom, markY: markY, entryY: entryY };
+}
 
 /* ── ที่ว่างสำหรับวางจุดสังเกต ─────────────────────────────────
 
@@ -30,7 +42,7 @@ const MAP = {
    ตำแหน่งอ้างอิงจากแปลนจริงของ VIVACE:
    แขกเดินขึ้นมาจากด้านล่าง จุดลงทะเบียนกับซุ้มถ่ายรูปจึงอยู่แถวนั้น   */
 function markSlots() {
-  const bottomY = MAP.rowY0 + 9 * MAP.rowGap + 52;      // แนวเดียวกับทางขึ้นฮอลล์
+  const markY = bottomRows().markY;
   const sw = 62, gap = 8;                                // ความกว้างป้ายริม · ระยะห่างจากวงกลม
 
   // คำนวณจากตำแหน่งคอลัมน์จริง ไม่ใช่ค่าคงที่ — ถ้าใครขยับผังทีหลัง
@@ -41,12 +53,16 @@ function markSlots() {
   const bw = 132, edge = 13;
 
   return {
-    'entry-left':  { x: edge,           y: bottomY, w: bw, h: 44 },
-    'entry-right': { x: MAP.w - edge - bw, y: bottomY, w: bw, h: 44 },
-    'right-mid':   { x: rightX, y: 250, w: sw, h: 40 },
-    'right-low':   { x: rightX, y: 420, w: sw, h: 40 },
-    'left-mid':    { x: leftX,  y: 250, w: sw, h: 40 },
-    'left-low':    { x: leftX,  y: 420, w: sw, h: 40 }
+    // แถวล่าง — อยู่คนละบรรทัดกับทางขึ้นฮอลล์ ตามผังจริงของฮอลล์
+    'bottom-left':  { x: edge,               y: markY, w: bw, h: MAP.markH },
+    'bottom-mid':   { x: MAP.cx - bw / 2,    y: markY, w: bw, h: MAP.markH },
+    'bottom-right': { x: MAP.w - edge - bw,  y: markY, w: bw, h: MAP.markH },
+
+    // ริมซ้าย-ขวาของผัง
+    'right-mid': { x: rightX, y: 250, w: sw, h: MAP.markH },
+    'right-low': { x: rightX, y: 420, w: sw, h: MAP.markH },
+    'left-mid':  { x: leftX,  y: 250, w: sw, h: MAP.markH },
+    'left-low':  { x: leftX,  y: 420, w: sw, h: MAP.markH }
   };
 }
 
@@ -172,7 +188,7 @@ function renderSeatMap(el, opts) {
   }
 
   // ── ทางขึ้นฮอลล์ (ที่แขกเดินเข้ามา) ──
-  const entryY = MAP.rowY0 + 9 * MAP.rowGap + 52;
+  const entryY = bottomRows().entryY;
   parts.push(
     '<rect class="sm-entry" x="' + (MAP.cx - 80) + '" y="' + entryY +
       '" width="160" height="44" rx="8"/>' +

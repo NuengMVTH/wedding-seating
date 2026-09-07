@@ -29,14 +29,14 @@ const CONFIG = {
   rowsPerSide:  10,
 
   /* จุดสังเกตบนแผนผัง — แก้ตรงนี้ที่เดียว
-     at: ตำแหน่งที่จะไปวาง (ดูรายการ SLOTS ใน js/seatmap.js)
-       entry-left / entry-right = ข้างทางขึ้นฮอลล์ ด้านล่างสุด
-       right-mid / right-low    = ริมขวาของผัง
-       left-mid / left-low      = ริมซ้ายของผัง
+     at: ตำแหน่งที่จะไปวาง (ช่องทั้งหมดอยู่ใน markSlots() ที่ js/seatmap.js)
+       bottom-left / bottom-mid / bottom-right = แถวล่าง เหนือทางขึ้นฮอลล์
+       right-mid / right-low                   = ริมขวาของผัง
+       left-mid  / left-low                    = ริมซ้ายของผัง
      ⚠️ ตำแหน่งพวกนี้ต้องตรงกับของจริงในฮอลล์ ไม่งั้นจะชี้ทางแขกผิด */
   landmarks: [
-    { label: 'โต๊ะลงทะเบียน', at: 'entry-left'  },
-    { label: 'ซุ้มถ่ายรูป',    at: 'entry-right' },
+    { label: 'โต๊ะลงทะเบียน', at: 'bottom-left' },
+    { label: 'ซุ้มถ่ายรูป',    at: 'bottom-mid'  },
     { label: 'ห้องน้ำ',       at: 'right-low'   }
   ],
 

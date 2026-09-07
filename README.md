@@ -129,7 +129,7 @@ python -m http.server 8000
 
 ```bash
 node test/search.test.js    # การค้นหา 59 เคส
-node test/layout.test.js    # ระยะห่างบนแผนผัง 32 เคส
+node test/layout.test.js    # ระยะห่างบนแผนผัง 37 เคส
 ```
 
 `layout.test.js` มีเพราะพิกัดใน `MAP` พึ่งพากันหมด แก้ตัวเดียวแล้วอย่างอื่นเลื่อนตาม
