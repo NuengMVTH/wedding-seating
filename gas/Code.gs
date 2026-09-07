@@ -102,6 +102,22 @@ function nowIso() {
   return Utilities.formatDate(new Date(), 'Asia/Bangkok', "yyyy-MM-dd'T'HH:mm:ss");
 }
 
+/**
+ * อ่านค่าเวลาจากชีตให้ได้รูปแบบเดียวกันเสมอ
+ *
+ * เราเขียนลงไปเป็นข้อความ "2026-09-07T16:42:11" แต่ Google Sheets
+ * เห็นว่าหน้าตาเหมือนวันที่ เลยแปลงเป็นชนิด Date ให้เองเงียบ ๆ
+ * พออ่านกลับมาจะกลายเป็น "Sun Sep 07 2026 16:42:11 GMT+0700 (...)"
+ * ซึ่งตัดเอาเวลาไม่ได้ — หน้าเว็บเลยโชว์ "2026 น." แทน "16:42 น."
+ */
+function fmtStamp(v) {
+  if (!v) return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') {
+    return Utilities.formatDate(v, 'Asia/Bangkok', "yyyy-MM-dd'T'HH:mm:ss");
+  }
+  return String(v).trim();
+}
+
 /** ตำแหน่งกายภาพของโต๊ะ — คนละเรื่องกับ "ฝั่ง" ของแขก */
 function blockOf(tableNo) {
   return Number(tableNo) <= LEFT_BLOCK_MAX ? 'left' : 'right';
@@ -219,7 +235,7 @@ function readGuests() {
       nickname: String(rows[i][2] || '').trim(),
       tableNo: Number(rows[i][3]) || 0,
       note: String(rows[i][4] || '').trim(),
-      checkedInAt: rows[i][5] ? String(rows[i][5]) : '',
+      checkedInAt: fmtStamp(rows[i][5]),
       _row: i + 1
     });
   }

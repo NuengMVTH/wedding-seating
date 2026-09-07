@@ -259,6 +259,22 @@ function drawTables() {
  * จากมือถือหรือ iPad เครื่องอื่น หน้านี้เลยไม่รู้เรื่องเลย
  * ตอนนี้อ่านจากข้อมูลกลาง ทุกเครื่องจึงเห็นตรงกัน
  */
+/**
+ * ดึง HH:MM ออกจากเวลาที่ได้มา — ทนได้ทั้งรูปแบบ ISO และรูปแบบที่
+ * Google Sheets แปลงเป็นวันที่แล้วส่งกลับมาเป็นข้อความยาว ๆ
+ * (ฝั่งเซิร์ฟเวอร์แปลงให้เป็น ISO แล้ว แต่ข้อมูลเก่าที่ cache ไว้อาจยังไม่ใช่)
+ */
+function hhmm(v) {
+  const s = String(v || '');
+  if (!s) return '';
+  const iso = s.match(/T(\d{2}:\d{2})/);
+  if (iso) return iso[1];
+  const d = new Date(s);
+  if (!isNaN(d)) return String(d.getHours()).padStart(2, '0') + ':' +
+                        String(d.getMinutes()).padStart(2, '0');
+  return '';
+}
+
 function drawRecent() {
   const list = DATA.guests
     .filter(function (g) { return g.checkedIn; })
@@ -276,7 +292,7 @@ function drawRecent() {
   DATA.tables.forEach(function (t) { byNo[t.no] = t.group || ''; });
 
   $('recent').innerHTML = '<ul>' + list.map(function (g) {
-    const time = String(g.checkedInAt || '').slice(11, 16);   // HH:MM จาก ISO
+    const time = hhmm(g.checkedInAt);
     return '<li><span>' + esc(g.fullName) +
              (g.nickname ? ' (' + esc(g.nickname) + ')' : '') +
              '<br><small>โต๊ะ ' + g.tableNo + (byNo[g.tableNo] ? ' · ' + esc(byNo[g.tableNo]) : '') +
