@@ -549,6 +549,12 @@ body {
 .sm-entry-t { fill: #5a7d5a; font-size: 13px; font-weight: 600; }
 .sm-hint    { fill: var(--ink-soft); font-size: 11px; }
 
+/* จุดสังเกต (ซุ้มถ่ายรูป · โต๊ะลงทะเบียน · ห้องน้ำ)
+   ตั้งใจให้หน้าตาต่างจากโต๊ะชัด ๆ — สี่เหลี่ยมจาง ไม่ใช่วงกลมสีสด
+   เพราะข้อมูลหลักของหน้านี้คือโต๊ะ จุดสังเกตเป็นแค่ตัวช่วยหาทิศ */
+.sm-mark rect { fill: var(--sand); stroke: var(--line); stroke-width: 1; }
+.sm-mark text { fill: var(--ink-soft); font-size: 12px; font-weight: 600; }
+
 .sm-table { cursor: pointer; }
 .sm-table circle { fill: var(--paper); stroke: var(--line); stroke-width: 1.8; transition: all .18s; }
 .sm-table text   { fill: var(--ink-soft); font-size: 14px; font-weight: 700; pointer-events: none; }

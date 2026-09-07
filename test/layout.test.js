@@ -29,6 +29,27 @@ const lastRowBottom = MAP.rowY0 + 9 * MAP.rowGap + MAP.r;
 const entryY       = MAP.rowY0 + 9 * MAP.rowGap + ENTRY.off;
 const runwayEnd    = MAP.runway.y + MAP.runway.h;
 
+/* จุดสังเกตต้องไม่ทับวงกลมโต๊ะ และไม่ล้นออกนอกกรอบ
+   วางผิดที่ = ชี้ทางแขกผิด ซึ่งแย่กว่าไม่มีจุดสังเกตเลย */
+const slotsRaw = src.match(/function markSlots\(\)[\s\S]*?\n\}/);
+const markSlots = eval('(' + slotsRaw[0].replace('function markSlots()', 'function ()') + ')');
+const SLOTS = markSlots();
+
+const markChecks = [];
+for (const [name, s] of Object.entries(SLOTS)) {
+  const isSide = name.startsWith('right') || name.startsWith('left');
+  if (isSide) {
+    const col = name.startsWith('right') ? MAP.colX.rightOuter : MAP.colX.leftOuter;
+    const gap = name.startsWith('right')
+      ? s.x - (col + MAP.r)
+      : col - MAP.r - (s.x + s.w);
+    markChecks.push(['ป้าย ' + name + ' ไม่ทับวงกลมโต๊ะ', gap, 4]);
+  }
+  markChecks.push(['ป้าย ' + name + ' ไม่ล้นขอบขวา', MAP.w - (s.x + s.w), 0]);
+  markChecks.push(['ป้าย ' + name + ' ไม่ล้นขอบซ้าย', s.x, 0]);
+  markChecks.push(['ป้าย ' + name + ' ไม่ล้นขอบล่าง', MAP.h - (s.y + s.h), 0]);
+}
+
 const checks = [
   ['ป้ายฝั่งไม่ทับเวที',           labelTop - stageBottom,        6],
   ['ป้ายฝั่งไม่ทับวงกลมแถวแรก',    circleTop - labelBottom,       8],
@@ -44,7 +65,7 @@ const checks = [
 
 let pass = 0, fail = 0;
 console.log('── ระยะห่างบนแผนผัง (พิกเซลใน viewBox) ──');
-for (const [name, gap, min] of checks) {
+for (const [name, gap, min] of checks.concat(markChecks)) {
   const ok = gap >= min;
   ok ? pass++ : fail++;
   console.log('  ' + (ok ? '✅' : '❌') + ' ' + name.padEnd(30) +

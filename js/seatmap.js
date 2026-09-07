@@ -13,12 +13,42 @@
    เพราะลืมว่าวงกลมกินพื้นที่ขึ้นไปข้างบนอีก r พิกเซลจากจุดศูนย์กลาง
    กติกา: labelY ต้องน้อยกว่า (rowY0 - r) อย่างน้อยสัก 10 px */
 const MAP = {
-  w: 400, h: 720,
-  colX: { leftOuter: 58, leftAisle: 126, rightAisle: 274, rightOuter: 342 },
+  w: 470, h: 730,
+  cx: 235,                       // กึ่งกลางแนวนอน ใช้จัดเวที รันเวย์ ทางเข้า
+  colX: { leftOuter: 93, leftAisle: 161, rightAisle: 309, rightOuter: 377 },
   labelY: 94,
   rowY0: 130, rowGap: 50, r: 21,
-  runway: { x: 168, w: 64, y: 106, h: 496 }
+  runway: { x: 203, w: 64, y: 106, h: 496 },
+  stage:  { x: 153, w: 164, y: 24, h: 52 }
 };
+
+/* ── ที่ว่างสำหรับวางจุดสังเกต ─────────────────────────────────
+
+   กว้าง 470 แทน 400 เพราะต้องเผื่อขอบซ้าย-ขวาไว้วางป้าย
+   ถ้าไม่เผื่อ ป้ายจะไปทับวงกลมโต๊ะซึ่งเป็นข้อมูลหลักของหน้านี้
+
+   ตำแหน่งอ้างอิงจากแปลนจริงของ VIVACE:
+   แขกเดินขึ้นมาจากด้านล่าง จุดลงทะเบียนกับซุ้มถ่ายรูปจึงอยู่แถวนั้น   */
+function markSlots() {
+  const bottomY = MAP.rowY0 + 9 * MAP.rowGap + 52;      // แนวเดียวกับทางขึ้นฮอลล์
+  const sw = 62, gap = 8;                                // ความกว้างป้ายริม · ระยะห่างจากวงกลม
+
+  // คำนวณจากตำแหน่งคอลัมน์จริง ไม่ใช่ค่าคงที่ — ถ้าใครขยับผังทีหลัง
+  // ป้ายจะเลื่อนตามเอง ไม่ไปทับวงกลมโต๊ะ (เคยพลาดตรงนี้ ฝั่งซ้ายเหลือ 2 px)
+  const rightX = MAP.colX.rightOuter + MAP.r + gap;
+  const leftX  = MAP.colX.leftOuter - MAP.r - gap - sw;
+
+  const bw = 132, edge = 13;
+
+  return {
+    'entry-left':  { x: edge,           y: bottomY, w: bw, h: 44 },
+    'entry-right': { x: MAP.w - edge - bw, y: bottomY, w: bw, h: 44 },
+    'right-mid':   { x: rightX, y: 250, w: sw, h: 40 },
+    'right-low':   { x: rightX, y: 420, w: sw, h: 40 },
+    'left-mid':    { x: leftX,  y: 250, w: sw, h: 40 },
+    'left-low':    { x: leftX,  y: 420, w: sw, h: 40 }
+  };
+}
 
 /** พิกัดกลางวงกลมของโต๊ะหนึ่งโต๊ะ */
 function tableXY(no) {
@@ -62,8 +92,10 @@ function renderSeatMap(el, opts) {
 
   // ── เวที ──
   parts.push(
-    '<rect class="sm-stage" x="118" y="24" width="164" height="52" rx="8"/>' +
-    '<text class="sm-stage-t" x="200" y="56" text-anchor="middle">เวที</text>'
+    '<rect class="sm-stage" x="' + MAP.stage.x + '" y="' + MAP.stage.y +
+      '" width="' + MAP.stage.w + '" height="' + MAP.stage.h + '" rx="8"/>' +
+    '<text class="sm-stage-t" x="' + MAP.cx + '" y="' + (MAP.stage.y + 32) +
+      '" text-anchor="middle">เวที</text>'
   );
 
   // ── ทางเดินกลาง (รันเวย์) ──
@@ -72,8 +104,8 @@ function renderSeatMap(el, opts) {
     '" width="' + MAP.runway.w + '" height="' + MAP.runway.h + '" rx="6"/>'
   );
   parts.push(
-    '<text class="sm-runway-t" x="200" y="' + (MAP.runway.y + MAP.runway.h / 2) +
-    '" text-anchor="middle" transform="rotate(-90 200 ' +
+    '<text class="sm-runway-t" x="' + MAP.cx + '" y="' + (MAP.runway.y + MAP.runway.h / 2) +
+    '" text-anchor="middle" transform="rotate(-90 ' + MAP.cx + ' ' +
     (MAP.runway.y + MAP.runway.h / 2) + ')">ทางเดินกลาง</text>'
   );
 
@@ -81,10 +113,10 @@ function renderSeatMap(el, opts) {
   // เขียนแค่ "ซ้าย/ขวา" ไม่ใช่ชื่อฝั่ง เพราะแต่ละบล็อกมีแขกปนกันทั้งสองฝั่ง
   // (HONDA กับ Thaismile นั่งบล็อกขวาแต่เป็นแขกเจ้าสาว) — สีของวงกลมบอกฝั่งแทน
   parts.push(
-    '<text class="sm-side" x="92" y="' + MAP.labelY + '" text-anchor="middle">' +
-      esc(BLOCK_LABEL.left) + '</text>' +
-    '<text class="sm-side" x="308" y="' + MAP.labelY + '" text-anchor="middle">' +
-      esc(BLOCK_LABEL.right) + '</text>'
+    '<text class="sm-side" x="' + ((MAP.colX.leftOuter + MAP.colX.leftAisle) / 2) +
+      '" y="' + MAP.labelY + '" text-anchor="middle">' + esc(BLOCK_LABEL.left) + '</text>' +
+    '<text class="sm-side" x="' + ((MAP.colX.rightAisle + MAP.colX.rightOuter) / 2) +
+      '" y="' + MAP.labelY + '" text-anchor="middle">' + esc(BLOCK_LABEL.right) + '</text>'
   );
 
   // ── โต๊ะทั้ง 40 ──
@@ -142,12 +174,31 @@ function renderSeatMap(el, opts) {
   // ── ทางขึ้นฮอลล์ (ที่แขกเดินเข้ามา) ──
   const entryY = MAP.rowY0 + 9 * MAP.rowGap + 52;
   parts.push(
-    '<rect class="sm-entry" x="110" y="' + entryY + '" width="180" height="44" rx="8"/>' +
-    '<text class="sm-entry-t" x="200" y="' + (entryY + 27) + '" text-anchor="middle">▲ ทางขึ้นฮอลล์</text>'
+    '<rect class="sm-entry" x="' + (MAP.cx - 80) + '" y="' + entryY +
+      '" width="160" height="44" rx="8"/>' +
+    '<text class="sm-entry-t" x="' + MAP.cx + '" y="' + (entryY + 27) +
+      '" text-anchor="middle">▲ ทางขึ้นฮอลล์</text>'
   );
+
+  /* ── จุดสังเกตอื่น ๆ ──
+     วาดต่างจากโต๊ะชัดเจน (สี่เหลี่ยมเขียวจาง ไม่ใช่วงกลม) เพื่อไม่ให้แขก
+     เผลอนึกว่าเป็นโต๊ะแล้วกด — ข้อมูลหลักของหน้านี้ยังเป็นโต๊ะเสมอ */
+  const slots = markSlots();
+  (CONFIG.landmarks || []).forEach(function (m) {
+    const s = slots[m.at];
+    if (!s) return;   // ชื่อตำแหน่งผิด — ข้ามไปเงียบ ๆ ดีกว่าวาดทับของอื่น
+    parts.push(
+      '<g class="sm-mark">' +
+        '<rect x="' + s.x + '" y="' + s.y + '" width="' + s.w + '" height="' + s.h + '" rx="8"/>' +
+        '<text x="' + (s.x + s.w / 2) + '" y="' + (s.y + s.h / 2 + 4) +
+          '" text-anchor="middle">' + esc(m.label) + '</text>' +
+      '</g>'
+    );
+  });
+
   parts.push(
-    '<text class="sm-hint" x="200" y="' + (entryY + 66) + '" text-anchor="middle">' +
-    'คุณเดินเข้ามาจากตรงนี้</text>'
+    '<text class="sm-hint" x="' + MAP.cx + '" y="' + (entryY + 66) +
+      '" text-anchor="middle">คุณเดินเข้ามาจากตรงนี้</text>'
   );
 
   parts.push('</svg>');

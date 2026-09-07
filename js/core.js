@@ -28,6 +28,18 @@ const CONFIG = {
   leftBlockMax: 20,             // โต๊ะ 1-20 อยู่บล็อกซ้าย · 21-40 อยู่บล็อกขวา
   rowsPerSide:  10,
 
+  /* จุดสังเกตบนแผนผัง — แก้ตรงนี้ที่เดียว
+     at: ตำแหน่งที่จะไปวาง (ดูรายการ SLOTS ใน js/seatmap.js)
+       entry-left / entry-right = ข้างทางขึ้นฮอลล์ ด้านล่างสุด
+       right-mid / right-low    = ริมขวาของผัง
+       left-mid / left-low      = ริมซ้ายของผัง
+     ⚠️ ตำแหน่งพวกนี้ต้องตรงกับของจริงในฮอลล์ ไม่งั้นจะชี้ทางแขกผิด */
+  landmarks: [
+    { label: 'โต๊ะลงทะเบียน', at: 'entry-left'  },
+    { label: 'ซุ้มถ่ายรูป',    at: 'entry-right' },
+    { label: 'ห้องน้ำ',       at: 'right-low'   }
+  ],
+
   cacheKey:    'seating_cache_v1',
   cacheMaxAge: 1000 * 60 * 60 * 12   // ข้อมูลเก่ากว่า 12 ชม. ถือว่าน่าสงสัย แต่ยังใช้ได้
 };
