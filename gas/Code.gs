@@ -231,7 +231,11 @@ function publicPayload() {
   const guests = readGuests().map(function (g) {
     return {
       id: g.id, fullName: g.fullName, nickname: g.nickname,
-      tableNo: g.tableNo, checkedIn: !!g.checkedInAt
+      tableNo: g.tableNo, checkedIn: !!g.checkedInAt,
+      // ส่งเวลาเช็คอินไปด้วยเพื่อให้หน้าโต๊ะต้อนรับเรียง "เพิ่งเช็คอิน" ได้จริง
+      // (เดิมหน้านั้นจำเฉพาะที่กดในเครื่องตัวเอง แขกกดเองจากเครื่องอื่นจึงไม่ขึ้น)
+      // ยอมเปิดเวลามาถึงเป็นสาธารณะ — น้อยกว่าชื่อกับเลขโต๊ะที่เปิดอยู่แล้วมาก
+      checkedInAt: g.checkedInAt || ''
     };
   });
   const tables = readTables().map(function (t) {

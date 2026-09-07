@@ -63,7 +63,7 @@
   <div class="tabs">
     <button class="on" data-tab="checkin">เช็คอิน</button>
     <button data-tab="tables">สถานะโต๊ะ</button>
-    <button data-tab="recent">เพิ่งเช็คอิน</button>
+    <button data-tab="recent">เช็คอินแล้ว</button>
   </div>
 
   <!-- ── แท็บเช็คอิน ── -->
@@ -83,9 +83,10 @@
     <div class="tbl-grid" id="tblGrid"></div>
   </section>
 
-  <!-- ── แท็บเพิ่งเช็คอิน ── -->
+  <!-- ── แท็บเช็คอินแล้ว ── -->
   <section data-panel="recent" hidden>
-    <p class="hint">กดยกเลิกได้ถ้ากดผิดคน</p>
+    <p class="hint">เรียงคนล่าสุดขึ้นก่อน · รวมคนที่แขกกดเช็คอินเองจากเครื่องอื่นด้วย ·
+      อัปเดตเองทุก 45 วินาที หรือกด "โหลดข้อมูลใหม่" ด้านล่าง</p>
     <div class="recent" id="recent"></div>
   </section>
 
@@ -114,7 +115,8 @@ let DATA  = { tables: [], guests: [] };
 let INDEX = [];
 let PIN   = '';
 let ROLE  = '';
-const RECENT = [];   // รายการที่เพิ่งกดในเครื่องนี้ ไว้ให้กดยกเลิกได้ทันที
+// เคยมี RECENT เก็บรายการที่กดในเครื่องนี้ — ตัดออกแล้ว
+// เพราะทำให้แต่ละเครื่องเห็นไม่ตรงกัน ตอนนี้อ่านจากข้อมูลกลางอย่างเดียว
 
 const $ = function (id) { return document.getElementById(id); };
 
@@ -178,6 +180,7 @@ async function refresh(silent) {
       : '';
     drawStats();
     drawTables();
+    drawRecent();
     if ($('q').value) runSearch();
   } catch (err) {
     $('status').innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
@@ -249,18 +252,43 @@ function drawTables() {
   }).join('');
 }
 
+/**
+ * รายชื่อที่เช็คอินแล้วทั้งงาน เรียงคนล่าสุดขึ้นก่อน
+ *
+ * เดิมอ่านจาก RECENT ซึ่งจำเฉพาะที่กดในเครื่องตัวเอง — พอแขกกดเช็คอินเอง
+ * จากมือถือหรือ iPad เครื่องอื่น หน้านี้เลยไม่รู้เรื่องเลย
+ * ตอนนี้อ่านจากข้อมูลกลาง ทุกเครื่องจึงเห็นตรงกัน
+ */
 function drawRecent() {
-  if (!RECENT.length) {
-    $('recent').innerHTML = '<div class="empty-state"><p>ยังไม่ได้เช็คอินใครในเครื่องนี้</p></div>';
+  const list = DATA.guests
+    .filter(function (g) { return g.checkedIn; })
+    .sort(function (a, b) {
+      // ไม่มีเวลาก็ให้ไปอยู่ท้าย ๆ ดีกว่าแทรกขึ้นหัวมั่ว
+      return String(b.checkedInAt || '').localeCompare(String(a.checkedInAt || ''));
+    });
+
+  if (!list.length) {
+    $('recent').innerHTML = '<div class="empty-state"><p>ยังไม่มีใครเช็คอิน</p></div>';
     return;
   }
-  $('recent').innerHTML = '<ul>' + RECENT.map(function (r, i) {
-    return '<li><span>' + esc(r.fullName) + ' · โต๊ะ ' + r.tableNo + '</span>' +
-           '<button class="btn btn-sm btn-danger" data-undo="' + i + '">ยกเลิก</button></li>';
+
+  const byNo = {};
+  DATA.tables.forEach(function (t) { byNo[t.no] = t.group || ''; });
+
+  $('recent').innerHTML = '<ul>' + list.map(function (g) {
+    const time = String(g.checkedInAt || '').slice(11, 16);   // HH:MM จาก ISO
+    return '<li><span>' + esc(g.fullName) +
+             (g.nickname ? ' (' + esc(g.nickname) + ')' : '') +
+             '<br><small>โต๊ะ ' + g.tableNo + (byNo[g.tableNo] ? ' · ' + esc(byNo[g.tableNo]) : '') +
+             (time ? ' · ' + time + ' น.' : '') + '</small></span>' +
+           '<button class="btn btn-sm btn-danger" data-undo="' + esc(g.id) + '">ยกเลิก</button></li>';
   }).join('') + '</ul>';
 
   $('recent').querySelectorAll('[data-undo]').forEach(function (b) {
-    b.addEventListener('click', function () { undo(RECENT[Number(b.dataset.undo)], b); });
+    b.addEventListener('click', function () {
+      const g = DATA.guests.find(function (x) { return x.id === b.dataset.undo; });
+      if (g) undo(g, b);
+    });
   });
 }
 
@@ -310,11 +338,8 @@ async function checkIn(g, btn) {
     await postGAS({ type: 'checkIn', pin: PIN, actor: ROLE, id: g.id });
 
     // อัปเดตในเครื่องทันทีโดยไม่รอโหลดใหม่ — พนักงานจะได้กดคนถัดไปต่อได้เลย
-    markLocal(g.id, true);
-    RECENT.unshift({ id: g.id, fullName: g.fullName, tableNo: g.tableNo });
-    if (RECENT.length > 40) RECENT.pop();
-
-    drawStats(); drawTables(); runSearch();
+    markLocal(g.id, true, res.checkedInAt);
+    drawStats(); drawTables(); drawRecent(); runSearch();
   } catch (err) {
     btn.disabled = false; btn.textContent = label;
     alert('เช็คอินไม่สำเร็จ: ' + err.message);
@@ -326,8 +351,6 @@ async function undo(g, btn) {
   try {
     await postGAS({ type: 'undoCheckIn', pin: PIN, actor: ROLE, id: g.id });
     markLocal(g.id, false);
-    const i = RECENT.findIndex(function (r) { return r.id === g.id; });
-    if (i >= 0) RECENT.splice(i, 1);
     drawStats(); drawTables(); drawRecent(); runSearch();
   } catch (err) {
     if (btn) { btn.disabled = false; btn.textContent = 'ยกเลิก'; }
@@ -336,10 +359,18 @@ async function undo(g, btn) {
 }
 
 /** แก้สถานะในหน่วยความจำ + cache ให้ตรงกับที่เพิ่งส่งไป */
-function markLocal(id, on) {
+/**
+ * แก้สถานะในหน่วยความจำให้ตรงกับที่เพิ่งส่งไป
+ * ต้องอัปเดตเวลาด้วย ไม่ใช่แค่ true/false — ไม่งั้นคนที่เพิ่งเช็คอิน
+ * จะไม่มีเวลาแล้วตกไปอยู่ท้ายรายการ "เช็คอินแล้ว" ทั้งที่เพิ่งกดไปเมื่อกี้
+ */
+function markLocal(id, on, at) {
   [DATA.guests, INDEX].forEach(function (list) {
     const g = list.find(function (x) { return x.id === id; });
-    if (g) g.checkedIn = on;
+    if (g) {
+      g.checkedIn = on;
+      g.checkedInAt = on ? (at || new Date().toISOString().slice(0, 19)) : '';
+    }
   });
 }
 </script>
