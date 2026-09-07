@@ -322,6 +322,76 @@ function searchGuests(index, query, limit) {
   return hits.slice(0, limit || 30);
 }
 
+/**
+ * ค้นหา "โต๊ะ" จากชื่อกลุ่มหรือเลขโต๊ะ — คนละอย่างกับ searchGuests()
+ *
+ * ทำไมต้องมีแยก: searchGuests คืนเฉพาะ "คน" ถ้าโต๊ะนั้นยังไม่มีใครถูกใส่ชื่อไว้
+ * พิมพ์ "ตระกูลอิน" หรือ "HONDA" จะไม่เจออะไรเลยทั้งที่โต๊ะนั้นมีอยู่จริง
+ * ซึ่งเกิดขึ้นตลอดช่วงที่รายชื่อยังกรอกไม่ครบ
+ */
+/**
+ * กันการจับคู่ข้ามฝั่งเจ้าบ่าว/เจ้าสาว
+ *
+ * พอตัดวรรณยุกต์แล้ว "เจ้าสาว" → เจาสาว และ "เจ้าบ่าว" → เจาบาว
+ * ต่างกันแค่ตัวเดียว การยอมให้พิมพ์ผิดแม้แต่ 1 ตัวจึงข้ามฝั่งได้ทันที
+ * เช่นค้น "เพื่อนเจ้าสาว" แล้วได้ "เพื่อนเจ้าบ่าว" ติดมาด้วย
+ *
+ * ผลของความผิดพลาดนี้ไม่ใช่แค่รำคาญ — มันพาแขกไปนั่งผิดฝั่งของงาน
+ * จึงต้องกันที่ระดับความหมาย ไม่ใช่ปล่อยให้ระยะตัวอักษรตัดสิน
+ */
+function crossSideConflict(qn, gn) {
+  const qBride = qn.indexOf('เจาสาว') > -1, qGroom = qn.indexOf('เจาบาว') > -1;
+  const gBride = gn.indexOf('เจาสาว') > -1, gGroom = gn.indexOf('เจาบาว') > -1;
+  if (qBride && gGroom && !gBride) return true;
+  if (qGroom && gBride && !gGroom) return true;
+  return false;
+}
+
+function searchTables(tables, query, limit) {
+  const raw = String(query || '').trim();
+  if (!raw) return [];
+
+  // พิมพ์เลขล้วน = ตั้งใจหาโต๊ะตรง ๆ
+  if (/^\d{1,2}$/.test(raw)) {
+    const t = (tables || []).find(function (x) { return x.no === Number(raw); });
+    return t ? [Object.assign({}, t, { _score: 100 })] : [];
+  }
+
+  const q = normTh(raw);
+  if (!q) return [];
+  const qSk = skeleton(raw);
+
+  const hits = [];
+  (tables || []).forEach(function (t) {
+    const g = t.group || '';
+    if (!g) return;
+
+    const ng = normTh(g), gSk = skeleton(g);
+    if (crossSideConflict(q, ng)) return;
+
+    let s = 0;
+
+    if (ng === q) s = 100;
+    else if (ng.startsWith(q)) s = 90;
+    else if (ng.includes(q)) s = 80;
+    else if (qSk.length >= 2 && gSk.includes(qSk)) s = 65;
+    else if (q.length >= 3) {
+      /* เกณฑ์พิมพ์ผิดของ "ชื่อกลุ่ม" ต้องเข้มกว่าของ "ชื่อคน"
+         เพราะชื่อกลุ่มหลายอันต่างกันแค่ไม่กี่ตัว เช่น
+           เพื่อนเจ้าบ่าว / เพื่อนเจ้าสาว (อว.)  ต่างกัน 3 ตัว
+         ถ้าใช้เกณฑ์หลวมแบบชื่อคน พิมพ์หาเพื่อนเจ้าบ่าวจะได้โต๊ะเจ้าสาวติดมาด้วย
+         ซึ่งพาแขกไปนั่งผิดฝั่งได้เลย — ผูกเพดานกับความยาวคำแทนค่าคงที่ */
+      const cap = Math.min(3, Math.max(1, Math.floor(q.length * 0.2)));
+      if (editDistance(q, ng, cap) <= cap) s = 55;
+    }
+
+    if (s > 0) hits.push(Object.assign({}, t, { _score: s }));
+  });
+
+  hits.sort(function (a, b) { return b._score - a._score || a.no - b.no; });
+  return hits.slice(0, limit || 12);
+}
+
 /* ── 4. เรขาคณิตของผัง + คำบอกทาง ─────────────────────────────
 
    ผังจริงจากแปลน VIVACE:

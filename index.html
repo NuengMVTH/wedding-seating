@@ -35,7 +35,7 @@
              enterkeyhint="search" placeholder="พิมพ์ชื่อของคุณ…" aria-label="ค้นหาชื่อ">
       <button class="clear" id="clearBtn" type="button" aria-label="ล้างคำค้น" hidden>×</button>
     </div>
-    <p class="hint">พิมพ์ชื่อจริง ชื่อเล่น หรือชื่อกลุ่มก็ได้ — สะกดไม่ตรงเป๊ะก็ยังหาเจอ</p>
+    <p class="hint">พิมพ์ได้ทั้งชื่อจริง ชื่อเล่น ชื่อกลุ่ม (เช่น HONDA) หรือเลขโต๊ะ — สะกดไม่ตรงเป๊ะก็ยังหาเจอ</p>
 
     <div class="results" id="results"></div>
 
@@ -498,24 +498,62 @@ function runSearch() {
   els.idle.hidden = true;
   els.prompt.hidden = true;
 
-  const hits = searchGuests(INDEX, q, 25);
+  // ค้นทั้งสองอย่างพร้อมกัน — คนพิมพ์ "HONDA" อาจหมายถึงโต๊ะ ไม่ใช่คน
+  const tHits = searchTables(DATA.tables, q, 12);
+  const gHits = searchGuests(INDEX, q, 25);
 
-  if (!hits.length) {
+  if (!tHits.length && !gHits.length) {
     els.results.innerHTML =
       '<div class="empty-state">' +
         '<div class="big">🔍</div>' +
-        '<p>ไม่พบชื่อ "' + esc(q) + '"</p>' +
-        '<p style="font-size:13px">ลองพิมพ์แค่ชื่อจริง ชื่อเล่น หรือชื่อกลุ่มดูครับ<br>' +
+        '<p>ไม่พบ "' + esc(q) + '"</p>' +
+        '<p style="font-size:13px">ลองพิมพ์แค่ชื่อจริง ชื่อเล่น ชื่อกลุ่ม หรือเลขโต๊ะดูครับ<br>' +
         'หรือกดเลือกฝั่งด้านล่างเพื่อไล่ดูโต๊ะเอง</p>' +
       '</div>';
     els.prompt.hidden = false;
     return;
   }
 
-  els.results.innerHTML = hits.map(guestCardHtml).join('');
-  els.results.querySelectorAll('[data-gid]').forEach(function (btn) {
-    btn.addEventListener('click', function () { navigate('g=' + encodeURIComponent(btn.dataset.gid)); });
+  // ใส่หัวข้อคั่นเฉพาะตอนมีผลทั้งสองแบบ — ถ้ามีอย่างเดียวหัวข้อก็เป็นแค่ของรก
+  const both = tHits.length && gHits.length;
+  let html = '';
+
+  if (tHits.length) {
+    html += (both ? '<div class="res-head">โต๊ะ</div>' : '') +
+            tHits.map(tableCardHtml).join('');
+  }
+  if (gHits.length) {
+    html += (both ? '<div class="res-head">รายชื่อแขก</div>' : '') +
+            gHits.map(guestCardHtml).join('');
+  }
+  els.results.innerHTML = html;
+
+  els.results.querySelectorAll('[data-tbl]').forEach(function (b) {
+    b.addEventListener('click', function () { navigate('t=' + b.dataset.tbl); });
   });
+  els.results.querySelectorAll('[data-gid]').forEach(function (b) {
+    b.addEventListener('click', function () { navigate('g=' + encodeURIComponent(b.dataset.gid)); });
+  });
+}
+
+/** การ์ดโต๊ะ — ใช้ทั้งในผลค้นหาและในหน้าไล่ดูทีละฝั่ง จะได้หน้าตาเหมือนกันเสมอ */
+function tableCardHtml(t) {
+  const side = tableSide(t.no, DATA.tables);
+  const a = t.arrived || 0;
+  const full = a >= t.seats;
+
+  return '' +
+    '<button class="card guest-card table-card" data-tbl="' + t.no + '">' +
+      '<span class="tno ' + (side || '') + '"><small>โต๊ะ</small>' + t.no + '</span>' +
+      '<span class="guest-info">' +
+        '<span class="guest-name">' + esc(t.group || 'ยังไม่ระบุกลุ่ม') + '</span>' +
+        '<span class="guest-meta">' +
+          esc([SIDE_LABEL[side], tableSummary(t.no, DATA.tables).line].filter(Boolean).join(' · ')) +
+        '</span>' +
+      '</span>' +
+      '<span class="seats' + (full ? ' is-full' : '') + '">' +
+        '<b>' + a + '</b>มาแล้ว<br><small>จาก ' + t.seats + ' ที่</small></span>' +
+    '</button>';
 }
 
 function guestCardHtml(g) {
@@ -542,21 +580,7 @@ function viewBrowse(side, quiet) {
 
   const tables = tablesOfSide(side);
   const arrived = tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
-
-  const cards = tables.map(function (t) {
-    const a = t.arrived || 0;
-    const full = a >= t.seats;
-    return '' +
-      '<button class="card guest-card table-card" data-tbl="' + t.no + '">' +
-        '<span class="tno ' + side + '"><small>โต๊ะ</small>' + t.no + '</span>' +
-        '<span class="guest-info">' +
-          '<span class="guest-name">' + esc(t.group || 'ยังไม่ระบุกลุ่ม') + '</span>' +
-          '<span class="guest-meta">' + esc(tableSummary(t.no, DATA.tables).line) + '</span>' +
-        '</span>' +
-        '<span class="seats' + (full ? ' is-full' : '') + '">' +
-          '<b>' + a + '</b>มาแล้ว<br><small>จาก ' + t.seats + ' ที่</small></span>' +
-      '</button>';
-  }).join('');
+  const cards = tables.map(tableCardHtml).join('');
 
   els.page.innerHTML = '' +
     '<div class="browse-head">' +

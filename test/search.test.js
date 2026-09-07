@@ -134,6 +134,44 @@ for (const [no, want, why] of sideCases) {
     ' → "' + got + '" (คาดว่า "' + want + '")  [' + why + ']');
 }
 
+console.log('\n── ค้นหา "โต๊ะ" จากชื่อกลุ่ม (ใช้ได้แม้โต๊ะนั้นยังไม่มีรายชื่อ) ──');
+const tableCases = [
+  ['HONDA',        [34],     'ชื่อกลุ่มอังกฤษ'],
+  ['honda',        [34],     'พิมพ์เล็กก็เจอ'],
+  ['FORMICA',      [15],     'ชื่อกลุ่มที่อยู่ในวงเล็บ'],
+  ['บางหญ้าแพรก',   [7],      'พิมพ์แค่บางส่วนของชื่อกลุ่มไทย'],
+  ['สำรอง',        [19, 39], 'ชื่อกลุ่มซ้ำกันหลายโต๊ะ ต้องได้ครบ'],
+  ['Thaismile',    [36],     'ชื่อกลุ่มอีกกลุ่ม'],
+  ['34',           [34],     'เลขโต๊ะตรง ๆ'],
+  ['หน้าต่างดาว',   [],       'คำที่ไม่มีจริง ต้องไม่เจอ'],
+  ['HONDAA',       [34],     'พิมพ์เกินมา 1 ตัว ยังต้องเจอ'],
+];
+for (const [q, want, why] of tableCases) {
+  const got = ctx.searchTables(tables, q, 12).map(t => t.no).sort((a, b) => a - b);
+  const ok = got.length === want.length && got.every((v, i) => v === want[i]);
+  if (ok) pass++; else fail++;
+  console.log((ok ? '  ✅' : '  ❌') + ' "' + q + '" → โต๊ะ [' + (got.join(', ') || '—') +
+    ']  (คาดว่า [' + (want.join(', ') || '—') + '])  [' + why + ']');
+}
+
+console.log('\n── กฎห้ามจับคู่ข้ามฝั่ง (ผิดแล้วแขกนั่งผิดฝั่งงาน) ──');
+const crossCases = [
+  ['ญาติเจ้าสาว',   'bride', 'ค้นญาติเจ้าสาว ต้องไม่ได้โต๊ะฝั่งเจ้าบ่าว'],
+  ['ญาติเจ้าบ่าว',  'groom', 'ค้นญาติเจ้าบ่าว ต้องไม่ได้โต๊ะฝั่งเจ้าสาว'],
+  ['เพื่อนเจ้าสาว', 'bride', 'เจ้าสาว/เจ้าบ่าว ตัดวรรณยุกต์แล้วต่างกันตัวเดียว'],
+  ['เพื่อนเจ้าบ่าว','groom', 'ทิศทางกลับกันก็ต้องกันได้เหมือนกัน'],
+];
+for (const [q, mustSide, why] of crossCases) {
+  const got = ctx.searchTables(tables, q, 12);
+  const wrong = got.filter(t => t.side && t.side !== mustSide);
+  const ok = wrong.length === 0;
+  if (ok) pass++; else fail++;
+  console.log((ok ? '  ✅' : '  ❌') + ' "' + q + '" → โต๊ะ [' +
+    (got.map(t => t.no).join(', ') || '—') + ']' +
+    (wrong.length ? '  ⛔ ข้ามฝั่ง: ' + wrong.map(t => t.no).join(', ') : '') +
+    '  [' + why + ']');
+}
+
 console.log('\n── ตัวอย่างคำบอกทางที่แขกจะเห็นจริง ───────────────');
 [1, 8, 23, 40].forEach(n => console.log('  โต๊ะ ' + String(n).padStart(2) + ': ' + wayfinding(n)));
 

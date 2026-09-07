@@ -177,6 +177,14 @@ body {
 
 .results { margin-top: 20px; display: grid; gap: 10px; }
 
+/* หัวข้อคั่นในผลค้นหา — โผล่เฉพาะตอนเจอทั้งโต๊ะและรายชื่อพร้อมกัน */
+.res-head {
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-soft); font-weight: 600;
+  margin: 6px 2px -2px; padding-left: .16em;
+}
+.results .res-head:first-child { margin-top: 0; }
+
 .card {
   background: var(--paper);
   border: 1px solid var(--line); border-radius: var(--radius);
@@ -210,9 +218,13 @@ body {
 .tno.groom { background: var(--groom-lt); color: var(--groom); border-color: var(--groom-map-ln); }
 
 .guest-info { min-width: 0; flex: 1; }
-.guest-name { font-size: 17px; font-weight: 600; line-height: 1.45; }
+
+/* ต้องเป็น block — โครงสร้างเป็น <span> ซ้อนใน <button> (ใส่ <div> ไม่ได้
+   เพราะ HTML ห้าม block element อยู่ใน button) ถ้าไม่บังคับ display
+   ชื่อกับรายละเอียดจะไหลต่อกันเป็นบรรทัดเดียวติดกันหมด */
+.guest-name { display: block; font-size: 17px; font-weight: 600; line-height: 1.45; }
 .guest-name .nick { color: var(--ink-soft); font-weight: 400; font-size: 15px; }
-.guest-meta { font-size: 13px; color: var(--ink-soft); margin-top: 1px; }
+.guest-meta { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 2px; line-height: 1.5; }
 
 .badge {
   display: inline-block; padding: 1px 9px; border-radius: 999px;
