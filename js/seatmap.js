@@ -8,11 +8,16 @@
    ทิศทางบนผังตรงกับแปลนจริง: เวทีอยู่บน · ทางขึ้นฮอลล์อยู่ล่าง
 ═══════════════════════════════════════════════════════════════ */
 
+/* ⚠️ ตัวเลขพวกนี้พึ่งพากันหมด แก้ตัวเดียวแล้วอย่างอื่นเลื่อนตาม
+   โดยเฉพาะ labelY กับ rowY0 — ป้าย "ฝั่งซ้าย/ขวา" เคยทับขอบบนวงกลมแถวแรก
+   เพราะลืมว่าวงกลมกินพื้นที่ขึ้นไปข้างบนอีก r พิกเซลจากจุดศูนย์กลาง
+   กติกา: labelY ต้องน้อยกว่า (rowY0 - r) อย่างน้อยสัก 10 px */
 const MAP = {
-  w: 400, h: 690,
+  w: 400, h: 720,
   colX: { leftOuter: 58, leftAisle: 126, rightAisle: 274, rightOuter: 342 },
-  rowY0: 112, rowGap: 50, r: 21,
-  runway: { x: 168, w: 64, y: 96, h: 490 }
+  labelY: 94,
+  rowY0: 130, rowGap: 50, r: 21,
+  runway: { x: 168, w: 64, y: 106, h: 496 }
 };
 
 /** พิกัดกลางวงกลมของโต๊ะหนึ่งโต๊ะ */
@@ -76,8 +81,10 @@ function renderSeatMap(el, opts) {
   // เขียนแค่ "ซ้าย/ขวา" ไม่ใช่ชื่อฝั่ง เพราะแต่ละบล็อกมีแขกปนกันทั้งสองฝั่ง
   // (HONDA กับ Thaismile นั่งบล็อกขวาแต่เป็นแขกเจ้าสาว) — สีของวงกลมบอกฝั่งแทน
   parts.push(
-    '<text class="sm-side" x="92" y="98" text-anchor="middle">' + esc(BLOCK_LABEL.left) + '</text>' +
-    '<text class="sm-side" x="308" y="98" text-anchor="middle">' + esc(BLOCK_LABEL.right) + '</text>'
+    '<text class="sm-side" x="92" y="' + MAP.labelY + '" text-anchor="middle">' +
+      esc(BLOCK_LABEL.left) + '</text>' +
+    '<text class="sm-side" x="308" y="' + MAP.labelY + '" text-anchor="middle">' +
+      esc(BLOCK_LABEL.right) + '</text>'
   );
 
   // ── โต๊ะทั้ง 40 ──
