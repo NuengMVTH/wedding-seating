@@ -453,6 +453,45 @@ body {
   box-shadow: inset 3px 0 0 var(--gold);
 }
 
+/* ── รายชื่อในโต๊ะที่แตะเช็คอินได้ ─────────────────────────────
+
+   คนที่ยังไม่มาเป็นปุ่มจริง ๆ (กดได้) · คนที่มาแล้วเป็นข้อความเฉย ๆ
+   ต่างกันให้เห็นชัด จะได้ไม่มีใครกดซ้ำแล้วสงสัยว่าทำไมไม่มีอะไรเกิดขึ้น   */
+
+.mate-list li { padding: 0; background: none; }
+
+.mate-list .mate-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; padding: 11px 14px;
+  font-family: inherit; font-size: 15px; color: inherit; text-align: left;
+  background: var(--cream); border: 1px solid var(--line-soft);
+  border-radius: 9px; cursor: pointer;
+  transition: background .13s, border-color .13s, transform .1s;
+}
+.mate-list .mate-btn:hover { background: var(--gold-lt); border-color: var(--gold-shine); }
+.mate-list .mate-btn:active { transform: scale(.99); }
+.mate-list .mate-btn:disabled { opacity: .6; cursor: default; }
+.mate-list .mate-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.mate-cta {
+  flex: 0 0 auto; font-size: 11px; color: var(--gold-deep);
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 999px; padding: 2px 9px; white-space: nowrap;
+}
+
+/* คนที่เช็คอินแล้ว — เขียวจาง กดไม่ได้อีก */
+.mate-list li.is-in {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 14px; background: #eef4ed; border: 1px solid #d7e3d5; border-radius: 9px;
+}
+.mate-list li.is-in .mate-name { color: #3f5f3f; }
+.mate-list li.me .mate-name { font-weight: 700; }
+
+.mate-note { font-size: 12px; color: var(--ink-soft); margin: 10px 0 0; }
+
+.is-kiosk .mate-list .mate-btn,
+.is-kiosk .mate-list li.is-in { font-size: 17px; padding: 14px 16px; }
+
 /* ── แผงนับหัว ───────────────────────────────────────────── */
 
 .counter {

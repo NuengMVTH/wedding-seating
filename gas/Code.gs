@@ -356,6 +356,54 @@ function doPost(e) {
       return jsonOut({ ok: true, arrived: next, seats: t.seats, applied: applied, asked: delta });
     }
 
+    /* ── แขกกดเช็คอินชื่อตัวเอง — ไม่ต้องใช้รหัส ─────────────────
+
+       ต่างจาก 'arrive' ตรงที่ผูกกับ "คน" ไม่ใช่แค่ตัวเลขรวมของโต๊ะ
+       ทำให้รายชื่อในโต๊ะโชว์ได้ว่าใครมาถึงแล้วบ้าง
+
+       กันความเสียหายแบบเดียวกับ 'arrive' และเพิ่มอีกข้อ:
+         • ตั้งเวลาเช็คอินได้อย่างเดียว **ลบไม่ได้**
+           (ยกเลิกต้องใช้รหัสพนักงานผ่านคำสั่ง undoCheckIn)
+           ถ้าเปิดให้ลบด้วย คนกวนคนเดียวกดยกเลิกทั้งงานได้ในนาทีเดียว
+         • กดซ้ำไม่นับเพิ่ม — เช็คแล้วก็คือเช็คแล้ว ยอดไม่บวมจากการกดรัว     */
+    if (type === 'selfArrive') {
+      const sh = sheetOf(SH_GUESTS, HDR_GUESTS);
+      const row = findGuestRow(sh, data.id);
+      if (!row) return jsonOut({ ok: false, error: 'ไม่พบรายชื่อนี้' });
+
+      const already = String(sh.getRange(row, 6).getValue() || '').trim();
+      const tableNo = Number(sh.getRange(row, 4).getValue()) || 0;
+      const name    = String(sh.getRange(row, 2).getValue() || '');
+
+      if (already) {
+        // กดซ้ำ — ตอบว่าสำเร็จแต่ไม่แตะอะไร หน้าเว็บจะได้ไม่ต้องแยกเคส
+        return jsonOut({ ok: true, already: true, checkedInAt: already, tableNo: tableNo });
+      }
+
+      const stamp = nowIso();
+      sh.getRange(row, 6).setValue(stamp);
+      sh.getRange(row, 7).setValue(stamp);
+
+      // ขยับยอดนับหัวของโต๊ะตามไปด้วย ไม่งั้นสองตัวเลขจะเล่าคนละเรื่อง
+      let arrived = null, seats = null;
+      if (validTable(tableNo)) {
+        const tb = sheetOf(SH_TABLES, HDR_TABLES);
+        ensureArrivedColumn(tb);
+        const t = readTables().find(function (x) { return x.no === tableNo; });
+        if (t && t._row) {
+          arrived = Math.min(t.seats, t.arrived + 1);
+          seats = t.seats;
+          tb.getRange(t._row, COL_ARRIVED).setValue(arrived);
+        }
+      }
+
+      logIt('selfArrive', 'guest', { id: data.id, fullName: name, tableNo: tableNo },
+            arrived === null ? '' : 'ยอดโต๊ะ → ' + arrived + '/' + seats);
+      dropCache();
+      return jsonOut({ ok: true, checkedInAt: stamp, tableNo: tableNo,
+                       arrived: arrived, seats: seats });
+    }
+
     /* ── เช็คอิน / ยกเลิกเช็คอิน (พนักงานต้อนรับทำได้) ── */
     if (type === 'checkIn' || type === 'undoCheckIn') {
       const err = checkPin(data, 'staff');

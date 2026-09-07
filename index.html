@@ -324,12 +324,18 @@ function refreshView() {
   if (t >= 1 && t <= CONFIG.totalTables) {
     // ถ้าแขกกำลังเลือกดรอปดาวน์อยู่ อย่าเพิ่งวาดทับ — รอรอบหน้า
     const busyEl = document.activeElement;
-    const inCounter = busyEl && busyEl.closest && busyEl.closest('#counter');
-    if (!inCounter) drawCounter(t);
-    drawMap(t);
+    if (busyEl && busyEl.closest && busyEl.closest('#counter')) { drawMap(t); return; }
+
+    // วาดทั้งหน้าใหม่ ไม่ใช่แค่แผงนับหัว — ไม่งั้นป้าย "มาถึงแล้ว"
+    // ในรายชื่อจะไม่อัปเดตเวลามีคนเช็คอิน
+    viewTable(t, side, true);
     return;
   }
-  if (gid) { drawMap(MAP_HI); return; }
+  if (gid) {
+    const g = INDEX.find(function (x) { return x.id === gid; });
+    if (g) viewGuest(g, true); else drawMap(MAP_HI);
+    return;
+  }
   if (side === 'bride' || side === 'groom') { viewBrowse(side, true); return; }
 
   drawSidePick();
@@ -670,8 +676,8 @@ function viewBrowse(side, quiet) {
 
 /* ── รายละเอียดโต๊ะ + ปุ่มนับหัว ──────────────────────────── */
 
-function viewTable(no, side) {
-  chrome(false);
+function viewTable(no, side, quiet) {
+  chrome(false, quiet);
 
   const meta = DATA.tables.find(function (t) { return t.no === no; }) || { seats: 10, arrived: 0 };
   const s = tableSide(no, DATA.tables);
@@ -694,9 +700,8 @@ function viewTable(no, side) {
         // ไม่ขึ้น "0 ท่าน" ให้ดูเงียบ ๆ ตอนยังกรอกรายชื่อไม่ครบ
         '<h4>รายชื่อในโต๊ะนี้' + (mates.length ? ' ' + mates.length + ' ท่าน' : '') + '</h4>' +
         (mates.length
-          ? '<ul>' + mates.map(function (m) {
-              return '<li>' + esc(m.fullName) + (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</li>';
-            }).join('') + '</ul>'
+          ? '<ul class="mate-list">' + mates.map(mateRowHtml).join('') + '</ul>' +
+            '<p class="mate-note">แตะชื่อเพื่อแจ้งว่ามาถึงแล้ว — มากันหลายคนแตะได้ทีละชื่อ</p>'
           : '<p style="font-size:14px;color:var(--ink-soft)">ยังไม่มีรายชื่อในโต๊ะนี้</p>') +
       '</div>' +
     '</div>';
@@ -705,7 +710,69 @@ function viewTable(no, side) {
   els.mapSec.hidden = false;
   drawCounter(no);
   drawMap(no);
-  setTimeout(function () { scrollToTable(els.map, no); }, 250);
+  bindMateRows();
+  if (!quiet) setTimeout(function () { scrollToTable(els.map, no); }, 250);
+}
+
+/** แถวรายชื่อหนึ่งคน — แตะได้ถ้ายังไม่เช็คอิน */
+function mateRowHtml(m, meId) {
+  const done = !!m.checkedIn;
+  const cls = ['mate'];
+  if (done) cls.push('is-in');
+  if (meId && m.id === meId) cls.push('me');
+
+  return '<li class="' + cls.join(' ') + '">' +
+    (done
+      ? '<span class="mate-name">' + esc(m.fullName) +
+          (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</span>' +
+        '<span class="badge badge-in">มาถึงแล้ว</span>'
+      : '<button class="mate-btn" data-checkin="' + esc(m.id) + '">' +
+          '<span class="mate-name">' + esc(m.fullName) +
+            (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</span>' +
+          '<span class="mate-cta">แตะเพื่อแจ้งว่ามาถึง</span>' +
+        '</button>') +
+  '</li>';
+}
+
+function bindMateRows() {
+  els.page.querySelectorAll('[data-checkin]').forEach(function (b) {
+    b.addEventListener('click', function () { selfArrive(b.dataset.checkin, b); });
+  });
+}
+
+/**
+ * แขกแจ้งว่ามาถึงด้วยตัวเอง — ผูกกับชื่อ ไม่ใช่แค่ตัวเลขรวมของโต๊ะ
+ * เซิร์ฟเวอร์ขยับยอดนับหัวของโต๊ะให้เองด้วย จะได้ไม่ต้องยิงสองครั้ง
+ */
+async function selfArrive(id, btn) {
+  BUSY = true;
+  btn.disabled = true;
+  const keep = btn.innerHTML;
+  btn.innerHTML = '<span class="mate-name">กำลังบันทึก…</span>';
+
+  try {
+    const res = await postGAS({ type: 'selfArrive', id: id });
+
+    const g = DATA.guests.find(function (x) { return x.id === id; });
+    if (g) g.checkedIn = true;
+    const gi = INDEX.find(function (x) { return x.id === id; });
+    if (gi) gi.checkedIn = true;
+
+    if (res.arrived !== null && res.arrived !== undefined) {
+      const t = DATA.tables.find(function (x) { return x.no === res.tableNo; });
+      if (t) t.arrived = res.arrived;
+    }
+
+    // วาดใหม่จาก URL ปัจจุบัน จะได้ใช้ได้ทั้งหน้าโต๊ะและหน้าแขกรายคน
+    refreshView();
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = keep;
+    alert('บันทึกไม่สำเร็จ: ' + err.message);
+  } finally {
+    BUSY = false;
+    LAST_SIG = dataSignature(DATA);
+  }
 }
 
 /**
@@ -758,7 +825,9 @@ function drawCounter(no) {
       '<button class="btn btn-sm" id="minusBtn"' + (a <= 0 ? ' disabled' : '') + '>ลดจำนวน</button>' +
     '</div>' +
 
-    '<p class="count-note">มากันกี่คนเลือกตรงนั้นแล้วกด "มาถึงแล้ว" ครั้งเดียว — กดผิดใช้แถวล่างแก้ได้</p>' +
+    // เตือนเรื่องนับซ้ำ — สองทางนี้บวกยอดเดียวกัน ถ้าใช้ทั้งคู่จะเกินจริง
+    '<p class="count-note">สำหรับคนที่<b>ไม่มีชื่อ</b>ในรายชื่อด้านล่าง — ' +
+      'ถ้าแตะชื่อตัวเองไปแล้วไม่ต้องกดตรงนี้อีก<br>กดผิดใช้แถวล่างแก้ได้</p>' +
     '<div id="countMsg"></div>';
 
   if (!full) $('plusBtn').addEventListener('click', function () {
@@ -831,8 +900,8 @@ async function arrive(no, delta) {
 
 /* ── ที่นั่งของแขกรายคน ───────────────────────────────────── */
 
-function viewGuest(g) {
-  chrome(false);
+function viewGuest(g, quiet) {
+  chrome(false, quiet);
 
   const meta = DATA.tables.find(function (t) { return t.no === g.tableNo; }) || {};
   const side = tableSide(g.tableNo, DATA.tables);
@@ -853,25 +922,31 @@ function viewGuest(g) {
 
       (p ? '<div class="wayfind"><b>วิธีเดินไปโต๊ะ</b>' + esc(wayfinding(g.tableNo)) + '</div>' : '') +
 
+      (g.checkedIn
+        ? '<div class="notice notice-ok" style="margin-top:18px">✓ คุณแจ้งว่ามาถึงแล้ว</div>'
+        : '<div class="btn-row no-print"><button class="btn btn-primary btn-lg" ' +
+            'data-checkin="' + esc(g.id) + '">✓ ฉันมาถึงแล้ว</button></div>') +
+
       '<div class="tablemates">' +
         '<h4>ร่วมโต๊ะกับ ' + Math.max(0, mates.length - 1) + ' ท่าน</h4>' +
-        '<ul>' + mates.map(function (m) {
-          return '<li' + (m.id === g.id ? ' class="me"' : '') + '>' + esc(m.fullName) +
-                 (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</li>';
+        '<ul class="mate-list">' + mates.map(function (m) {
+          return mateRowHtml(m, g.id);
         }).join('') + '</ul>' +
+        '<p class="mate-note">แตะชื่อคนที่มาด้วยกันเพื่อแจ้งว่ามาถึงแล้วได้เลย</p>' +
       '</div>' +
 
       '<div class="btn-row no-print">' +
-        '<button class="btn btn-primary" id="toTableBtn">ดูโต๊ะนี้ / แจ้งว่ามาถึง</button>' +
+        '<button class="btn" id="toTableBtn">ดูโต๊ะนี้ทั้งหมด</button>' +
       '</div>' +
     '</div>';
 
   els.page.hidden = false;
   els.mapSec.hidden = false;
   drawMap(g.tableNo);
-  setTimeout(function () { scrollToTable(els.map, g.tableNo); }, 250);
+  if (!quiet) setTimeout(function () { scrollToTable(els.map, g.tableNo); }, 250);
 
   $('toTableBtn').addEventListener('click', function () { navigate('t=' + g.tableNo); });
+  bindMateRows();
 }
 
 /* ── แผนผัง ───────────────────────────────────────────────── */
