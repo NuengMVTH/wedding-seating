@@ -90,6 +90,14 @@
           <span class="s" id="groomSub"></span>
         </button>
       </div>
+
+      <!-- ซ่อนปุ่มตัวอักษรทั้งชุดไว้หลังปุ่มเดียว — ถ้าโชว์ทั้ง 40 ตัวบนหน้าแรก
+           หน้าเว็บจะรกจนเสียความเรียบที่ตั้งใจทำไว้ -->
+      <button class="alpha-btn" id="alphaBtn" hidden>
+        <span class="ico">ก ข ค</span>
+        <span class="t">ค้นจากตัวอักษรแรกของชื่อ</span>
+        <span class="s" id="alphaSub"></span>
+      </button>
     </div>
 
     <nav class="mini-nav no-print">
@@ -401,6 +409,8 @@ function bind() {
     b.addEventListener('click', function () { navigate('side=' + b.dataset.pick); });
   });
 
+  $('alphaBtn').addEventListener('click', function () { navigate('alpha=1'); });
+
   $('showMapLink').addEventListener('click', function (e) {
     e.preventDefault();
     drawMap(0);
@@ -420,9 +430,10 @@ function bind() {
 /** อ่าน URL แล้วแสดงหน้าที่ตรงกัน — ทางเข้าเดียวของการเปลี่ยนหน้าทั้งเว็บ */
 function render() {
   const p = new URLSearchParams(location.search);
-  const gid  = p.get('g');
-  const t    = Number(p.get('t'));
-  const side = p.get('side');
+  const gid   = p.get('g');
+  const t     = Number(p.get('t'));
+  const side  = p.get('side');
+  const alpha = p.get('alpha');
 
   els.home.hidden = true;
   els.page.hidden = true;
@@ -435,6 +446,7 @@ function render() {
   }
   if (t >= 1 && t <= CONFIG.totalTables) return viewTable(t, side);
   if (side === 'bride' || side === 'groom') return viewBrowse(side);
+  if (alpha) return alpha === '1' ? viewLetters() : viewLetter(alpha);
 
   return viewHome();
 }
@@ -478,6 +490,11 @@ function drawSidePick() {
 
   // ยังไม่ได้ระบุฝั่งให้โต๊ะไหนเลย → ซ่อนปุ่มไว้ ดีกว่าให้กดแล้วเจอหน้าเปล่า
   els.prompt.hidden = tablesOfSide('bride').length + tablesOfSide('groom').length === 0;
+
+  // ปุ่มตัวอักษรโผล่เฉพาะตอนมีรายชื่อจริง — ไม่มีชื่อก็ไม่มีอะไรให้ไล่ดู
+  const letters = lettersOf(DATA.guests);
+  $('alphaBtn').hidden = letters.length === 0;
+  $('alphaSub').textContent = letters.length + ' ตัวอักษร · ' + DATA.guests.length + ' ท่าน';
 }
 
 function tablesOfSide(side) {
@@ -571,6 +588,52 @@ function guestCardHtml(g) {
         '<span class="guest-meta">' + esc(meta.join(' · ')) + '</span>' +
       '</span>' +
     '</button>';
+}
+
+/* ── ค้นจากตัวอักษรแรกของชื่อ ─────────────────────────────── */
+
+function viewLetters() {
+  chrome(false);
+
+  const letters = lettersOf(DATA.guests);
+
+  els.page.innerHTML = '' +
+    '<div class="browse-head"><h2>ชื่อของคุณขึ้นต้นด้วยตัวอะไร<br>' +
+      '<span class="count">แตะตัวอักษรแรกของชื่อจริง</span></h2></div>' +
+    (letters.length
+      ? '<div class="alpha-grid">' + letters.map(function (l) {
+          return '<button class="alpha-key" data-letter="' + esc(l.letter) + '">' +
+                   '<b>' + esc(l.letter) + '</b><i>' + l.count + '</i></button>';
+        }).join('') + '</div>' +
+        '<p class="map-filter-hint">แสดงเฉพาะตัวอักษรที่มีรายชื่ออยู่จริง</p>'
+      : '<div class="empty-state"><p>ยังไม่มีรายชื่อในระบบ</p></div>');
+
+  els.page.hidden = false;
+
+  els.page.querySelectorAll('[data-letter]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      navigate('alpha=' + encodeURIComponent(b.dataset.letter));
+    });
+  });
+}
+
+function viewLetter(letter) {
+  chrome(false);
+
+  const list = guestsByLetter(INDEX, letter);
+
+  els.page.innerHTML = '' +
+    '<div class="browse-head"><h2>ชื่อขึ้นต้นด้วย “' + esc(letter) + '”<br>' +
+      '<span class="count">' + list.length + ' ท่าน</span></h2></div>' +
+    (list.length
+      ? '<div class="results">' + list.map(guestCardHtml).join('') + '</div>'
+      : '<div class="empty-state"><p>ไม่มีรายชื่อที่ขึ้นต้นด้วยตัวนี้</p></div>');
+
+  els.page.hidden = false;
+
+  els.page.querySelectorAll('[data-gid]').forEach(function (b) {
+    b.addEventListener('click', function () { navigate('g=' + encodeURIComponent(b.dataset.gid)); });
+  });
 }
 
 /* ── รายการโต๊ะทีละฝั่ง ───────────────────────────────────── */

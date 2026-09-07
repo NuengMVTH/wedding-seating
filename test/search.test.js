@@ -172,6 +172,36 @@ for (const [q, mustSide, why] of crossCases) {
     '  [' + why + ']');
 }
 
+console.log('\n── ตัวอักษรแรกของชื่อ (สำหรับผู้สูงอายุที่ไม่พิมพ์) ──');
+const letterCases = [
+  ['สมชาย ใจดี',           'ส', 'ชื่อไทยทั่วไป'],
+  ['นางสาวสมหญิง รักดี',   'ส', 'ต้องตัดคำนำหน้าก่อน'],
+  ['ดร.วิชัย มั่นคง',       'ว', 'คำนำหน้าแบบมีจุด'],
+  ['เอกชัย พงษ์ศิริ',       'อ', 'สระ เ นำหน้า ต้องข้ามไปที่ อ'],
+  ['ไพโรจน์ ทองมาก',       'พ', 'สระ ไ นำหน้า'],
+  ['ใจดี มีสุข',            'จ', 'สระ ใ นำหน้า'],
+  ['แดง สายบัว',           'ด', 'สระ แ นำหน้า'],
+  ['โสภา ศรีสุข',          'ส', 'สระ โ นำหน้า'],
+  ['John Smith',          'A-Z', 'ชื่อภาษาอังกฤษรวมเป็นกองเดียว'],
+];
+for (const [name, want, why] of letterCases) {
+  const got = ctx.firstLetter(name);
+  const ok = got === want;
+  if (ok) pass++; else fail++;
+  console.log((ok ? '  ✅' : '  ❌') + ' ' + name.padEnd(22) + ' → "' + got +
+    '"  (คาดว่า "' + want + '")  [' + why + ']');
+}
+
+// ปุ่มตัวอักษรต้องไม่มีตัวที่กดแล้วเจอหน้าเปล่า
+const buckets = ctx.lettersOf(guests);
+const emptyBucket = buckets.filter(b => ctx.guestsByLetter(index, b.letter).length === 0);
+const sumOk = buckets.reduce((s, b) => s + b.count, 0) === guests.length;
+if (!emptyBucket.length) pass++; else fail++;
+console.log((emptyBucket.length ? '  ❌' : '  ✅') +
+  ' ไม่มีปุ่มตัวอักษรที่กดแล้วเจอหน้าเปล่า (' + buckets.length + ' ปุ่ม)');
+if (sumOk) pass++; else fail++;
+console.log((sumOk ? '  ✅' : '  ❌') + ' จำนวนบนปุ่มรวมกันเท่ากับจำนวนแขกทั้งหมด');
+
 console.log('\n── ตัวอย่างคำบอกทางที่แขกจะเห็นจริง ───────────────');
 [1, 8, 23, 40].forEach(n => console.log('  โต๊ะ ' + String(n).padStart(2) + ': ' + wayfinding(n)));
 

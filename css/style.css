@@ -282,6 +282,64 @@ body {
 .side-btn.groom .t    { color: var(--groom); }
 .side-btn.groom:hover { background: var(--groom-lt); border-color: var(--groom); }
 
+/* ปุ่มเปิดหน้าค้นจากตัวอักษร — เต็มความกว้าง อยู่ใต้ปุ่มเลือกฝั่ง
+   ใช้โครงเดียวกับ .side-btn แต่วางแนวนอนเพื่อไม่ให้กินพื้นที่แนวตั้งเพิ่ม */
+.alpha-btn {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; margin-top: 12px; padding: 16px 18px;
+  border-radius: 18px; border: 1px solid var(--line); background: var(--paper);
+  font-family: inherit; text-align: left; cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform .14s, box-shadow .14s, border-color .14s, background .14s;
+}
+.alpha-btn:hover  { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--gold-shine); background: var(--gold-lt); }
+.alpha-btn:active { transform: scale(.99); }
+.alpha-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.alpha-btn .ico {
+  flex: 0 0 auto; padding: 8px 12px; border-radius: 11px;
+  background: var(--gold-lt); border: 1px solid var(--line-soft);
+  font-family: var(--serif); font-size: 17px; color: var(--gold-deep); letter-spacing: .05em;
+}
+.alpha-btn .t { display: block; font-family: var(--serif); font-size: 18px; font-weight: 600; }
+.alpha-btn .s { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
+
+/* ── แป้นตัวอักษร ────────────────────────────────────────────
+
+   ปุ่มใหญ่กว่าปกติมากโดยตั้งใจ — คนที่ใช้หน้านี้คือผู้สูงอายุที่กด
+   แป้นพิมพ์เล็ก ๆ ไม่ถนัด ถ้าปุ่มเล็กก็ไม่ได้แก้ปัญหาอะไรเลย        */
+
+.alpha-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px; margin-top: 4px;
+}
+
+.alpha-key {
+  position: relative;
+  min-height: 74px; padding: 10px 6px 6px;
+  border-radius: 15px; border: 1px solid var(--line); background: var(--paper);
+  font-family: inherit; cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform .12s, box-shadow .12s, border-color .12s, background .12s;
+}
+.alpha-key:hover  { transform: translateY(-2px); box-shadow: var(--shadow-lg);
+                    border-color: var(--gold); background: var(--gold-lt); }
+.alpha-key:active { transform: scale(.97); }
+.alpha-key:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.alpha-key b {
+  display: block; font-family: var(--serif);
+  font-size: 32px; font-weight: 600; line-height: 1.1; color: var(--ink);
+}
+.alpha-key i {
+  display: block; font-style: normal;
+  font-size: 12px; color: var(--ink-soft); margin-top: 2px;
+}
+
+.is-kiosk .alpha-grid { grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); }
+.is-kiosk .alpha-key { min-height: 88px; }
+.is-kiosk .alpha-key b { font-size: 38px; }
+
 /* ── หัวข้อหน้าไล่ดูโต๊ะ ──────────────────────────────────── */
 
 .browse-head { display: flex; align-items: center; gap: 10px; margin: 20px 0 14px; }

@@ -322,6 +322,59 @@ function searchGuests(index, query, limit) {
   return hits.slice(0, limit || 30);
 }
 
+/* ── ค้นจากตัวอักษรแรกของชื่อ ─────────────────────────────────
+
+   ทางเข้าสำหรับผู้สูงอายุที่พิมพ์บนจอไม่ถนัด และมักตอบได้แค่
+   "ฉันเป็นน้าเจ้าสาว" โดยไม่รู้ว่ากลุ่มตัวเองชื่ออะไรในระบบ
+   แต่ตัวอักษรแรกของชื่อตัวเอง ทุกคนรู้แน่นอน                            */
+
+// สระหน้าที่เขียนนำหน้าพยัญชนะ — ต้องข้ามไปดูตัวถัดไป
+// "เอกชัย" คนไทยหาที่ตัว อ ไม่ใช่ตัว เ (ใ ถูก normTh แปลงเป็น ไ ไปแล้ว)
+const LEAD_VOWELS = 'เแโไ';
+
+/**
+ * ตัวอักษรที่ควรใช้จัดหมวดชื่อนี้
+ * คืน '' ถ้าหาไม่ได้ · คืน 'A-Z' สำหรับชื่อภาษาอังกฤษ (รวมเป็นกองเดียว)
+ */
+function firstLetter(name) {
+  const s = normTh(name);          // ตัดคำนำหน้า วรรณยุกต์ ช่องว่างออกแล้ว
+  if (!s) return '';
+
+  let c = s.charAt(0);
+  if (LEAD_VOWELS.indexOf(c) > -1 && s.length > 1) c = s.charAt(1);
+
+  if (/[a-z0-9]/.test(c)) return 'A-Z';
+  return c;
+}
+
+/**
+ * จัดกลุ่มแขกตามตัวอักษรแรก คืนเฉพาะตัวที่มีคนจริง
+ * [{ letter, count }] เรียงตามลำดับพจนานุกรมไทย
+ */
+function lettersOf(guests) {
+  const bucket = {};
+  (guests || []).forEach(function (g) {
+    const c = firstLetter(g.fullName);
+    if (c) bucket[c] = (bucket[c] || 0) + 1;
+  });
+
+  return Object.keys(bucket)
+    .map(function (c) { return { letter: c, count: bucket[c] }; })
+    .sort(function (a, b) {
+      // กองภาษาอังกฤษไว้ท้ายสุดเสมอ ไม่ปนกับลำดับพยัญชนะไทย
+      if (a.letter === 'A-Z') return 1;
+      if (b.letter === 'A-Z') return -1;
+      return a.letter.localeCompare(b.letter, 'th');
+    });
+}
+
+/** แขกทุกคนที่ชื่อขึ้นต้นด้วยตัวอักษรนี้ */
+function guestsByLetter(index, letter) {
+  return (index || [])
+    .filter(function (g) { return firstLetter(g.fullName) === letter; })
+    .sort(function (a, b) { return a.fullName.localeCompare(b.fullName, 'th'); });
+}
+
 /**
  * ค้นหา "โต๊ะ" จากชื่อกลุ่มหรือเลขโต๊ะ — คนละอย่างกับ searchGuests()
  *
