@@ -232,8 +232,3 @@ function renderSeatMap(el, opts) {
   }
 }
 
-/** เลื่อนหน้าจอให้เห็นโต๊ะที่ไฮไลต์ — สำคัญบนมือถือที่ผังยาวเกินจอ */
-function scrollToTable(el, no) {
-  const g = el.querySelector('[data-table="' + no + '"]');
-  if (g && g.scrollIntoView) g.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}

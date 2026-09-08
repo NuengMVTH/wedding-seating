@@ -711,7 +711,8 @@ function viewTable(no, side, quiet) {
   drawCounter(no);
   drawMap(no);
   bindMateRows();
-  if (!quiet) setTimeout(function () { scrollToTable(els.map, no); }, 250);
+  // ไม่ลากจอลงไปหาแผนผัง — เปิดหน้ามาต้องเห็นเลขโต๊ะกับวิธีเดินก่อน
+  // ซึ่งอยู่บนสุด ส่วนแผนผังเป็นของประกอบ ใครอยากดูค่อยเลื่อนลงเอง
 }
 
 /** แถวรายชื่อหนึ่งคน — แตะได้ถ้ายังไม่เช็คอิน */
@@ -943,7 +944,6 @@ function viewGuest(g, quiet) {
   els.page.hidden = false;
   els.mapSec.hidden = false;
   drawMap(g.tableNo);
-  if (!quiet) setTimeout(function () { scrollToTable(els.map, g.tableNo); }, 250);
 
   $('toTableBtn').addEventListener('click', function () { navigate('t=' + g.tableNo); });
   bindMateRows();
