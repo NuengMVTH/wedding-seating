@@ -715,49 +715,62 @@ function viewTable(no, side, quiet) {
   // ซึ่งอยู่บนสุด ส่วนแผนผังเป็นของประกอบ ใครอยากดูค่อยเลื่อนลงเอง
 }
 
-/** แถวรายชื่อหนึ่งคน — แตะได้ถ้ายังไม่เช็คอิน */
+/** แถวรายชื่อหนึ่งคน — แตะเพื่อแจ้งว่ามาถึง · แตะซ้ำเพื่อยกเลิก */
 function mateRowHtml(m, meId) {
   const done = !!m.checkedIn;
   const cls = ['mate'];
   if (done) cls.push('is-in');
   if (meId && m.id === meId) cls.push('me');
 
+  const name = esc(m.fullName) + (m.nickname ? ' (' + esc(m.nickname) + ')' : '');
+
   return '<li class="' + cls.join(' ') + '">' +
-    (done
-      ? '<span class="mate-name">' + esc(m.fullName) +
-          (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</span>' +
-        '<span class="badge badge-in">มาถึงแล้ว</span>'
-      : '<button class="mate-btn" data-checkin="' + esc(m.id) + '">' +
-          '<span class="mate-name">' + esc(m.fullName) +
-            (m.nickname ? ' (' + esc(m.nickname) + ')' : '') + '</span>' +
-          '<span class="mate-cta">แตะเพื่อแจ้งว่ามาถึง</span>' +
-        '</button>') +
+    '<button class="mate-btn" data-' + (done ? 'undo' : 'checkin') + '="' + esc(m.id) + '">' +
+      '<span class="mate-name">' + name + '</span>' +
+      (done
+        ? '<span class="badge badge-in">มาถึงแล้ว</span>'
+        : '<span class="mate-cta">แตะเพื่อแจ้งว่ามาถึง</span>') +
+    '</button>' +
   '</li>';
 }
 
 function bindMateRows() {
   els.page.querySelectorAll('[data-checkin]').forEach(function (b) {
-    b.addEventListener('click', function () { selfArrive(b.dataset.checkin, b); });
+    b.addEventListener('click', function () { setArrived(b.dataset.checkin, b, true); });
+  });
+
+  els.page.querySelectorAll('[data-undo]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      // ถามก่อนเสมอ — รายชื่อเรียงติดกันและมีชื่อคล้ายกัน นิ้วปัดโดนง่ายมาก
+      const who = b.querySelector('.mate-name');
+      if (!confirm('ยกเลิกการแจ้งว่ามาถึงของ\n\n' +
+                   (who ? who.textContent : 'ท่านนี้') + '\n\nใช่หรือไม่?')) return;
+      setArrived(b.dataset.undo, b, false);
+    });
   });
 }
 
 /**
- * แขกแจ้งว่ามาถึงด้วยตัวเอง — ผูกกับชื่อ ไม่ใช่แค่ตัวเลขรวมของโต๊ะ
+ * แขกแจ้ง/ยกเลิกการมาถึงด้วยตัวเอง — ผูกกับชื่อ ไม่ใช่แค่ตัวเลขรวมของโต๊ะ
  * เซิร์ฟเวอร์ขยับยอดนับหัวของโต๊ะให้เองด้วย จะได้ไม่ต้องยิงสองครั้ง
+ * และตัวเลขบนหน้าแขกกับหน้าพนักงานจึงมาจากแหล่งเดียวกันเสมอ
  */
-async function selfArrive(id, btn) {
+async function setArrived(id, btn, arriving) {
   BUSY = true;
   btn.disabled = true;
   const keep = btn.innerHTML;
   btn.innerHTML = '<span class="mate-name">กำลังบันทึก…</span>';
 
   try {
-    const res = await postGAS({ type: 'selfArrive', id: id });
+    const res = await postGAS({ type: arriving ? 'selfArrive' : 'selfUndo', id: id });
 
-    const g = DATA.guests.find(function (x) { return x.id === id; });
-    if (g) g.checkedIn = true;
-    const gi = INDEX.find(function (x) { return x.id === id; });
-    if (gi) gi.checkedIn = true;
+    [DATA.guests, INDEX].forEach(function (list) {
+      const g = list.find(function (x) { return x.id === id; });
+      if (g) {
+        g.checkedIn = arriving;
+        g.checkedInAt = arriving ? (res.checkedInAt || '') : '';
+      }
+    });
 
     if (res.arrived !== null && res.arrived !== undefined) {
       const t = DATA.tables.find(function (x) { return x.no === res.tableNo; });
@@ -769,7 +782,7 @@ async function selfArrive(id, btn) {
   } catch (err) {
     btn.disabled = false;
     btn.innerHTML = keep;
-    alert('บันทึกไม่สำเร็จ: ' + err.message);
+    alert((arriving ? 'บันทึกไม่สำเร็จ: ' : 'ยกเลิกไม่สำเร็จ: ') + err.message);
   } finally {
     BUSY = false;
     LAST_SIG = dataSignature(DATA);
@@ -924,7 +937,9 @@ function viewGuest(g, quiet) {
       (p ? '<div class="wayfind"><b>วิธีเดินไปโต๊ะ</b>' + esc(wayfinding(g.tableNo)) + '</div>' : '') +
 
       (g.checkedIn
-        ? '<div class="notice notice-ok" style="margin-top:18px">✓ คุณแจ้งว่ามาถึงแล้ว</div>'
+        ? '<div class="notice notice-ok" style="margin-top:18px">✓ คุณแจ้งว่ามาถึงแล้ว</div>' +
+          '<div class="btn-row no-print"><button class="btn btn-sm" ' +
+            'data-undo="' + esc(g.id) + '">ยกเลิกการแจ้ง</button></div>'
         : '<div class="btn-row no-print"><button class="btn btn-primary btn-lg" ' +
             'data-checkin="' + esc(g.id) + '">✓ ฉันมาถึงแล้ว</button></div>') +
 

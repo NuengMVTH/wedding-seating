@@ -387,26 +387,34 @@ function doPost(e) {
       const t = readTables().find(function (x) { return x.no === Number(data.tableNo); });
       if (!t || !t._row) return jsonOut({ ok: false, error: 'ไม่พบโต๊ะ ' + data.tableNo + ' ในชีต' });
 
+      const before = t.arrived;
       const c0 = bumpArrived(t.no, delta);
-      const next = c0 ? c0.arrived : t.arrived;
+      const next  = c0 ? c0.arrived : before;
+      const floor = c0 ? c0.floor : 0;
 
-      if (next === t.arrived) {
-        // ขยับไม่ได้ — บอกเหตุผลให้ตรง ดีกว่าตอบ ok แล้วเลขไม่ขยับ
-        const floor = c0 ? c0.floor : 0;
+      /* ขอ "ลด" แต่ยอดไม่ลดจริง = ลดไม่ได้
+         ครอบคลุมสองกรณี: ชนพื้นพอดี และข้อมูลเดิมต่ำกว่าพื้นจนถูกดันขึ้น
+         (กรณีหลัง bumpArrived ซ่อมข้อมูลให้แล้ว แต่ไม่ใช่สิ่งที่ผู้ใช้สั่ง
+          จึงไม่ควรตอบว่า "บันทึกแล้ว" — ต้องบอกว่าลดไม่ได้พร้อมเหตุผล) */
+      if (delta < 0 && next >= before) {
         return jsonOut({
-          ok: false,
-          arrived: t.arrived,
-          error: delta > 0
-            ? 'โต๊ะ ' + t.no + ' เต็มแล้ว (' + t.seats + ' ที่) — กรุณาแจ้งโต๊ะต้อนรับ'
-            : (floor > 0
-                ? 'โต๊ะนี้มีคนแตะแจ้งชื่อไว้แล้ว ' + floor + ' ท่าน ลดต่ำกว่านี้ไม่ได้ — ' +
-                  'ถ้าแตะชื่อผิด กรุณาแจ้งโต๊ะต้อนรับให้ยกเลิกให้'
-                : 'โต๊ะ ' + t.no + ' ยังไม่มีใครกดมา')
+          ok: false, arrived: next,
+          error: floor > 0
+            ? 'โต๊ะนี้มีคนแตะแจ้งชื่อไว้แล้ว ' + floor + ' ท่าน ลดต่ำกว่านี้ไม่ได้ — ' +
+              'ถ้าแตะชื่อผิด ให้แตะชื่อนั้นซ้ำเพื่อยกเลิก'
+            : 'โต๊ะ ' + t.no + ' ยังไม่มีใครกดมา'
+        });
+      }
+
+      if (next === before) {
+        return jsonOut({
+          ok: false, arrived: before,
+          error: 'โต๊ะ ' + t.no + ' เต็มแล้ว (' + t.seats + ' ที่) — กรุณาแจ้งโต๊ะต้อนรับ'
         });
       }
 
       // applied อาจน้อยกว่าที่ขอ ถ้าที่นั่งเหลือไม่พอ — หน้าเว็บเอาไปบอกแขกได้ตรง ๆ
-      const applied = next - t.arrived;
+      const applied = next - before;
       logIt('arrive', 'guest', { tableNo: t.no },
             (applied > 0 ? '+' : '') + applied + ' → ' + next + '/' + t.seats +
             (applied !== delta ? ' (ขอ ' + delta + ' แต่ที่นั่งเหลือไม่พอ)' : '') +
@@ -450,6 +458,44 @@ function doPost(e) {
             c ? 'ยอดโต๊ะ → ' + c.arrived + '/' + c.seats : '');
       dropCache();
       return jsonOut({ ok: true, checkedInAt: stamp, tableNo: tableNo,
+                       arrived: c ? c.arrived : null, seats: c ? c.seats : null });
+    }
+
+    /* ── แขกยกเลิกการแจ้งชื่อของตัวเอง — ไม่ต้องใช้รหัส ─────────────
+
+       ตอนแรกปิดไว้เพราะกลัวคนกวนกดยกเลิกรัวทั้งงาน แต่ใช้จริงแล้วพบว่า
+       "แตะผิดคน" เกิดบ่อยกว่ามาก — รายชื่อเรียงติดกัน มีผู้ติดตาม 1/2 ชื่อคล้ายกัน
+       และเมื่อยกเลิกเองไม่ได้ แขกจะไปกด "ลดจำนวน" แทน ซึ่งทำให้ตัวเลขขัดกันเอง
+
+       Nueng ตัดสินใจให้เปิด (8 ก.ย. 2026) — ความเสี่ยงคุมด้วย:
+         • กดได้ทีละคน ไม่มีคำสั่งยกเลิกหมู่
+         • จดลง Log ทุกครั้งพร้อมเวลา
+         • พนักงานเช็คอินกลับให้ได้ใน 5 วินาที                              */
+    if (type === 'selfUndo') {
+      const sh = sheetOf(SH_GUESTS, HDR_GUESTS);
+      const row = findGuestRow(sh, data.id);
+      if (!row) return jsonOut({ ok: false, error: 'ไม่พบรายชื่อนี้' });
+
+      const already = fmtStamp(sh.getRange(row, 6).getValue());
+      const tableNo = Number(sh.getRange(row, 4).getValue()) || 0;
+      const name    = String(sh.getRange(row, 2).getValue() || '');
+
+      if (!already) {
+        // ยังไม่เคยแจ้ง — ตอบสำเร็จไปเลย หน้าเว็บจะได้ไม่ต้องแยกเคส
+        return jsonOut({ ok: true, already: true, checkedInAt: '', tableNo: tableNo });
+      }
+
+      sh.getRange(row, 6).setValue('');
+      sh.getRange(row, 7).setValue(nowIso());
+
+      // ต้องลบ checkedInAt ก่อนเรียก bumpArrived เสมอ
+      // เพราะพื้นล่างคำนวณจากจำนวนคนที่แจ้งชื่อไว้ ณ ตอนนั้น
+      const c = bumpArrived(tableNo, -1);
+
+      logIt('selfUndo', 'guest', { id: data.id, fullName: name, tableNo: tableNo },
+            c ? 'ยอดโต๊ะ → ' + c.arrived + '/' + c.seats : '');
+      dropCache();
+      return jsonOut({ ok: true, checkedInAt: '', tableNo: tableNo,
                        arrived: c ? c.arrived : null, seats: c ? c.seats : null });
     }
 

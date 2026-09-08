@@ -479,10 +479,12 @@ body {
   border-radius: 999px; padding: 2px 9px; white-space: nowrap;
 }
 
-/* คนที่เช็คอินแล้ว — เขียวจาง กดไม่ได้อีก */
-.mate-list li.is-in {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 11px 14px; background: #eef4ed; border: 1px solid #d7e3d5; border-radius: 9px;
+/* คนที่แจ้งชื่อแล้ว — เขียวจาง แตะซ้ำเพื่อยกเลิกได้ */
+.mate-list li.is-in .mate-btn {
+  background: #eef4ed; border-color: #d7e3d5;
+}
+.mate-list li.is-in .mate-btn:hover {
+  background: #e2eee1; border-color: var(--ok);
 }
 .mate-list li.is-in .mate-name { color: #3f5f3f; }
 .mate-list li.me .mate-name { font-weight: 700; }
