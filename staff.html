@@ -351,10 +351,11 @@ async function checkIn(g, btn) {
   const label = btn.textContent;
   btn.textContent = '…';
   try {
-    await postGAS({ type: 'checkIn', pin: PIN, actor: ROLE, id: g.id });
+    const res = await postGAS({ type: 'checkIn', pin: PIN, actor: ROLE, id: g.id });
 
     // อัปเดตในเครื่องทันทีโดยไม่รอโหลดใหม่ — พนักงานจะได้กดคนถัดไปต่อได้เลย
     markLocal(g.id, true, res.checkedInAt);
+    applyArrived(res);
     drawStats(); drawTables(); drawRecent(); runSearch();
   } catch (err) {
     btn.disabled = false; btn.textContent = label;
@@ -365,7 +366,7 @@ async function checkIn(g, btn) {
 async function undo(g, btn) {
   if (btn) { btn.disabled = true; btn.textContent = '…'; }
   try {
-    await postGAS({ type: 'undoCheckIn', pin: PIN, actor: ROLE, id: g.id });
+    applyArrived(await postGAS({ type: 'undoCheckIn', pin: PIN, actor: ROLE, id: g.id }));
     markLocal(g.id, false);
     drawStats(); drawTables(); drawRecent(); runSearch();
   } catch (err) {
@@ -375,6 +376,16 @@ async function undo(g, btn) {
 }
 
 /** แก้สถานะในหน่วยความจำ + cache ให้ตรงกับที่เพิ่งส่งไป */
+/**
+ * เอายอดนับหัวที่เซิร์ฟเวอร์คำนวณแล้วมาใส่ในเครื่องทันที
+ * ไม่งั้นตัวเลข "นับหัว" กับ "สถานะโต๊ะ" จะค้างค่าเก่าจนกว่าจะรีเฟรชรอบถัดไป
+ */
+function applyArrived(res) {
+  if (!res || res.arrived === null || res.arrived === undefined) return;
+  const t = DATA.tables.find(function (x) { return x.no === Number(res.tableNo); });
+  if (t) t.arrived = res.arrived;
+}
+
 /**
  * แก้สถานะในหน่วยความจำให้ตรงกับที่เพิ่งส่งไป
  * ต้องอัปเดตเวลาด้วย ไม่ใช่แค่ true/false — ไม่งั้นคนที่เพิ่งเช็คอิน

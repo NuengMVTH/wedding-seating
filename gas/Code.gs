@@ -118,6 +118,27 @@ function fmtStamp(v) {
   return String(v).trim();
 }
 
+/**
+ * ขยับยอดนับหัวของโต๊ะ แล้วคืนค่าใหม่ ({ arrived, seats }) — คืน null ถ้าโต๊ะไม่มีจริง
+ *
+ * มีที่เดียวเพราะมี 3 คำสั่งที่ต้องขยับ (selfArrive / checkIn / undoCheckIn)
+ * เคยเขียนแยกกันแล้วพลาด — พนักงานกดยกเลิกเช็คอิน ยอดเช็คอินลดแต่ยอดนับหัวค้าง
+ * สองตัวเลขบนหน้าจอเลยเล่าคนละเรื่องกัน
+ */
+function bumpArrived(tableNo, delta) {
+  if (!validTable(tableNo)) return null;
+
+  const tb = sheetOf(SH_TABLES, HDR_TABLES);
+  ensureArrivedColumn(tb);
+
+  const t = readTables().find(function (x) { return x.no === Number(tableNo); });
+  if (!t || !t._row) return null;
+
+  const next = Math.min(t.seats, Math.max(0, t.arrived + delta));
+  if (next !== t.arrived) tb.getRange(t._row, COL_ARRIVED).setValue(next);
+  return { arrived: next, seats: t.seats };
+}
+
 /** ตำแหน่งกายภาพของโต๊ะ — คนละเรื่องกับ "ฝั่ง" ของแขก */
 function blockOf(tableNo) {
   return Number(tableNo) <= LEFT_BLOCK_MAX ? 'left' : 'right';
@@ -405,23 +426,13 @@ function doPost(e) {
       sh.getRange(row, 7).setValue(stamp);
 
       // ขยับยอดนับหัวของโต๊ะตามไปด้วย ไม่งั้นสองตัวเลขจะเล่าคนละเรื่อง
-      let arrived = null, seats = null;
-      if (validTable(tableNo)) {
-        const tb = sheetOf(SH_TABLES, HDR_TABLES);
-        ensureArrivedColumn(tb);
-        const t = readTables().find(function (x) { return x.no === tableNo; });
-        if (t && t._row) {
-          arrived = Math.min(t.seats, t.arrived + 1);
-          seats = t.seats;
-          tb.getRange(t._row, COL_ARRIVED).setValue(arrived);
-        }
-      }
+      const c = bumpArrived(tableNo, 1);
 
       logIt('selfArrive', 'guest', { id: data.id, fullName: name, tableNo: tableNo },
-            arrived === null ? '' : 'ยอดโต๊ะ → ' + arrived + '/' + seats);
+            c ? 'ยอดโต๊ะ → ' + c.arrived + '/' + c.seats : '');
       dropCache();
       return jsonOut({ ok: true, checkedInAt: stamp, tableNo: tableNo,
-                       arrived: arrived, seats: seats });
+                       arrived: c ? c.arrived : null, seats: c ? c.seats : null });
     }
 
     /* ── เช็คอิน / ยกเลิกเช็คอิน (พนักงานต้อนรับทำได้) ── */
@@ -433,17 +444,33 @@ function doPost(e) {
       const row = findGuestRow(sh, data.id);
       if (!row) return jsonOut({ ok: false, error: 'ไม่พบแขกรหัส ' + data.id });
 
-      const stamp = type === 'checkIn' ? nowIso() : '';
+      const already = fmtStamp(sh.getRange(row, 6).getValue());
+      const wantIn  = type === 'checkIn';
+
+      // กดซ้ำสถานะเดิมไม่ต้องทำอะไร — ไม่งั้นยอดนับหัวจะเพี้ยนจากการกดรัว
+      if (wantIn === !!already) {
+        return jsonOut({ ok: true, already: true, checkedInAt: already });
+      }
+
+      const stamp   = wantIn ? nowIso() : '';
+      const tableNo = Number(sh.getRange(row, 4).getValue()) || 0;
+
       sh.getRange(row, 6).setValue(stamp);
       sh.getRange(row, 7).setValue(nowIso());
+
+      // ยอดนับหัวต้องขยับตามเสมอ ไม่งั้นสองตัวเลขบนหน้าจอเล่าคนละเรื่อง
+      const c = bumpArrived(tableNo, wantIn ? 1 : -1);
 
       logIt(type, actor, {
         id: data.id,
         fullName: String(sh.getRange(row, 2).getValue()),
-        tableNo: sh.getRange(row, 4).getValue()
-      }, '');
+        tableNo: tableNo
+      }, c ? 'ยอดโต๊ะ → ' + c.arrived + '/' + c.seats : '');
       dropCache();
-      return jsonOut({ ok: true, checkedInAt: stamp });
+      return jsonOut({ ok: true, checkedInAt: stamp,
+                       tableNo: tableNo,
+                       arrived: c ? c.arrived : null,
+                       seats: c ? c.seats : null });
     }
 
     /* ── ตั้งแต่ตรงนี้ลงไปต้องเป็น admin เท่านั้น ── */
