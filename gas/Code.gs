@@ -134,9 +134,24 @@ function bumpArrived(tableNo, delta) {
   const t = readTables().find(function (x) { return x.no === Number(tableNo); });
   if (!t || !t._row) return null;
 
-  const next = Math.min(t.seats, Math.max(0, t.arrived + delta));
+  /* พื้นล่างของยอดนับหัว = จำนวนคนที่แจ้งชื่อไว้แล้วในโต๊ะนั้น
+     เพราะมีสองทางเขียนตัวเลขเดียวกัน: แจ้งชื่อ (ผูกกับคน) กับ นับหัว (ไม่ระบุชื่อ)
+     ถ้าไม่กั้น แขกกด "ลดจำนวน" จะลากยอดลงต่ำกว่าจำนวนคนที่แจ้งชื่อไว้ได้
+     กลายเป็น "นับหัว 0 แต่มีคนขึ้นป้ายมาถึงแล้ว 1" ซึ่งขัดกันเอง
+
+     ต้องเรียกหลังเขียน checkedInAt เสมอ ค่าที่นับได้จะได้เป็นค่าล่าสุด */
+  const floor = countCheckedIn(Number(tableNo));
+
+  const next = Math.min(t.seats, Math.max(floor, t.arrived + delta));
   if (next !== t.arrived) tb.getRange(t._row, COL_ARRIVED).setValue(next);
-  return { arrived: next, seats: t.seats };
+  return { arrived: next, seats: t.seats, floor: floor };
+}
+
+/** จำนวนคนในโต๊ะนี้ที่แจ้งชื่อว่ามาถึงแล้ว */
+function countCheckedIn(tableNo) {
+  return readGuests().filter(function (g) {
+    return g.tableNo === Number(tableNo) && g.checkedInAt;
+  }).length;
 }
 
 /** ตำแหน่งกายภาพของโต๊ะ — คนละเรื่องกับ "ฝั่ง" ของแขก */
@@ -372,20 +387,23 @@ function doPost(e) {
       const t = readTables().find(function (x) { return x.no === Number(data.tableNo); });
       if (!t || !t._row) return jsonOut({ ok: false, error: 'ไม่พบโต๊ะ ' + data.tableNo + ' ในชีต' });
 
-      const next = Math.min(t.seats, Math.max(0, t.arrived + delta));
+      const c0 = bumpArrived(t.no, delta);
+      const next = c0 ? c0.arrived : t.arrived;
 
       if (next === t.arrived) {
-        // ชนเพดานอยู่แล้ว — บอกไปตรง ๆ ดีกว่าตอบ ok แล้วเลขไม่ขยับ
+        // ขยับไม่ได้ — บอกเหตุผลให้ตรง ดีกว่าตอบ ok แล้วเลขไม่ขยับ
+        const floor = c0 ? c0.floor : 0;
         return jsonOut({
           ok: false,
           arrived: t.arrived,
           error: delta > 0
             ? 'โต๊ะ ' + t.no + ' เต็มแล้ว (' + t.seats + ' ที่) — กรุณาแจ้งโต๊ะต้อนรับ'
-            : 'โต๊ะ ' + t.no + ' ยังไม่มีใครกดมา'
+            : (floor > 0
+                ? 'โต๊ะนี้มีคนแตะแจ้งชื่อไว้แล้ว ' + floor + ' ท่าน ลดต่ำกว่านี้ไม่ได้ — ' +
+                  'ถ้าแตะชื่อผิด กรุณาแจ้งโต๊ะต้อนรับให้ยกเลิกให้'
+                : 'โต๊ะ ' + t.no + ' ยังไม่มีใครกดมา')
         });
       }
-
-      sh.getRange(t._row, COL_ARRIVED).setValue(next);
 
       // applied อาจน้อยกว่าที่ขอ ถ้าที่นั่งเหลือไม่พอ — หน้าเว็บเอาไปบอกแขกได้ตรง ๆ
       const applied = next - t.arrived;
@@ -724,6 +742,17 @@ function healthCheck() {
   const checked = guests.filter(function (g) { return g.checkedInAt; }).length;
   if (arrived > 0 && checked > 0 && Math.abs(arrived - checked) > 30)
     problems.push('⚠️ ยอดนับหัว (' + arrived + ') ต่างจากยอดเช็คอินรายชื่อ (' + checked + ') มาก');
+
+  // ยอดนับหัวต้องไม่ต่ำกว่าจำนวนคนที่แจ้งชื่อไว้ — ถ้าต่ำกว่าแปลว่าข้อมูลขัดกันเอง
+  // (แอดมินตั้งยอดเองหรือกดรีเซ็ตทั้งงานทั้งที่ยังมีคนเช็คอินค้างอยู่)
+  const under = tables.filter(function (t) {
+    const named = guests.filter(function (g) {
+      return g.tableNo === t.no && g.checkedInAt;
+    }).length;
+    return named > (t.arrived || 0);
+  });
+  if (under.length) problems.push('⚠️ โต๊ะที่ยอดนับหัวต่ำกว่าจำนวนคนที่แจ้งชื่อไว้: ' +
+    under.map(function (t) { return t.no; }).join(', ') + ' — ข้อมูลขัดกันเอง');
 
   const overArr = tables.filter(function (t) { return t.arrived > t.seats; });
   if (overArr.length) problems.push('⚠️ โต๊ะที่ยอดนับหัวเกินที่นั่ง: ' +
