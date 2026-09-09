@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ค้นหาโต๊ะของคุณ — งานแต่งงาน</title>
 <meta name="description" content="ค้นหาชื่อของคุณเพื่อดูว่านั่งโต๊ะไหนในงาน">
-<meta name="theme-color" content="#a88544">
+<meta name="theme-color" content="#2A1216">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Trirong:wght@300;400;500;600&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -17,7 +17,10 @@
 <div class="wrap">
 
   <header class="hero" id="hero">
-    <div class="hero-mark" id="heroDate">20 &middot; 09 &middot; 2026</div>
+    <!-- เดิมบรรทัดนี้เป็นวันที่คั่นด้วยจุดกลาง (20 · 09 · 2026)
+         ตัดออกเพราะแขกยืนอยู่ในงานแล้ว เขารู้ว่าวันไหน — และรูปแบบนั้น
+         เป็นลายเซ็นของงานที่ AI สร้าง ย้ายวันที่ไปเป็นประโยคที่ท้ายหน้าแทน -->
+    <div class="hero-mark" id="heroDate" hidden></div>
     <h1 id="coupleName">ผังที่นั่งในงาน</h1>
     <p id="venueLine">VIVACE สาขาบางปู</p>
     <div class="hero-rule"></div>
@@ -76,36 +79,26 @@
     </div>
 
     <!-- ทางเลือกสำหรับคนที่ไม่อยากพิมพ์ — จิ้มเลือกฝั่งแล้วไล่ดูโต๊ะเอา -->
-    <div id="browsePrompt">
-      <div class="or-line">หรือไม่ต้องพิมพ์ — เลือกฝั่งของคุณ</div>
-      <!-- เดิมเป็นอิโมจิ 👰🤵 ในวงกลม — ถอดออกตอนทำธีมเรียบแพง (9 ก.ย. 2026)
-           อิโมจิถูกวาดโดยผู้ผลิตมือถือแต่ละเจ้า คุมสีและน้ำหนักเส้นไม่ได้เลย
-           ตอนนี้ใช้ตัวอักษรล้วน + แถบสีฝั่งบาง ๆ ด้านบนแทน -->
-      <div class="side-pick">
-        <button class="side-btn bride" data-pick="bride">
-          <span class="k">Bride</span>
-          <span class="t">ฝั่งเจ้าสาว</span>
-          <span class="s" id="brideSub"></span>
-        </button>
-        <button class="side-btn groom" data-pick="groom">
-          <span class="k">Groom</span>
-          <span class="t">ฝั่งเจ้าบ่าว</span>
-          <span class="s" id="groomSub"></span>
-        </button>
-      </div>
-
-      <!-- ซ่อนปุ่มตัวอักษรทั้งชุดไว้หลังปุ่มเดียว — ถ้าโชว์ทั้ง 40 ตัวบนหน้าแรก
-           หน้าเว็บจะรกจนเสียความเรียบที่ตั้งใจทำไว้ -->
-      <button class="alpha-btn" id="alphaBtn" hidden>
-        <span class="ico">ก&#8202;ข&#8202;ค</span>
-        <span class="t">ค้นจากตัวอักษรแรกของชื่อ</span>
-        <span class="s" id="alphaSub"></span>
+    <!-- แถวคั่นเส้นแบบดัชนีท้ายเล่ม ไม่ใช่การ์ด
+         การ์ดมนเหมือนกันหมดทุกใบคือลายเซ็นของงานที่ AI สร้าง และที่นี่มันบอกอะไรไม่ได้เลย
+         สิ่งที่คนกำลังทำคือ "ไล่ดูรายการ" ซึ่งมีภาษาของมันอยู่แล้วคือดัชนีท้ายเล่มหนังสือ
+         เดิมมีป้าย BRIDE / GROOM ตัวพิมพ์ใหญ่เว้นวรรคกว้างเหนือชื่อไทย — ตัดทิ้ง
+         ไม่ได้ให้ข้อมูลอะไรเพิ่ม แขกทุกคนอ่านไทยได้อยู่แล้ว -->
+    <nav class="pick" id="browsePrompt">
+      <button class="pick-row bride" data-pick="bride">
+        <span class="t">ฝั่งเจ้าสาว</span><span class="s" id="brideSub"></span>
       </button>
-    </div>
-
-    <nav class="mini-nav no-print">
-      <a href="#" id="showMapLink">ดูแผนผังทั้งงาน</a>
+      <button class="pick-row groom" data-pick="groom">
+        <span class="t">ฝั่งเจ้าบ่าว</span><span class="s" id="groomSub"></span>
+      </button>
+      <button class="pick-row" id="alphaBtn" hidden>
+        <span class="t">ค้นจากตัวอักษรแรกของชื่อ</span><span class="s" id="alphaSub"></span>
+      </button>
+      <a class="pick-row no-print" href="#" id="showMapLink">
+        <span class="t">ดูแผนผังทั้งงาน</span><span class="s">40 โต๊ะ</span>
+      </a>
     </nav>
+
   </section>
 
   <!-- ══ หน้าเนื้อหา (รายการโต๊ะ / โต๊ะ / แขก) ══ -->

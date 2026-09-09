@@ -14,81 +14,83 @@
 ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* พื้นและกระดาษ */
-  --cream:    #faf6ee;
-  --paper:    #fffdf9;
-  --sand:     #f2ebdd;
+  /* ═══ วัสดุ: รักสมุก + ทองคำเปลว ═══════════════════════════════
 
-  /* ตัวอักษร — น้ำตาลเข้มแทนดำ */
-  --ink:      #2f2620;
-  /* ⚠️ ต้องได้ 4.5:1 ทั้งบน --paper และ --cream เพราะใช้กับตัวหนังสือเล็กทั่วเว็บ
-     รวมถึงเลขโต๊ะบนแผนผัง · ค่าเดิม #8a7a68 ได้แค่ 4.08 / 3.85 ซึ่งตกเกณฑ์ */
-  --ink-soft: #7d6e5d;
-  --line:     #e6dbc8;
-  --line-soft:#f0e8da;
+     ธีมนี้ไม่ได้มาจาก "โหมดมืดดูทันสมัย" แต่มาจากของจริงสองอย่าง:
 
-  /* ทอง */
-  --gold:      #a88544;
-  --gold-deep: #8a6c2e;
-  --gold-lt:   #f4ecd9;
-  --gold-shine:#c9a961;
+     1. ห้องจัดเลี้ยงตอนกลางคืนมันมืด — จอครีมสว่างจ้าคือไฟฉายส่องหน้าแขก
+        และทำลายบรรยากาศห้อง ป้ายบอกทางในที่มืดทุกที่ในโลก (เลขที่นั่งโรงละคร
+        เลขห้องโรงแรม) เป็นพื้นมืดตัวเลขสว่าง
+     2. ทองคำเปลวบนรักสมุก — ประตูโบสถ์ เครื่องใช้ในพิธี พื้นรักสีแดงเข้ม
+        เกือบดำ ทองเปลวด้าน ๆ ไม่วาว นี่คือคู่สีของงานพิธีไทยจริง ๆ
 
-  /* ฝั่งเจ้าสาว = โรสโกลด์ (ชมพูอมทองแดง) · เจ้าบ่าว = น้ำตาลทอง
-     ทั้งคู่อยู่ในตระกูลอุ่นเดียวกับธีมครีม-ทอง-น้ำตาล ไม่หลุดออกไปเป็นชมพู/ฟ้าสด
-     ชุด -lt / -ln ใช้กับชิปและป้ายใน UI ทั่วไป ต้องนุ่มไม่แย่งสายตา */
-  --bride:    #a85f4a;
-  --bride-lt: #fbf0ec;
-  --bride-ln: #ecd2c8;
-  --groom:    #8a6a2e;
-  --groom-lt: #f8f3e8;
-  --groom-ln: #e0d0ab;
+     ผลพลอยได้ที่วัดได้: ทองบนพื้นรัก 10.84:1 เทียบกับทองบนครีมที่ทำได้ดีสุด
+     3.54:1 ปัญหาความคมชัดที่สู้กันมาทั้งวันหายไปเองเพราะพื้นมืด            */
 
-  /* ชุด -map ใช้เฉพาะวงกลมบนแผนผัง — เข้มกว่าตั้งใจ
-     เพราะบนผังต้องแยกฝั่งให้ออกภายในเสี้ยววินาทีจากระยะยืนห่างจอ
+  /* พื้นและแผง */
+  --cream:    #2A1216;   /* พื้นรัก — พื้นหลังทั้งหน้า */
+  --paper:    #3B1A1E;   /* แผงยกระดับ — การ์ด กล่อง ช่องกรอก */
+  --sand:     #4A2429;   /* ยกอีกชั้น */
 
-     ⚠️ สองฝั่งต้องต่างกันทั้ง "สี" และ "ความสว่าง" ไม่ใช่แค่สี
-     เคยตั้งชมพูอ่อนคู่กับครีมเข้มที่สว่างเท่ากันเป๊ะ (ต่างกัน 1.01:1)
-     ผลคือในที่แสงน้อย บนจอสะท้อนแสง หรือกับคนตาบอดสี สองฝั่งดูเหมือนกันสนิท
-     ตอนนี้เจ้าสาวชมพูอ่อน / เจ้าบ่าวบรอนซ์เข้ม ต่างกัน 2.00:1 */
-  --bride-map:    #f3cec0;
-  --bride-map-ln: #b5705a;
-  --bride-map-tx: #7c3625;
-  --groom-map:    #b8934f;
-  --groom-map-ln: #7d6027;
-  --groom-map-tx: #2b2109;
+  /* ตัวอักษร */
+  --ink:      #F2EBDD;   /* หลัก — 14.79:1 บนพื้นรัก */
+  --ink-soft: #D8C9B0;   /* รอง — 10.78:1 (เดิม 4.08:1 บนครีม ตกเกณฑ์มาตลอด) */
+  --line:     #5A3A2E;   /* เส้นคั่น */
+  --line-soft:#46262A;   /* เส้นจาง */
 
-  --ok:     #5a7d5a;
-  --warn:   #b5762f;
-  --danger: #a8543f;
+  /* ทองคำเปลว — ด้าน ไม่วาว
+     ⚠️ --gold-deep ใช้กับ "ตัวอักษรเด่น" จึงต้องสว่างที่สุดในชุด (กลับหัวจากธีมครีม) */
+  --gold:      #C9A85E;
+  --gold-deep: #E8C87A;  /* ทองเปลว — 10.84:1 */
+  --gold-lt:   #46262A;  /* พื้นอ่อนของทอง = แผงอมทอง ไม่ใช่สีอ่อน */
+  --gold-shine:#E8C87A;
 
-  /* น้ำตาลเข้มเกือบดำ — ใช้เป็นพื้นปุ่มหลักแทนแผ่นทอง
-     ธีมเขียนกฎตัวเองไว้ว่า "ทองใช้เป็นเส้นและตัวอักษร ไม่ใช่พื้นใหญ่"
-     แต่ปุ่มหลักกลับเป็นแผ่นทองทึบ ซึ่งขัดกฎนั้นและทำให้ดูราคาถูกลง */
-  --espresso:    #33291f;
-  --espresso-lt: #453729;
+  /* ฝั่งเจ้าสาว = โรส · เจ้าบ่าว = ทองเหลือง
+     ⚠️ ต้องต่างกันทั้งสีและความสว่าง — เคยพลาดตอนต่างกันแค่ 1.01:1
+     ตอนนี้ต่างกัน 1.91:1 · เจ้าสาว 10.79:1 · เจ้าบ่าว 5.65:1 บนพื้นรัก */
+  --bride:    #F2C0AC;
+  --bride-lt: #4A2A28;
+  --bride-ln: #8C5648;
+  --groom:    #BC8934;
+  --groom-lt: #3E2E1A;
+  --groom-ln: #7A5C24;
 
-  /* มุมมนน้อยลงมาก (16px → 5px) — ของหรูมักคมกว่าที่คิด
-     มุมมนเยอะเป็นภาษาของแอปมือถือ ไม่ใช่ของโรงแรม */
-  --radius:    5px;
-  --radius-sm: 3px;
+  /* ชุด -map ใช้เฉพาะวงกลมบนแผนผัง
+     บนพื้นมืดใช้ "วงแหวนสี + เลขสี" แทนการถมสีทั้งวง — ถมสีบนพื้นมืด
+     จะกลายเป็นจุดสว่างเรียงกัน 40 จุดจนลายตา */
+  --bride-map:    #4A2A28;   /* พื้นในวง */
+  --bride-map-ln: #F2C0AC;   /* วงแหวน — 10.79:1 */
+  --bride-map-tx: #F2C0AC;   /* ตัวเลข */
+  --groom-map:    #3E2E1A;
+  --groom-map-ln: #BC8934;   /* 5.65:1 บนพื้นรัก */
+  --groom-map-tx: #BC8934;
 
-  /* เงาบางลงและอุ่นขึ้น — ของหรูไม่ลอย มันวางนิ่ง ๆ */
-  --shadow:    0 1px 1px rgba(84, 64, 38, .035), 0 4px 14px rgba(84, 64, 38, .045);
-  --shadow-lg: 0 1px 2px rgba(84, 64, 38, .05),  0 12px 34px rgba(84, 64, 38, .09);
+  --ok:     #9DBFA8;   /* สังคโลก — ใช้เฉพาะสถานะ "มาถึงแล้ว" 8.73:1 */
+  --warn:   #E0A860;
+  --danger: #E39182;
 
-  /* ฟอนต์
-       display = Cormorant Garamond สำหรับ "ตัวเลขและอักษรละติน"
-                 เซริฟคอนทราสต์สูง หางบาง ให้ความรู้สึกแกะสลักมากกว่าพิมพ์
-       serif   = Trirong สำหรับหัวข้อภาษาไทย (Cormorant ไม่มีตัวไทย)
-       sans    = Sarabun สำหรับเนื้อความ
-     เลขโต๊ะเป็นตัวเลข จึงตกไปที่ Cormorant เสมอ ซึ่งเป็นตัวที่สวยที่สุดในชุด */
-  --display: 'Cormorant Garamond', 'Trirong', Georgia, serif;
-  --serif:   'Trirong', 'Cormorant Garamond', Georgia, serif;
-  --sans:    'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* ปุ่มหลักกลับหัว: บนพื้นมืด ของที่ "สว่าง" คือของที่กดได้
+     ทองทึบตัวอักษรสีรัก = 10.84:1 และเป็นจุดสว่างที่สุดของหน้า */
+  --espresso:    #E8C87A;
+  --espresso-lt: #F0D48C;
 
-  /* ระยะห่างมาตรฐาน — ความหรูมาจากช่องไฟที่สม่ำเสมอ ไม่ใช่จากลวดลาย */
+  --radius:    3px;
+  --radius-sm: 2px;
+
+  /* บนพื้นมืดเงาแทบมองไม่เห็น ใช้เส้นขอบและการยกพื้นแทน
+     เก็บชื่อตัวแปรไว้เพื่อไม่ให้กฎเดิมพัง แต่ทำให้แทบไม่มีผล */
+  --shadow:    0 1px 2px rgba(0, 0, 0, .28);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, .34), 0 14px 40px rgba(0, 0, 0, .3);
+
+  /* ตระกูลเดียวทั้งเว็บ — Bai Jamjuree มีทั้งไทยและละติน
+     ต่างกันด้วย "ขนาดและน้ำหนัก" ไม่ใช่ด้วยการสลับตระกูล
+     ชื่อตัวแปรเดิมคงไว้ทั้งสามตัวเพื่อไม่ต้องไล่แก้ทุกกฎ */
+  --display: 'Bai Jamjuree', system-ui, sans-serif;
+  --serif:   'Bai Jamjuree', system-ui, sans-serif;
+  --sans:    'Bai Jamjuree', system-ui, sans-serif;
+
   --gap:    22px;
   --gap-lg: 38px;
 }
@@ -160,16 +162,20 @@ body {
 /* ผิวกระดาษ + แสงอุ่นจากมุมบน — สองชั้นบาง ๆ ที่ตาไม่ทันจับว่ามีอะไร
    แต่ทำให้พื้นครีมไม่เป็นแผ่นสีแบน ๆ ซึ่งเป็นสิ่งที่แยกงานพิมพ์ดี ๆ ออกจากงานทั่วไป
    pointer-events: none สำคัญมาก ไม่งั้นมันบังทั้งหน้าจนกดอะไรไม่ได้เลย */
+/* แสงอุ่นจากไฟดาวน์ไลต์ด้านบน — ห้องจัดเลี้ยงไม่ได้มืดสม่ำเสมอ
+   มันมีไฟส่องลงมาเป็นวง พื้นรักเลยไม่ใช่แผ่นสีแบน */
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(120% 70% at 50% -10%, rgba(201, 169, 97, .10), transparent 60%),
-    radial-gradient(90% 50% at 50% 108%, rgba(168, 95, 74, .05), transparent 62%);
+    radial-gradient(130% 62% at 50% -12%, rgba(232, 200, 122, .13), transparent 62%),
+    radial-gradient(100% 46% at 50% 112%, rgba(140, 86, 72, .10), transparent 64%);
 }
+/* ผิวรัก — รักสมุกจริงไม่เรียบ มีเนื้อทรายละเอียด
+   screen แทน multiply เพราะบนพื้นมืดต้องเพิ่มแสง ไม่ใช่ลดแสง */
 body::after {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  opacity: .5; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+  opacity: .30; mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");
 }
 .wrap, .kiosk-reset { position: relative; z-index: 1; }
 
@@ -285,7 +291,7 @@ body::after {
 
 /* ── การ์ด ───────────────────────────────────────────────── */
 
-.results { margin-top: var(--gap); display: grid; gap: 11px; }
+.results { margin-top: var(--gap); border-top: 1px solid var(--line); }
 
 /* หัวข้อคั่นในผลค้นหา — โผล่เฉพาะตอนเจอทั้งโต๊ะและรายชื่อพร้อมกัน */
 .res-head {
@@ -295,11 +301,15 @@ body::after {
 }
 .results .res-head:first-child { margin-top: 0; }
 
+/* ⚠️ ไม่ใช้ "การ์ดมีเงา" กับรายการอีกแล้ว
+   รายการยาว ๆ ที่เป็นการ์ดมนเหมือนกันหมดทุกใบคือค่าตั้งต้นที่ไม่ได้บอกอะไร
+   และบนพื้นมืดมันกลายเป็นแถบสว่าง 40 แถบแย่งสายตาจากเลขโต๊ะ
+   ใช้แถวคั่นเส้นแบบเดียวกับดัชนีหน้าแรก — ภาษาเดียวกันทั้งเว็บ */
 .card {
-  background: var(--paper);
-  border: 1px solid var(--line); border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 18px;
+  background: transparent;
+  border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  box-shadow: none;
+  padding: 16px 2px;
 }
 
 .guest-card {
@@ -307,24 +317,24 @@ body::after {
   width: 100%; text-align: left;
   font-family: inherit; font-size: inherit; color: inherit;
   cursor: pointer;
-  transition: transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s, border-color .3s;
+  transition: background .2s, padding .2s;
 }
-.guest-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--gold-shine); }
+.guest-card:hover { background: var(--gold-lt); padding-left: 10px; padding-right: 10px; }
 .guest-card:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
 
 /* บล็อกเลขโต๊ะ — เดิมเป็นบล็อกสีทึบ ตอนนี้เป็นกรอบเส้นบางพื้นอ่อน
    ตัวเลขใช้ Cormorant ซึ่งเป็นเซริฟคอนทราสต์สูง เลขเดี่ยว ๆ จะดูเหมือนเลขบนป้ายโต๊ะจริง */
 .tno {
-  flex: 0 0 62px; height: 62px; border-radius: var(--radius-sm);
+  flex: 0 0 54px; height: 54px; border-radius: 50%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-family: var(--display); font-weight: 500; font-size: 30px; line-height: 1;
+  font-family: var(--display); font-weight: 400; font-size: 22px; line-height: 1;
   font-variant-numeric: lining-nums tabular-nums;
-  background: var(--gold-lt); color: var(--gold-deep);
-  border: 1px solid var(--line-soft);
+  background: transparent; color: var(--gold-deep);
+  border: 1px solid var(--gold-ln, #7A5C24);
 }
 .tno small {
-  font-family: var(--sans); font-size: 8px; font-weight: 500;
-  letter-spacing: .22em; opacity: .92; margin-bottom: 3px; padding-left: .22em;
+  font-size: 8px; font-weight: 400;
+  letter-spacing: .2em; opacity: .8; margin-bottom: 2px; padding-left: .2em;
 }
 
 .tno.bride { background: var(--bride-lt); color: var(--bride); border-color: var(--bride-map-ln); }
@@ -343,96 +353,59 @@ body::after {
   display: inline-block; padding: 1px 9px; border-radius: 999px;
   font-size: 11px; font-weight: 600; vertical-align: middle;
 }
-.badge-in   { background: #eaf1e9; color: #456344; }
-.badge-warn { background: #f8eddf; color: var(--warn); }
+.badge-in   { background: #23322A; color: var(--ok); }
+.badge-warn { background: #3A2A18; color: var(--warn); }
 
 /* ── เลือกฝั่งด้วยการจิ้ม ─────────────────────────────────── */
 
+/* ── ดัชนีเลือกฝั่ง ────────────────────────────────────────────
+
+   แถวคั่นด้วยเส้น ไม่ใช่การ์ด
+   สิ่งที่แขกกำลังทำคือ "ไล่ดูรายการ" ซึ่งมีภาษาของมันอยู่แล้ว —
+   ดัชนีท้ายเล่มหนังสือ ชื่อทางซ้าย จำนวนทางขวา เส้นบางคั่น
+   การ์ดมนมีเงาเหมือนกันหมดทุกใบไม่ได้บอกอะไรเลย และเป็นค่าตั้งต้น
+   ที่โผล่มาในทุกงานไม่ว่าเนื้อหาจะเป็นอะไร                          */
+
+.pick { margin-top: var(--gap-lg); border-top: 1px solid var(--line); }
+
+.pick-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  width: 100%; padding: 20px 2px;
+  border: 0; border-bottom: 1px solid var(--line);
+  background: transparent; color: var(--ink);
+  font-family: inherit; font-size: 19px; font-weight: 400; text-align: left;
+  text-decoration: none; cursor: pointer;
+  transition: color .2s, padding-left .2s;
+}
+.pick-row:hover,
+.pick-row:focus-visible { color: var(--gold-deep); padding-left: 8px; outline: none; }
+.pick-row:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+
+.pick-row .t { flex: 1; }
+.pick-row .s {
+  flex: 0 0 auto; font-size: 14px; font-weight: 300; color: var(--ink-soft);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.pick-row:hover .s { color: var(--gold); }
+
+/* สีฝั่งเป็นขีดสั้นทางซ้าย ไม่ใช่พื้นทั้งแถว
+   ถมสีทั้งแถวบนพื้นมืดจะกลายเป็นแถบสว่างแย่งสายตาจากเลขโต๊ะ */
+.pick-row.bride { box-shadow: inset 3px 0 0 var(--bride); padding-left: 13px; }
+.pick-row.groom { box-shadow: inset 3px 0 0 var(--groom); padding-left: 13px; }
+.pick-row.bride:hover { color: var(--bride); padding-left: 19px; }
+.pick-row.groom:hover { color: var(--groom); padding-left: 19px; }
+
+/* .or-line เดิมเป็นเส้นคั่นพร้อมคำว่า "หรือไม่ต้องพิมพ์ — เลือกฝั่งของคุณ"
+   ตัดคำอธิบายทิ้ง ดัชนีอธิบายตัวเองได้อยู่แล้ว เก็บกฎไว้เผื่อหน้าอื่นยังใช้ */
 .or-line {
   display: flex; align-items: center; gap: 18px;
   margin: var(--gap-lg) 0 18px;
-  font-size: 10px; letter-spacing: .34em; text-transform: uppercase;
-  color: var(--ink-soft); font-weight: 500; padding-left: .34em;
+  font-size: 12px; letter-spacing: .12em; color: var(--ink-soft);
 }
 .or-line::before, .or-line::after {
   content: ''; flex: 1; height: 1px;
   background: linear-gradient(90deg, transparent, var(--line), transparent);
 }
-
-.side-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-/* ปุ่มเลือกฝั่ง — ตัวอักษรล้วน ไม่มีไอคอน
-   แถบสีฝั่งเป็นเส้นบาง 2px ด้านบน เหมือนริบบิ้นคาดการ์ด
-   บอกฝั่งได้ชัดโดยไม่ต้องถมสีทั้งปุ่ม ซึ่งจะกลายเป็นป้ายโฆษณาทันที */
-.side-btn {
-  position: relative; overflow: hidden;
-  padding: 26px 14px 22px;
-  border-radius: var(--radius);
-  border: 1px solid var(--line); background: var(--paper);
-  font-family: inherit; cursor: pointer; text-align: center;
-  box-shadow: var(--shadow);
-  transition: transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s, border-color .3s, background .3s;
-}
-.side-btn::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: var(--line);
-  transition: background .3s;
-}
-.side-btn:hover  { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-.side-btn:active { transform: translateY(-1px); }
-.side-btn:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
-
-/* คำละตินตัวเล็กเหนือชื่อไทย — ชั้นข้อมูลที่สองที่ทำให้ปุ่มดูเป็นงานพิมพ์
-   ไม่ใช่แค่ปุ่มที่มีข้อความ */
-.side-btn .k {
-  display: block;
-  font-family: var(--display);
-  font-size: 12px; font-weight: 500; font-style: italic;
-  letter-spacing: .26em; text-transform: uppercase;
-  color: var(--ink-soft); padding-left: .26em;
-}
-.side-btn .t {
-  display: block; font-family: var(--serif);
-  font-size: 21px; font-weight: 400; margin-top: 7px; letter-spacing: .01em;
-}
-.side-btn .s {
-  display: block; font-size: 11.5px; color: var(--ink-soft); margin-top: 3px;
-  letter-spacing: .04em;
-}
-
-.side-btn.bride::before      { background: var(--bride-map-ln); }
-.side-btn.bride .k           { color: var(--bride); }
-.side-btn.bride .t           { color: var(--bride); }
-.side-btn.bride:hover        { background: var(--bride-lt); border-color: var(--bride-ln); }
-
-.side-btn.groom::before      { background: var(--groom-map-ln); }
-.side-btn.groom .k           { color: var(--groom); }
-.side-btn.groom .t           { color: var(--groom); }
-.side-btn.groom:hover        { background: var(--groom-lt); border-color: var(--groom-ln); }
-
-/* ปุ่มเปิดหน้าค้นจากตัวอักษร — วางแนวนอนเพื่อไม่ให้กินพื้นที่แนวตั้งเพิ่ม */
-.alpha-btn {
-  display: flex; align-items: center; gap: 16px;
-  width: 100%; margin-top: 14px; padding: 17px 20px;
-  border-radius: var(--radius); border: 1px solid var(--line); background: var(--paper);
-  font-family: inherit; text-align: left; cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s, border-color .3s, background .3s;
-}
-.alpha-btn:hover  { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--gold-shine); }
-.alpha-btn:active { transform: translateY(0); }
-.alpha-btn:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
-
-/* ก ข ค — ไม่ใส่กล่องพื้นหลังแล้ว เหลือแค่เส้นทองคั่นด้านขวา
-   กล่องซ้อนกล่องคือสิ่งที่ทำให้หน้าเว็บดูรก */
-.alpha-btn .ico {
-  flex: 0 0 auto; padding-right: 16px;
-  border-right: 1px solid var(--line);
-  font-family: var(--serif); font-size: 20px; font-weight: 400;
-  color: var(--gold-deep); letter-spacing: .08em; line-height: 1.5;
-}
-.alpha-btn .t { display: block; font-family: var(--serif); font-size: 18px; font-weight: 400; }
-.alpha-btn .s { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
 
 /* ── แป้นตัวอักษร ────────────────────────────────────────────
 
@@ -497,13 +470,18 @@ body::after {
 
 .table-card .guest-name { font-family: var(--serif); font-size: 18px; font-weight: 400; }
 .table-card .seats {
-  flex: 0 0 auto; font-size: 11px; color: var(--ink-soft);
-  text-align: right; line-height: 1.35;
+  flex: 0 0 auto; font-size: 11.5px; color: var(--ink-soft);
+  text-align: right; line-height: 1.45; white-space: nowrap;
 }
+/* <br> กับ <small> ในโครงเดิมทำให้กลายเป็นสามบรรทัดซ้อนกันแคบ ๆ
+   ยุบให้เป็นบรรทัดเดียว อ่านเป็นประโยคได้ในหางตา */
+.table-card .seats br { display: none; }
+.table-card .seats small { margin-left: .3em; }
 .table-card .seats b {
-  display: block; font-family: var(--display);
-  font-size: 26px; color: var(--ink); font-weight: 400;
+  display: inline; font-family: var(--display);
+  font-size: 17px; color: var(--ink); font-weight: 500;
   font-variant-numeric: lining-nums tabular-nums;
+  margin-right: .25em;
 }
 .table-card .seats.is-full,
 .table-card .seats.is-full b { color: var(--ok); }
@@ -519,12 +497,14 @@ body::after {
   background: var(--paper);
   border: 1px solid var(--line); border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 44px 26px 34px; margin-top: var(--gap);
+  padding: 46px 26px 34px; margin-top: var(--gap);
   animation: rise .5s cubic-bezier(.2,.7,.3,1) both;
 }
+/* เส้นทองล้อมแบบแผ่นป้ายสลัก — ของจริงที่ตั้งอยู่บนโต๊ะในงาน
+   ไม่ใช่ "การ์ดมีเงา" เพราะงานสลักไม่มีเงาแบบนั้น */
 .found::before {
-  content: ''; position: absolute; inset: 6px;
-  border: 1px solid var(--line-soft); border-radius: 2px;
+  content: ''; position: absolute; inset: 7px;
+  border: 1px solid var(--gold-ln, #7A5C24); border-radius: 1px;
   pointer-events: none;
 }
 .found > * { position: relative; }
@@ -542,41 +522,17 @@ body::after {
    tabular-nums ให้เลขทุกตัวกว้างเท่ากัน โต๊ะ 1 กับโต๊ะ 40 จะอยู่กึ่งกลางเท่ากัน */
 .found .big-table {
   font-family: var(--display);
-  font-size: clamp(92px, 26vw, 128px); font-weight: 300; line-height: .88;
+  font-size: clamp(96px, 27vw, 132px); font-weight: 300; line-height: .86;
   font-variant-numeric: lining-nums tabular-nums;
   margin: 22px 0 10px;
   color: var(--gold-deep);
   animation: rise .55s cubic-bezier(.2,.7,.3,1) .07s both;
 }
 
-/* ทองไล่เฉดบนตัวเลข — ใส่ใน @supports โดยตั้งใจ
-   ถ้าเบราว์เซอร์ไม่รองรับ background-clip:text แล้วเราเขียนแบบไม่ป้องกัน
-   พื้นหลังไล่เฉดจะทับกล่องทั้งกล่องพร้อมตัวอักษรโปร่งใส = เลขโต๊ะหายไปเลย
-   ซึ่งเป็นข้อมูลชิ้นสำคัญที่สุดในหน้านี้ ยอมเสียลูกเล่นดีกว่าเสี่ยงให้แขกอ่านไม่ได้
-
-   ⚠️ ทุกจุดในเฉดต้องเข้มพอด้วย — เคยตั้งยอดตัวเลขเป็น #dcc088 ซึ่งได้แค่ 1.73:1
-   บนพื้นกระดาษ (ต้องการ 3:1) ยอดของเลข 1 4 7 ที่เส้นบางอยู่แล้วจะจางหายในห้องไฟสลัว
-   แย่กว่าสีทึบสำรอง #8a6c2e (4.85:1) ที่บรรทัดล่างเสียอีก — ลูกเล่นห้ามชนะการอ่านออก
-   ตอนนี้ต่ำสุด 3.54:1 · สูงสุด 8.33:1 */
-@supports ((background-clip: text) or (-webkit-background-clip: text)) {
-  .found .big-table {
-    background: linear-gradient(158deg, #a6813f 5%, #8a6c2e 42%, #5f4a1c 96%);
-    -webkit-background-clip: text;
-            background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-}
-
-/* ตอนพิมพ์ เบราว์เซอร์ตัดพื้นหลังทิ้งเป็นค่าตั้งต้น แต่ -webkit-text-fill-color
-   ยังโปร่งใสอยู่ → เลขโต๊ะพิมพ์ออกมาเป็นที่ว่าง คืนเป็นสีทึบเสมอตอนพิมพ์ */
-@media print {
-  .found .big-table {
-    background: none !important;
-    -webkit-text-fill-color: #6b5220 !important;
-    color: #6b5220 !important;
-  }
-}
-
+/* เลขโต๊ะเป็นทองทึบ ไม่ไล่เฉด
+   บนพื้นครีมเราต้องไล่เฉดเพื่อให้ดูเป็นโลหะ แล้วเกือบทำให้ยอดตัวเลขจางจนอ่านไม่ออก
+   บนพื้นรัก ทองทึบสีเดียวได้ 10.84:1 และดูเหมือนทองคำเปลวมากกว่าอยู่แล้ว
+   ทองเปลวจริงมันด้าน ไม่วาว การไล่เฉดคือการเลียนแบบทองชุบซึ่งดูถูกกว่า */
 /* ป้าย "โต๊ะ" ใต้เลข — ขนาบด้วยเส้นทองบางสองข้าง
    เส้นทำให้คำเล็ก ๆ คำนี้กลายเป็นองค์ประกอบ ไม่ใช่คำอธิบายที่หลงเหลืออยู่ */
 .found .big-label {
@@ -663,12 +619,12 @@ body::after {
 
 /* คนที่แจ้งชื่อแล้ว — เขียวจาง แตะซ้ำเพื่อยกเลิกได้ */
 .mate-list li.is-in .mate-btn {
-  background: #eef4ed; border-color: #d7e3d5;
+  background: #23322A; border-color: #3B5244;
 }
 .mate-list li.is-in .mate-btn:hover {
-  background: #e2eee1; border-color: var(--ok);
+  background: #2A3B31; border-color: var(--ok);
 }
-.mate-list li.is-in .mate-name { color: #3f5f3f; }
+.mate-list li.is-in .mate-name { color: var(--ok); }
 .mate-list li.me .mate-name { font-weight: 700; }
 
 .mate-note { font-size: 12px; color: var(--ink-soft); margin: 10px 0 0; }
@@ -694,7 +650,7 @@ body::after {
 
 .count-big { margin: 4px 0 12px; }
 .count-big b {
-  font-family: var(--display); font-size: 58px; font-weight: 300;
+  font-family: var(--display); font-size: 54px; font-weight: 400;
   font-variant-numeric: lining-nums tabular-nums;
   color: var(--ink); line-height: 1;
 }
@@ -769,27 +725,27 @@ body::after {
 .btn-primary {
   position: relative; overflow: hidden;
   background: linear-gradient(168deg, var(--espresso-lt), var(--espresso));
-  border-color: var(--espresso); color: #f6efdf;
+  border-color: var(--espresso); color: #2A1216;
   letter-spacing: .1em; font-weight: 500;
-  box-shadow: inset 0 1px 0 rgba(201, 169, 97, .22), 0 2px 12px rgba(51, 41, 31, .17);
+  box-shadow: 0 2px 14px rgba(232, 200, 122, .13);
 }
 .btn-primary:hover {
-  background: linear-gradient(168deg, #4e3f2f, #3b3025);
-  border-color: var(--espresso-lt); color: #fff;
-  box-shadow: inset 0 1px 0 rgba(201, 169, 97, .34), 0 4px 18px rgba(51, 41, 31, .24);
+  background: linear-gradient(168deg, #F6DEA0, #E8C87A);
+  border-color: var(--espresso-lt); color: #2A1216;
+  box-shadow: 0 3px 20px rgba(232, 200, 122, .22);
 }
 /* ประกายทองพาดผ่านตอนชี้ — เห็นแวบเดียวแล้วหายไป
    รายละเอียดแบบนี้คือสิ่งที่ทำให้ปุ่มรู้สึก "ถูกทำมา" ไม่ใช่ "ถูกวางไว้" */
 .btn-primary::after {
   content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%;
-  background: linear-gradient(100deg, transparent, rgba(233, 213, 168, .26), transparent);
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .30), transparent);
   transform: skewX(-18deg); transition: left .6s cubic-bezier(.3,.7,.3,1);
 }
 .btn-primary:hover::after { left: 125%; }
 .btn-primary:disabled::after { display: none; }
 
-.btn-danger { color: var(--danger); border-color: #e8d3cd; }
-.btn-danger:hover { background: #fbf0ed; border-color: var(--danger); }
+.btn-danger { color: var(--danger); border-color: #5C312C; }
+.btn-danger:hover { background: #3A1E1C; border-color: var(--danger); }
 
 .btn-lg { width: 100%; padding: 17px; font-size: 16px; }
 .btn-sm { padding: 9px 16px; min-height: 38px; font-size: 12.5px; }
@@ -810,17 +766,24 @@ body::after {
 
 .seatmap { width: 100%; height: auto; display: block; min-width: 320px; }
 
-.sm-stage   { fill: #f3ecdf; stroke: var(--line); stroke-width: 1; }
+/* เวทีเป็นแผงยกระดับมีเส้นทองล้อม ไม่ใช่บล็อกสว่าง
+   ของเดิมเป็นครีม #f3ecdf ซึ่งบนพื้นรักกลายเป็นแผ่นสว่างจ้า
+   แย่งความสนใจไปจากเลขโต๊ะซึ่งเป็นข้อมูลชิ้นเดียวที่แขกต้องการ */
+.sm-stage   { fill: #4A2429; stroke: var(--gold-ln, #7A5C24); stroke-width: 1; }
 .sm-stage-t { fill: var(--gold-deep); font-size: 12px; font-weight: 500;
   letter-spacing: .3em; text-transform: uppercase; }
 
-.sm-runway   { fill: #faf5ea; stroke: var(--line-soft); stroke-width: 1; }
-.sm-runway-t { fill: #93805f; font-size: 11px; letter-spacing: .2em; }
+/* ทางเดินกลางเคยเป็น #faf5ea = เสาสีขาวสูงกลางจอ สว่างที่สุดในหน้า
+   บนพื้นมืดมันต้องเป็น "ช่องว่าง" ไม่ใช่ "วัตถุ" — เข้มกว่าพื้นเล็กน้อยพอ */
+.sm-runway   { fill: #240F13; stroke: var(--line-soft); stroke-width: 1; }
+.sm-runway-t { fill: #8A7355; font-size: 11px; letter-spacing: .2em; }
 
 .sm-side { fill: var(--ink-soft); font-size: 10px; letter-spacing: .28em; font-weight: 500; }
 
-.sm-entry   { fill: #eef1e9; stroke: #d5ddc9; stroke-width: 1; }
-.sm-entry-t { fill: #5a7d5a; font-size: 13px; font-weight: 600; }
+/* ทางขึ้นฮอลล์ — ใช้สีสังคโลกซึ่งเป็นสีเดียวในธีมที่ไม่ใช่โทนอุ่น
+   จึงอ่านออกทันทีว่า "นี่คือทางเข้า ไม่ใช่โต๊ะ" */
+.sm-entry   { fill: #24322A; stroke: #4E6B58; stroke-width: 1; }
+.sm-entry-t { fill: var(--ok); font-size: 13px; font-weight: 500; }
 .sm-hint    { fill: var(--ink-soft); font-size: 11px; }
 
 /* จุดสังเกต (ซุ้มถ่ายรูป · โต๊ะลงทะเบียน · ห้องน้ำ)
@@ -830,7 +793,9 @@ body::after {
 .sm-mark text { fill: var(--ink-soft); font-size: 11.5px; font-weight: 400; letter-spacing: .04em; }
 
 .sm-table { cursor: pointer; }
-.sm-table circle { fill: var(--paper); stroke: var(--line); stroke-width: 1.8; transition: all .18s; }
+/* วงกลมบนพื้นมืดใช้ "วงแหวนสี + เลขสี" ไม่ถมสีทั้งวง
+   ถมสี 40 วงบนพื้นมืด = จุดสว่าง 40 จุดเรียงกันจนลายตา */
+.sm-table circle { fill: #351A1E; stroke: var(--line); stroke-width: 1.6; transition: all .18s; }
 .sm-table text   {
   fill: var(--ink-soft); font-size: 15px; font-weight: 500;
   font-family: var(--display); font-variant-numeric: lining-nums tabular-nums;
@@ -843,7 +808,7 @@ body::after {
 .sm-bride text    { fill: var(--bride-map-tx); }
 .sm-groom circle  { stroke: var(--groom-map-ln); fill: var(--groom-map); }
 .sm-groom text    { fill: var(--groom-map-tx); }
-.sm-noside circle { stroke: var(--line); fill: #fbf9f5; stroke-dasharray: 3 3; }
+.sm-noside circle { stroke: var(--line); fill: transparent; stroke-dasharray: 3 3; }
 .sm-noside text   { fill: var(--ink-soft); }
 
 .sm-table:hover circle,
@@ -851,27 +816,24 @@ body::after {
 .sm-table:focus { outline: none; }
 
 .sm-table.is-over circle { stroke: var(--warn); stroke-width: 3; }
-.sm-table.is-done circle { fill: #cfe3cd; stroke: var(--ok); }
-.sm-table.is-done text   { fill: #2e5230; }
+.sm-table.is-done circle { fill: #2A3B31; stroke: var(--ok); }
+.sm-table.is-done text   { fill: var(--ok); }
 
-/* โต๊ะที่เลือก: สีเข้มของฝั่งตัวเอง + วงขาวคั่น
-   วงขาวคั่นทำให้มันเด้งออกมาไม่ว่าอยู่ท่ามกลางสีอะไร
+/* โต๊ะที่เลือก: กลับหัวจากวงอื่น — ถมสีฝั่งทึบ ตัวเลขเป็นสีรัก
+   บนพื้นมืด ของที่ "สว่างทึบ" คือของที่เด่นที่สุด และมีอยู่ชิ้นเดียวในจอ
+   วงอื่นทั้ง 39 วงเป็นวงแหวนโปร่ง จึงไม่มีอะไรมาแข่ง
 
-   ⚠️ ต้องแยกสองฝั่ง — เดิมใช้น้ำตาลเข้มสีเดียวทุกโต๊ะ
-   Nueng ทักว่ากดโต๊ะ 8 ของฝั่งเจ้าสาวแล้วขึ้นเป็นน้ำตาล ซึ่งเป็นสีเจ้าบ่าว
-   หน้านั้นบอกฝั่งไว้ 3 ที่ (ป้ายชื่อ · วงบนผัง · ตัวกรอง) ถ้าอันกลางขัดกับอีกสอง
-   แขกจะเชื่ออันไหนก็ผิดหมด — สีบนผังต้องพูดเรื่องเดียวกับป้ายเสมอ */
+   ⚠️ สองฝั่งต้องต่างกันทั้งสีและความสว่าง (เคยพลาดตอนต่างกันแค่ 1.01:1)
+   ตอนนี้ต่างกัน 1.91:1 · ตัวเลขสีรักบนเจ้าสาว 10.79:1 บนเจ้าบ่าว 7.83:1 */
 .sm-table.is-hi circle {
-  fill: #5a4420; stroke: var(--paper); stroke-width: 3.5; r: 24;
-  filter: drop-shadow(0 2px 7px rgba(74, 56, 26, .55));
+  fill: var(--groom); stroke: var(--cream); stroke-width: 3.5; r: 24;
+  filter: drop-shadow(0 0 10px rgba(188, 137, 52, .5));
 }
-.sm-table.is-hi text { fill: #fff; font-size: 18px; font-weight: 400; }
+.sm-table.is-hi text { fill: #2A1216; font-size: 18px; font-weight: 600; }
 
-/* เจ้าสาว = โรสโกลด์เข้ม (ตัวหนังสือขาวบนพื้นนี้ 6.12:1 ผ่าน AA)
-   เจ้าบ่าว = น้ำตาลทองเข้มตามค่าตั้งต้นด้านบน (9.20:1) */
 .sm-table.sm-bride.is-hi circle {
-  fill: #a2452f;
-  filter: drop-shadow(0 2px 7px rgba(122, 47, 34, .5));
+  fill: var(--bride);
+  filter: drop-shadow(0 0 10px rgba(242, 192, 172, .45));
 }
 
 /* ตอนเปิดตัวกรอง: ตัวที่เข้าเงื่อนไขเส้นหนาขึ้น · ตัวที่ไม่เข้าจางลงมาก
@@ -924,8 +886,8 @@ body::after {
 
 .lg-bride { background: var(--bride-map); border-color: var(--bride-map-ln); }
 .lg-groom { background: var(--groom-map); border-color: var(--groom-map-ln); }
-.lg-free  { background: var(--paper);     border-color: var(--ink-soft); }
-.lg-done  { background: #cfe3cd;          border-color: var(--ok); }
+.lg-free  { background: #351A1E;          border-color: var(--ink-soft); }
+.lg-done  { background: #2A3B31;          border-color: var(--ok); }
 
 /* ── สถานะ / แจ้งเตือน ───────────────────────────────────── */
 
@@ -934,10 +896,12 @@ body::after {
   display: flex; align-items: flex-start; gap: 8px; line-height: 1.65;
   border: 1px solid transparent;
 }
-.notice-info  { background: #eef2f4; color: #4a6674; border-color: #dde5e9; }
-.notice-warn  { background: #faf0e2; color: #8a5a24; border-color: #eeddc4; }
-.notice-error { background: #fbf0ed; color: var(--danger); border-color: #eed9d2; }
-.notice-ok    { background: #eaf1e9; color: #3f5f3f; border-color: #d7e3d5; }
+/* กล่องแจ้งเตือนบนพื้นมืด: พื้นเข้มอมสี + ตัวอักษรสีสว่างของหมวดนั้น
+   ทุกคู่เกิน 7:1 บนพื้นของตัวเอง */
+.notice-info  { background: #23282E; color: #A8C4D2; border-color: #3A434C; }
+.notice-warn  { background: #3A2A18; color: var(--warn);   border-color: #5C4324; }
+.notice-error { background: #3A1E1C; color: var(--danger); border-color: #5C312C; }
+.notice-ok    { background: #23322A; color: var(--ok);     border-color: #3B5244; }
 
 .empty-state { text-align: center; padding: 46px 20px 34px; color: var(--ink-soft);
   animation: fade .7s ease both; }
@@ -994,7 +958,7 @@ table.data th {
   color: var(--ink-soft); font-weight: 600; position: sticky; top: 0;
 }
 table.data tr:last-child td { border-bottom: 0; }
-table.data tbody tr:hover { background: #fdfbf6; }
+table.data tbody tr:hover { background: var(--gold-lt); }
 
 /* ── แท็บ ────────────────────────────────────────────────── */
 
@@ -1036,10 +1000,12 @@ table.data tbody tr:hover { background: #fdfbf6; }
 .restart {
   position: fixed; right: 20px; bottom: 20px; z-index: 50;
   padding: 16px 28px; min-height: 58px;
-  font-family: inherit; font-size: 17px; font-weight: 700; color: #fff;
+  /* ⚠️ ตัวอักษรต้องเป็นสีรัก ไม่ใช่ขาว — ขาวบนทองได้แค่ 1.72:1 อ่านไม่ออก
+     เคยพลาดจุดนี้มาแล้วตอนธีมครีม (ขาวบนทองอ่อน 2.25:1) */
+  font-family: inherit; font-size: 17px; font-weight: 600; color: #2A1216;
   background: linear-gradient(160deg, var(--espresso-lt), var(--espresso));
   border: 0; border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(122, 96, 46, .35);
+  box-shadow: 0 8px 26px rgba(232, 200, 122, .28);
   cursor: pointer;
 }
 .restart:active { transform: scale(.97); }
@@ -1054,9 +1020,10 @@ table.data tbody tr:hover { background: #fdfbf6; }
 /* ⚠️ ค่าพวกนี้ต้องใหญ่กว่าค่าพื้นฐานเสมอ — จอ kiosk คือจอที่ยืนดูไกลที่สุด
    เคยค้างค่าจากธีมเก่าไว้ (28px / 100px) ซึ่งเล็กกว่าที่มือถือเห็นเสียอีก */
 .is-kiosk .tno { flex: 0 0 76px; height: 76px; font-size: 36px; }
-.is-kiosk .side-btn { padding: 28px 12px; }
-.is-kiosk .side-btn .k { font-size: 14px; }
-.is-kiosk .side-btn .t { font-size: 22px; }
+/* ⚠️ ค่าฝั่ง kiosk ต้องใหญ่กว่าค่าพื้นฐานเสมอ — จอนี้คือจอที่ยืนดูไกลที่สุด
+   เคยค้างค่าเก่าจนเล็กกว่ามือถือมาแล้ว */
+.is-kiosk .pick-row { padding-top: 26px; padding-bottom: 26px; font-size: 23px; }
+.is-kiosk .pick-row .s { font-size: 16px; }
 .is-kiosk .tablemates li { font-size: 17px; padding: 9px 14px; }
 .is-kiosk .count-row .btn-primary { min-height: 62px; font-size: 19px; }
 .is-kiosk .count-row select { flex: 0 0 128px; font-size: 18px; }
@@ -1088,7 +1055,14 @@ table.data tbody tr:hover { background: #fdfbf6; }
 /* ── การพิมพ์ (ป้ายโต๊ะ / รายชื่อให้ทีมงาน) ───────────────── */
 
 @media print {
-  body { background: #fff; }
+  /* ⚠️ ตอนพิมพ์ต้องกลับเป็นพื้นขาวหมึกเข้ม — เบราว์เซอร์ตัดพื้นหลังทิ้งเป็นค่าตั้งต้น
+     ถ้าไม่บังคับสีตัวอักษร ธีมมืดจะพิมพ์ออกมาเป็นตัวหนังสือสีอ่อนบนกระดาษขาว = อ่านไม่ออก */
+  body { background: #fff !important; color: #221 !important; }
+  body::before, body::after { display: none !important; }
+  .card, .found, .counter, .map-holder, .wayfind, .notice { background: #fff !important; }
+  .found .big-table, .tno, .sm-table text { color: #6b5220 !important; }
+  h1, h2, h4, .guest-name, .mate-name, .count-big b { color: #221 !important; }
+  .guest-meta, .hint, .foot, .side-pill, .count-head { color: #555 !important; }
   .no-print, .tabs, .search-box, .btn, .mini-nav, .foot, .restart, .backbar { display: none !important; }
   .card, .table-scroll { box-shadow: none; border-color: #ccc; }
   .print-page { page-break-after: always; }
