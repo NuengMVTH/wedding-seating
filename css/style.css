@@ -23,7 +23,9 @@
 
   /* ตัวอักษร — น้ำตาลเข้มแทนดำ */
   --ink:      #2f2620;
-  --ink-soft: #8a7a68;
+  /* ⚠️ ต้องได้ 4.5:1 ทั้งบน --paper และ --cream เพราะใช้กับตัวหนังสือเล็กทั่วเว็บ
+     รวมถึงเลขโต๊ะบนแผนผัง · ค่าเดิม #8a7a68 ได้แค่ 4.08 / 3.85 ซึ่งตกเกณฑ์ */
+  --ink-soft: #7d6e5d;
   --line:     #e6dbc8;
   --line-soft:#f0e8da;
 
@@ -119,6 +121,9 @@
   *, *::before, *::after {
     animation-duration: .01ms !important; animation-iteration-count: 1 !important;
     transition-duration: .01ms !important; scroll-behavior: auto !important;
+    /* ต้องล้าง delay ด้วย ไม่งั้น animation-fill-mode: both จะค้าง opacity: 0
+       ตลอดช่วง delay — คนที่ปิดแอนิเมชันจะเห็นจอว่าง ~0.26 วิ แล้วของค่อยผุดขึ้นมา */
+    animation-delay: 0s !important;
   }
 }
 
@@ -309,7 +314,7 @@ body::after {
 }
 .tno small {
   font-family: var(--sans); font-size: 8px; font-weight: 500;
-  letter-spacing: .22em; opacity: .7; margin-bottom: 3px; padding-left: .22em;
+  letter-spacing: .22em; opacity: .92; margin-bottom: 3px; padding-left: .22em;
 }
 
 .tno.bride { background: var(--bride-lt); color: var(--bride); border-color: var(--bride-map-ln); }
@@ -328,7 +333,7 @@ body::after {
   display: inline-block; padding: 1px 9px; border-radius: 999px;
   font-size: 11px; font-weight: 600; vertical-align: middle;
 }
-.badge-in   { background: #eaf1e9; color: var(--ok); }
+.badge-in   { background: #eaf1e9; color: #456344; }
 .badge-warn { background: #f8eddf; color: var(--warn); }
 
 /* ── เลือกฝั่งด้วยการจิ้ม ─────────────────────────────────── */
@@ -539,13 +544,26 @@ body::after {
    พื้นหลังไล่เฉดจะทับกล่องทั้งกล่องพร้อมตัวอักษรโปร่งใส = เลขโต๊ะหายไปเลย
    ซึ่งเป็นข้อมูลชิ้นสำคัญที่สุดในหน้านี้ ยอมเสียลูกเล่นดีกว่าเสี่ยงให้แขกอ่านไม่ได้
 
-   เฉดสามจุด (สว่าง → ทอง → เข้ม) แทนสองจุด ทำให้เห็นเป็นโลหะไม่ใช่แค่สีไล่ */
+   ⚠️ ทุกจุดในเฉดต้องเข้มพอด้วย — เคยตั้งยอดตัวเลขเป็น #dcc088 ซึ่งได้แค่ 1.73:1
+   บนพื้นกระดาษ (ต้องการ 3:1) ยอดของเลข 1 4 7 ที่เส้นบางอยู่แล้วจะจางหายในห้องไฟสลัว
+   แย่กว่าสีทึบสำรอง #8a6c2e (4.85:1) ที่บรรทัดล่างเสียอีก — ลูกเล่นห้ามชนะการอ่านออก
+   ตอนนี้ต่ำสุด 3.54:1 · สูงสุด 8.33:1 */
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
   .found .big-table {
-    background: linear-gradient(158deg, #dcc088 6%, var(--gold) 44%, #775c25 96%);
+    background: linear-gradient(158deg, #a6813f 5%, #8a6c2e 42%, #5f4a1c 96%);
     -webkit-background-clip: text;
             background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+}
+
+/* ตอนพิมพ์ เบราว์เซอร์ตัดพื้นหลังทิ้งเป็นค่าตั้งต้น แต่ -webkit-text-fill-color
+   ยังโปร่งใสอยู่ → เลขโต๊ะพิมพ์ออกมาเป็นที่ว่าง คืนเป็นสีทึบเสมอตอนพิมพ์ */
+@media print {
+  .found .big-table {
+    background: none !important;
+    -webkit-text-fill-color: #6b5220 !important;
+    color: #6b5220 !important;
   }
 }
 
@@ -645,8 +663,10 @@ body::after {
 
 .mate-note { font-size: 12px; color: var(--ink-soft); margin: 10px 0 0; }
 
-.is-kiosk .mate-list .mate-btn,
-.is-kiosk .mate-list li.is-in { font-size: 17px; padding: 14px 16px; }
+/* ทุกแถวเป็นปุ่มหมด (ทั้งคนที่มาแล้วและยังไม่มา) ระยะขอบจึงต้องอยู่ที่ปุ่มที่เดียว
+   เดิมใส่ที่ li ด้วย ทำให้ซ้อนกันสองชั้นและแถวสองแบบเยื้องไม่ตรงกัน */
+.is-kiosk .mate-list .mate-btn { font-size: 17px; padding: 14px 16px; }
+.is-kiosk .mate-list li { padding: 0; }
 
 /* ── แผงนับหัว ───────────────────────────────────────────── */
 
@@ -680,7 +700,9 @@ body::after {
 .count-full { margin-top: 11px; font-size: 14px; font-weight: 600; color: var(--ok); }
 .count-left { margin-top: 10px; font-size: 14px; color: var(--ink-soft); }
 
-.count-row { display: flex; gap: 9px; margin-top: 14px; align-items: stretch; }
+/* flex-wrap เป็นทางหนี — คู่กับ white-space: nowrap ที่จอแคบ ถ้าตัวหนังสือยาวเกิน
+   ให้ตกลงบรรทัดใหม่ ดีกว่าดันจนทั้งหน้าเลื่อนซ้ายขวาได้ */
+.count-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; align-items: stretch; }
 .count-row select {
   flex: 0 0 106px;
   padding: 12px 10px; font-family: inherit; font-size: 16px; color: var(--ink);
@@ -783,7 +805,7 @@ body::after {
   letter-spacing: .3em; text-transform: uppercase; }
 
 .sm-runway   { fill: #faf5ea; stroke: var(--line-soft); stroke-width: 1; }
-.sm-runway-t { fill: #c3b193; font-size: 11px; letter-spacing: .2em; }
+.sm-runway-t { fill: #93805f; font-size: 11px; letter-spacing: .2em; }
 
 .sm-side { fill: var(--ink-soft); font-size: 10px; letter-spacing: .28em; font-weight: 500; }
 
@@ -1005,7 +1027,7 @@ table.data tbody tr:hover { background: #fdfbf6; }
   position: fixed; right: 20px; bottom: 20px; z-index: 50;
   padding: 16px 28px; min-height: 58px;
   font-family: inherit; font-size: 17px; font-weight: 700; color: #fff;
-  background: linear-gradient(160deg, var(--gold-shine), var(--gold-deep));
+  background: linear-gradient(160deg, var(--espresso-lt), var(--espresso));
   border: 0; border-radius: 999px;
   box-shadow: 0 8px 24px rgba(122, 96, 46, .35);
   cursor: pointer;
@@ -1014,20 +1036,22 @@ table.data tbody tr:hover { background: #fdfbf6; }
 
 .is-kiosk { font-size: 18px; }
 .is-kiosk .wrap { max-width: 700px; padding-bottom: 120px; }
-.is-kiosk .hero h1 { font-size: 46px; }
+.is-kiosk .hero:not(.compact) h1 { font-size: 46px; }
 .is-kiosk .ornament { width: 118px; }
 .is-kiosk .search-box input { padding: 23px 48px 23px 22px; font-size: 22px; }
 .is-kiosk .guest-name { font-size: 20px; }
 .is-kiosk .guest-meta { font-size: 15px; }
-.is-kiosk .tno { flex: 0 0 70px; height: 70px; font-size: 28px; }
+/* ⚠️ ค่าพวกนี้ต้องใหญ่กว่าค่าพื้นฐานเสมอ — จอ kiosk คือจอที่ยืนดูไกลที่สุด
+   เคยค้างค่าจากธีมเก่าไว้ (28px / 100px) ซึ่งเล็กกว่าที่มือถือเห็นเสียอีก */
+.is-kiosk .tno { flex: 0 0 76px; height: 76px; font-size: 36px; }
 .is-kiosk .side-btn { padding: 28px 12px; }
-.is-kiosk .side-btn .ico { width: 66px; height: 66px; font-size: 32px; }
+.is-kiosk .side-btn .k { font-size: 14px; }
 .is-kiosk .side-btn .t { font-size: 22px; }
 .is-kiosk .tablemates li { font-size: 17px; padding: 9px 14px; }
 .is-kiosk .count-row .btn-primary { min-height: 62px; font-size: 19px; }
 .is-kiosk .count-row select { flex: 0 0 128px; font-size: 18px; }
 .is-kiosk .backbar { font-size: 16px; padding: 13px 22px 13px 17px; }
-.is-kiosk .found .big-table { font-size: 100px; }
+.is-kiosk .found .big-table { font-size: 138px; }
 
 /* ── footer ──────────────────────────────────────────────── */
 
