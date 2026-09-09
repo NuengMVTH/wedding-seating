@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Trirong:wght@400;500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Trirong:wght@300;400;500;600&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
 <div class="wrap">
 
   <header class="hero" id="hero">
-    <div class="hero-mark">Wedding Seating</div>
+    <div class="hero-mark" id="heroDate">20 &middot; 09 &middot; 2026</div>
     <h1 id="coupleName">ผังที่นั่งในงาน</h1>
     <p id="venueLine">VIVACE สาขาบางปู</p>
     <div class="hero-rule"></div>
@@ -78,14 +78,17 @@
     <!-- ทางเลือกสำหรับคนที่ไม่อยากพิมพ์ — จิ้มเลือกฝั่งแล้วไล่ดูโต๊ะเอา -->
     <div id="browsePrompt">
       <div class="or-line">หรือไม่ต้องพิมพ์ — เลือกฝั่งของคุณ</div>
+      <!-- เดิมเป็นอิโมจิ 👰🤵 ในวงกลม — ถอดออกตอนทำธีมเรียบแพง (9 ก.ย. 2026)
+           อิโมจิถูกวาดโดยผู้ผลิตมือถือแต่ละเจ้า คุมสีและน้ำหนักเส้นไม่ได้เลย
+           ตอนนี้ใช้ตัวอักษรล้วน + แถบสีฝั่งบาง ๆ ด้านบนแทน -->
       <div class="side-pick">
         <button class="side-btn bride" data-pick="bride">
-          <span class="ico">👰</span>
+          <span class="k">Bride</span>
           <span class="t">ฝั่งเจ้าสาว</span>
           <span class="s" id="brideSub"></span>
         </button>
         <button class="side-btn groom" data-pick="groom">
-          <span class="ico">🤵</span>
+          <span class="k">Groom</span>
           <span class="t">ฝั่งเจ้าบ่าว</span>
           <span class="s" id="groomSub"></span>
         </button>
@@ -94,7 +97,7 @@
       <!-- ซ่อนปุ่มตัวอักษรทั้งชุดไว้หลังปุ่มเดียว — ถ้าโชว์ทั้ง 40 ตัวบนหน้าแรก
            หน้าเว็บจะรกจนเสียความเรียบที่ตั้งใจทำไว้ -->
       <button class="alpha-btn" id="alphaBtn" hidden>
-        <span class="ico">ก ข ค</span>
+        <span class="ico">ก&#8202;ข&#8202;ค</span>
         <span class="t">ค้นจากตัวอักษรแรกของชื่อ</span>
         <span class="s" id="alphaSub"></span>
       </button>
@@ -241,9 +244,14 @@ const els = {
   $('coupleName').innerHTML =
     esc(B.nick || B.name) + ' <span class="heart">♥</span> ' + esc(G.nick || G.name);
   document.title = 'ค้นหาโต๊ะของคุณ — งานแต่ง ' + (B.nick || B.name) + ' & ' + (G.nick || G.name);
+  // วันที่ย้ายขึ้นไปเป็นบรรทัดบนสุดในรูปตัวเลข — เป็นจุดที่สายตาแตะก่อนชื่อ
+  // และตัวเลขละตินใน Cormorant คือของที่สวยที่สุดในชุดฟอนต์นี้
+  if (CONFIG.weddingDate) {
+    const d = CONFIG.weddingDate.split('-');
+    $('heroDate').innerHTML = d[2] + ' &middot; ' + d[1] + ' &middot; ' + d[0];
+  }
   $('venueLine').innerHTML =
-    esc(B.name) + ' &amp; ' + esc(G.name) + '<br>' +
-    esc(CONFIG.venue + (CONFIG.weddingDate ? ' · ' + thaiDate(CONFIG.weddingDate) : ''));
+    esc(B.name) + ' &amp; ' + esc(G.name) + '<br>' + esc(CONFIG.venue);
 
   els.status.innerHTML = '<div class="spinner"></div>';
 
