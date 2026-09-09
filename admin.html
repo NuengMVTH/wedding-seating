@@ -321,6 +321,8 @@ function bind() {
 
   $('previewBtn').addEventListener('click', previewImport);
   $('importBtn').addEventListener('click', doImport);
+  $('impText').addEventListener('input', invalidateImport);
+  $('impTable').addEventListener('change', invalidateImport);
 
   $('qrPrintBtn').addEventListener('click', function () { window.print(); });
   $('copyUrlBtn').addEventListener('click', copyGuestUrl);
@@ -479,7 +481,9 @@ function note(kind, msg) {
  * รับได้ทั้งคั่นด้วยลูกน้ำ แท็บ (วางจาก Excel) หรือชื่อเปล่า ๆ บรรทัดละคน
  */
 function parseImport(text, defaultTable) {
-  return String(text).split(/\r?\n/).map(function (line, i) {
+  // ตัดบรรทัดให้ครอบคลุมกว่าเดิม — คลิปบอร์ดจาก Excel บนแมคใช้ \r เดี่ยว
+  // และ Word/PDF ใช้ U+2028 ถ้าจับไม่ได้ ทั้งกองจะยุบเหลือ "แขก 1 คน" ชื่อยาวเหยียด
+  return String(text).split(/\r\n|[\n\r\u2028\u2029]/).map(function (line, i) {
     const raw = line.trim();
     if (!raw) return null;
 
@@ -489,9 +493,18 @@ function parseImport(text, defaultTable) {
     // ช่องสุดท้ายถ้าเป็นตัวเลข 1-40 ให้ถือว่าเป็นเลขโต๊ะ
     if (f.length >= 2) {
       const last = f[f.length - 1];
-      if (/^\d{1,2}$/.test(last) && Number(last) >= 1 && Number(last) <= CONFIG.totalTables) {
-        item.tableNo = Number(last);
-        if (f.length >= 3) item.nickname = f[1];
+      if (/^\d{1,3}$/.test(last)) {
+        const n = Number(last);
+        if (n >= 1 && n <= CONFIG.totalTables) {
+          item.tableNo = n;
+          if (f.length >= 3) item.nickname = f[1];
+        } else {
+          // ⚠️ เดิมตกมาที่ else แล้วเอา f[1] ไปเป็นชื่อเล่น ตัวเลขที่พิมพ์ผิดหายไปเฉย ๆ
+          // แขกไปโผล่โต๊ะ default โดยไม่มีคำเตือนที่ไหนเลย แล้วนั่งผิดโต๊ะในวันงาน
+          // พิมพ์ 45 แทน 4 คือความผิดพลาดที่เกิดง่ายสุดตอนกรอกรายชื่อเป็นร้อย
+          item.badTable = n;
+          if (f.length >= 3) item.nickname = f[1];
+        }
       } else {
         item.nickname = f[1];
       }
@@ -500,8 +513,31 @@ function parseImport(text, defaultTable) {
   }).filter(Boolean);
 }
 
+/** ล้างผลการตรวจทิ้ง — ต้องเรียกทุกครั้งที่ข้อความหรือโต๊ะปลายทางเปลี่ยน
+ *  ไม่งั้นกด "ตรวจก่อนนำเข้า" → แก้ข้อความ → กด "นำเข้า" จะได้ของชุดเก่า
+ *  แล้วช่องข้อความถูกล้างทิ้ง ของที่แก้ไว้หายไปด้วย กู้ไม่ได้ */
+function invalidateImport() {
+  if (!PENDING.length) return;
+  PENDING = [];
+  $('importBtn').disabled = true;
+  $('impMsg').innerHTML = note('info', 'ข้อความเปลี่ยนแล้ว — กด "ตรวจก่อนนำเข้า" อีกครั้ง');
+}
+
 function previewImport() {
   PENDING = parseImport($('impText').value, Number($('impTable').value));
+
+  // เลขโต๊ะที่พิมพ์นอกช่วง ต้องหยุดไว้ก่อน ไม่ใช่นำเข้าแล้วค่อยไปตามแก้ทีหลัง
+  const bad = PENDING.filter(function (x) { return x.badTable; });
+  if (bad.length) {
+    $('impMsg').innerHTML = note('error',
+      'เลขโต๊ะไม่ถูกต้อง ' + bad.length + ' บรรทัด (ต้องอยู่ระหว่าง 1-' + CONFIG.totalTables + '): ' +
+      bad.slice(0, 6).map(function (b) {
+        return 'บรรทัด ' + b.line + ' "' + b.fullName + '" → ' + b.badTable;
+      }).join(' · ') + (bad.length > 6 ? ' …' : '') + ' — แก้แล้วกดตรวจใหม่');
+    PENDING = [];
+    $('importBtn').disabled = true;
+    return;
+  }
 
   if (!PENDING.length) {
     $('impMsg').innerHTML = note('error', 'ไม่พบรายชื่อในข้อความที่วาง');
@@ -588,15 +624,30 @@ function drawTableEditor() {
                         group: input.value.trim(), side: sel.value, seats: t.seats || 10 });
 
         // ยอดนับหัวอยู่คนละคอลัมน์และคนละคำสั่ง — ส่งเฉพาะตอนที่ค่าเปลี่ยนจริง
-        if (Number(arr.value) !== (t.arrived || 0)) {
+        //
+        // ⚠️ ช่องว่างไม่ใช่ศูนย์ — Number('') คือ 0 และ Number('abc') คือ NaN
+        // เดิมเผลอลบตัวเลขในช่อง "มา" ทิ้ง (หรือแตะโดนบนมือถือ) แล้วกดบันทึกเพื่อแก้ชื่อกลุ่ม
+        // ยอดนับหัวของโต๊ะนั้นจะถูกล้างเป็น 0 เงียบ ๆ ต้องไปนับหัวใหม่เองทั้งโต๊ะ
+        const rawArr = String(arr.value).trim();
+        const numArr = Number(rawArr);
+        if (rawArr === '' || !Number.isFinite(numArr) || numArr < 0) {
+          arr.value = t.arrived || 0;                    // คืนค่าเดิมให้เห็นกับตา
+          throw new Error('ช่อง "มา" ของโต๊ะ ' + no + ' ว่างหรือไม่ใช่ตัวเลข — ' +
+                          'ชื่อกลุ่มบันทึกแล้ว แต่ยอดนับหัวคงไว้ที่ ' + (t.arrived || 0));
+        }
+        if (numArr !== (t.arrived || 0)) {
           await postGAS({ type: 'setArrived', pin: PIN, actor: 'admin',
-                          tableNo: no, arrived: Number(arr.value) });
+                          tableNo: no, arrived: numArr });
         }
         b.textContent = '✓';
         setTimeout(function () { b.textContent = 'บันทึก'; b.disabled = false; }, 1200);
         await refresh();
       } catch (err) {
         b.disabled = false; b.textContent = 'บันทึก';
+        // ต้องโหลดใหม่เสมอ — คำสั่งแรก (ชื่อกลุ่ม) อาจสำเร็จไปแล้วขณะที่คำสั่งที่สองพลาด
+        // ถ้าไม่โหลด ข้อมูลในเครื่องจะไม่ตรงกับเซิร์ฟเวอร์ แล้วการบันทึกครั้งถัดไป
+        // จะส่งค่าเก่าที่ค้างอยู่ขึ้นไปทับของใหม่
+        await refresh().catch(function () {});
         alert('บันทึกไม่สำเร็จ: ' + err.message);
       }
     });

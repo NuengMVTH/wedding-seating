@@ -168,7 +168,12 @@ let MAP_HI     = 0;    // เลขโต๊ะที่ไฮไลต์อย
      • ล้มเหลวก็เงียบ ใช้ของเดิมต่อ แขกไม่ต้องเห็น error ที่ทำอะไรไม่ได้อยู่ดี   */
 
 const REFRESH_MS = 60000;
-let BUSY = false;      // มีคำสั่งเขียนค้างอยู่
+/* BUSY เป็น "ตัวนับ" ไม่ใช่ true/false โดยตั้งใจ
+   บน iPad มีคนกดพร้อมกันสองคนได้ ถ้าเป็น boolean คำสั่งที่เสร็จก่อนจะปลดธง
+   ทั้งที่ของอีกคนยังลอยอยู่ แล้ว auto-refresh จะแทรกเข้ามาทับ */
+let BUSY = 0;          // จำนวนคำสั่งเขียนที่ยังค้างอยู่
+let WRITE_SEQ = 0;     // ขยับทุกครั้งที่เขียนเสร็จ — ใช้ทิ้งคำตอบเก่าที่มาช้า
+let REFRESHING = false;// มีการดึงข้อมูลอัตโนมัติค้างอยู่ กันไม่ให้ซ้อนกันเอง
 let LAST_SIG = '';     // ลายนิ้วมือข้อมูลชุดล่าสุดที่วาดไปแล้ว
 
 const $ = function (id) { return document.getElementById(id); };
@@ -281,11 +286,23 @@ const els = {
   });
 })();
 
-/** ลายนิ้วมือของข้อมูล — เอาไว้ดูว่ามีอะไรเปลี่ยนจริงไหมก่อนวาดหน้าจอใหม่ */
+/** ลายนิ้วมือของข้อมูล — เอาไว้ดูว่ามีอะไรเปลี่ยนจริงไหมก่อนวาดหน้าจอใหม่
+ *
+ * ⚠️ ต้องนับสถานะของแขกรายคนด้วย ห้ามนับแค่จำนวน
+ * เดิมใช้แค่ guests.length ผลคือ:
+ *   - แอดมินย้ายแขกจากโต๊ะ 12 ไป 14 → ไม่มีอะไรในลายนิ้วมือเปลี่ยน
+ *     คนที่เปิดหน้าตัวเองค้างไว้เห็น "โต๊ะ 12" ไปตลอดงาน แล้วเดินผิดโต๊ะจริง
+ *   - เช็คอินคนที่โต๊ะเต็มแล้ว → ยอดนับหัวชนเพดาน ไม่ขยับ → ป้าย "มาถึงแล้ว" ไม่ขึ้น
+ *   - แก้ชื่อผิด/เพิ่มชื่อเล่น → ไม่ขึ้นเลย
+ * สายอักขระยาวขึ้นก็จริง (แขก 400 คน ≈ 20KB) แต่เทียบกันแค่นาทีละครั้งในหน่วยความจำ */
 function dataSignature(d) {
-  return (d.tables || []).map(function (t) {
+  const tables = (d.tables || []).map(function (t) {
     return t.no + ':' + (t.arrived || 0) + ':' + t.group + ':' + t.side + ':' + t.seats;
-  }).join('|') + '#' + (d.guests || []).length;
+  }).join('|');
+  const guests = (d.guests || []).map(function (g) {
+    return g.id + ':' + g.tableNo + ':' + (g.checkedIn ? 1 : 0) + ':' + g.fullName + ':' + g.nickname;
+  }).join('|');
+  return tables + '#' + guests;
 }
 
 function markSynced(d) {
@@ -298,7 +315,12 @@ function markSynced(d) {
 }
 
 async function autoRefresh() {
-  if (BUSY || document.visibilityState !== 'visible') return;
+  if (BUSY || REFRESHING || document.visibilityState !== 'visible') return;
+
+  // จำไว้ว่าตอนเริ่มดึง มีการเขียนไปแล้วกี่ครั้ง
+  // ถ้าระหว่างรอ แขกกดปุ่มจนเลขเปลี่ยน ตัวนับจะขยับ แล้วเราจะทิ้งคำตอบนี้
+  const seq = WRITE_SEQ;
+  REFRESHING = true;
 
   try {
     const fresh = await loadData({ timeout: 9000 });
@@ -307,15 +329,25 @@ async function autoRefresh() {
     // ได้ cache กลับมาแปลว่าเน็ตไม่ติด — ของเดิมบนจอใหม่กว่าหรือเท่ากันอยู่แล้ว
     if (fresh.from !== 'network') return;
 
+    // ⚠️ ด่านนี้สำคัญมาก — GAS ตอบช้า 3-4 วิ
+    // แขกกด "มาถึงแล้ว +2" ระหว่างที่คำขอนี้ยังลอยอยู่ → เลขขึ้นเป็น 7
+    // แล้วคำตอบเก่า (ยังเป็น 5) มาถึงทีหลัง ถ้าเอามาใช้ เลขจะเด้งกลับเป็น 5
+    // แขกนึกว่าไม่สำเร็จ กดซ้ำอีก 2 → กลายเป็น 9 นับหัวเกินจริง
+    if (BUSY || seq !== WRITE_SEQ) return;
+
     const sig = dataSignature(fresh);
     if (sig === LAST_SIG) return;
 
-    LAST_SIG = sig;
     DATA  = fresh;
     INDEX = buildIndex(DATA.guests, DATA.tables);
-    refreshView();
+
+    // วาดสำเร็จค่อยจำลายนิ้วมือ — ถ้าวาดไม่ได้ (แขกกำลังจิ้มดรอปดาวน์ค้างอยู่)
+    // ต้องปล่อยให้รอบหน้าลองใหม่ ไม่งั้นหน้าจะค้างจนกว่าข้อมูลจะเปลี่ยนอีกรอบ
+    LAST_SIG = refreshView() ? sig : '';
   } catch (err) {
     // เงียบโดยตั้งใจ — แขกที่ยืนอยู่หน้า iPad ทำอะไรกับ error นี้ไม่ได้อยู่แล้ว
+  } finally {
+    REFRESHING = false;
   }
 }
 
@@ -323,31 +355,44 @@ async function autoRefresh() {
  * วาดเฉพาะส่วนที่ผูกกับข้อมูล โดยไม่เด้งจอกลับขึ้นบนและไม่รีเซ็ตสิ่งที่แขกกำลังทำ
  * (ถ้าเรียก render() ตรง ๆ หน้าจอจะกระโดดกลางคันทุกนาที ซึ่งน่ารำคาญกว่าข้อมูลเก่า)
  */
+/**
+ * วาดหน้าปัจจุบันใหม่จากข้อมูลชุดล่าสุด — คืน true ถ้าวาดจริง
+ *
+ * ⚠️ ลำดับการตรวจต้องตรงกับ render() เป๊ะ ๆ
+ * เดิมที่นี่เช็ค t ก่อน g แต่ render() เช็ค g ก่อน t → ลิงก์ที่มีทั้งสองค่า
+ * จะเปิดมาเป็นหน้าแขก แล้วพอ auto-refresh ทำงานรอบแรกก็เด้งเป็นหน้าโต๊ะเอง
+ * และเดิมไม่มีสาขา alpha เลย → หน้ารายชื่อตามตัวอักษรค้างอยู่กับข้อมูลตอนเปิดหน้า
+ */
 function refreshView() {
   const p = new URLSearchParams(location.search);
-  const t = Number(p.get('t'));
-  const side = p.get('side');
-  const gid = p.get('g');
+  const gid   = p.get('g');
+  const t     = Number(p.get('t'));
+  const side  = p.get('side');
+  const alpha = p.get('alpha');
 
-  if (t >= 1 && t <= CONFIG.totalTables) {
+  if (gid) {
+    const g = INDEX.find(function (x) { return x.id === gid; });
+    if (g) { viewGuest(g, true); return true; }
+    drawMap(MAP_HI);
+    return true;
+  }
+  if (validTableNo(t)) {
     // ถ้าแขกกำลังเลือกดรอปดาวน์อยู่ อย่าเพิ่งวาดทับ — รอรอบหน้า
+    // คืน false เพื่อไม่ให้จำลายนิ้วมือ ไม่งั้นรอบหน้าจะคิดว่า "ไม่มีอะไรเปลี่ยน" แล้วข้ามไป
     const busyEl = document.activeElement;
-    if (busyEl && busyEl.closest && busyEl.closest('#counter')) { drawMap(t); return; }
+    if (busyEl && busyEl.closest && busyEl.closest('#counter')) { drawMap(t); return false; }
 
     // วาดทั้งหน้าใหม่ ไม่ใช่แค่แผงนับหัว — ไม่งั้นป้าย "มาถึงแล้ว"
     // ในรายชื่อจะไม่อัปเดตเวลามีคนเช็คอิน
     viewTable(t, side, true);
-    return;
+    return true;
   }
-  if (gid) {
-    const g = INDEX.find(function (x) { return x.id === gid; });
-    if (g) viewGuest(g, true); else drawMap(MAP_HI);
-    return;
-  }
-  if (side === 'bride' || side === 'groom') { viewBrowse(side, true); return; }
+  if (side === 'bride' || side === 'groom') { viewBrowse(side, true); return true; }
+  if (alpha) { alpha === '1' ? viewLetters(true) : viewLetter(alpha, true); return true; }
 
   drawSidePick();
   runSearch();
+  return true;
 }
 
 /** บอกตรง ๆ เมื่อข้อมูลที่เห็นมาจาก cache ไม่ใช่ของสด — อย่าให้แขกเข้าใจผิด */
@@ -447,6 +492,14 @@ function bind() {
 }
 
 /** อ่าน URL แล้วแสดงหน้าที่ตรงกัน — ทางเข้าเดียวของการเปลี่ยนหน้าทั้งเว็บ */
+/** เลขโต๊ะที่ใช้ได้จริง — ต้องเป็นจำนวนเต็ม 1..40
+ *  เดิมเช็คแค่ช่วง ทำให้ ?t=20.5 เปิดหน้า "โต๊ะ 20.5" ได้ พร้อมปุ่มแจ้งมาถึงที่กดได้
+ *  แล้วเซิร์ฟเวอร์ค่อยปฏิเสธทีหลัง — เสียเวลาแขกเปล่า ๆ
+ *  เกณฑ์เดียวกับ tablePos() ใน core.js และ validTable() ใน Code.gs */
+function validTableNo(n) {
+  return Number.isInteger(n) && n >= 1 && n <= CONFIG.totalTables;
+}
+
 function render() {
   const p = new URLSearchParams(location.search);
   const gid   = p.get('g');
@@ -463,7 +516,7 @@ function render() {
     const g = INDEX.find(function (x) { return x.id === gid; });
     if (g) return viewGuest(g);
   }
-  if (t >= 1 && t <= CONFIG.totalTables) return viewTable(t, side);
+  if (validTableNo(t)) return viewTable(t, side);
   if (side === 'bride' || side === 'groom') return viewBrowse(side);
   if (alpha) return alpha === '1' ? viewLetters() : viewLetter(alpha);
 
@@ -593,6 +646,14 @@ function tableCardHtml(t) {
 }
 
 function guestCardHtml(g) {
+  // แถวที่พิมพ์ชื่อลงชีตตรง ๆ โดยไม่มี ID จะกดไม่ได้ (render หา g= ว่าง ๆ ไม่เจอ)
+  // เดิมยังวาดเป็นปุ่มอยู่ กดแล้วเด้งกลับหน้าแรกเงียบ ๆ แถมเปลืองประวัติย้อนกลับอีกครั้ง
+  if (!g.id) return '' +
+    '<div class="card guest-card" style="cursor:default">' +
+      '<span class="tno ' + (g.side || '') + '"><small>โต๊ะ</small>' + (g.tableNo || '?') + '</span>' +
+      '<span class="guest-info"><span class="guest-name">' + esc(g.fullName) + '</span>' +
+      '<span class="guest-meta">กรุณาแจ้งโต๊ะต้อนรับ</span></span></div>';
+
   const meta = [];
   if (g.side) meta.push(SIDE_LABEL[g.side]);
   if (g.group) meta.push(g.group);
@@ -611,8 +672,8 @@ function guestCardHtml(g) {
 
 /* ── ค้นจากตัวอักษรแรกของชื่อ ─────────────────────────────── */
 
-function viewLetters() {
-  chrome(false);
+function viewLetters(quiet) {
+  chrome(false, quiet);
 
   const letters = lettersOf(DATA.guests);
 
@@ -636,8 +697,8 @@ function viewLetters() {
   });
 }
 
-function viewLetter(letter) {
-  chrome(false);
+function viewLetter(letter, quiet) {
+  chrome(false, quiet);
 
   const list = guestsByLetter(INDEX, letter);
 
@@ -764,7 +825,7 @@ function bindMateRows() {
  * และตัวเลขบนหน้าแขกกับหน้าพนักงานจึงมาจากแหล่งเดียวกันเสมอ
  */
 async function setArrived(id, btn, arriving) {
-  BUSY = true;
+  BUSY++;
   btn.disabled = true;
   const keep = btn.innerHTML;
   btn.innerHTML = '<span class="mate-name">กำลังบันทึก…</span>';
@@ -792,7 +853,8 @@ async function setArrived(id, btn, arriving) {
     btn.innerHTML = keep;
     alert((arriving ? 'บันทึกไม่สำเร็จ: ' : 'ยกเลิกไม่สำเร็จ: ') + err.message);
   } finally {
-    BUSY = false;
+    BUSY--;
+    WRITE_SEQ++;
     LAST_SIG = dataSignature(DATA);
   }
 }
@@ -873,7 +935,7 @@ function setMsg(html) {
 }
 
 async function arrive(no, delta) {
-  BUSY = true;   // กัน auto-refresh มาวาดทับยอดเก่าระหว่างที่คำสั่งยังไม่ถึงเซิร์ฟเวอร์
+  BUSY++;   // กัน auto-refresh มาวาดทับยอดเก่าระหว่างที่คำสั่งยังไม่ถึงเซิร์ฟเวอร์
   document.querySelectorAll('#counter button, #counter select').forEach(function (el) {
     el.disabled = true;
   });
@@ -913,9 +975,10 @@ async function arrive(no, delta) {
     drawCounter(no);
     setMsg('<div class="notice notice-error">' + esc(err.message) + '</div>');
   } finally {
-    // ต้องอยู่ใน finally — ถ้าปลดใน try แล้วยิงพลาด BUSY จะค้าง true
+    // ต้องอยู่ใน finally — ถ้าปลดใน try แล้วยิงพลาด ตัวนับจะค้าง
     // แล้ว auto-refresh จะตายไปทั้งงานโดยไม่มีใครรู้
-    BUSY = false;
+    BUSY--;
+    WRITE_SEQ++;
     LAST_SIG = dataSignature(DATA);
   }
 }
@@ -925,11 +988,17 @@ async function arrive(no, delta) {
 function viewGuest(g, quiet) {
   chrome(false, quiet);
 
+  // แขกที่ยังไม่ได้ระบุโต๊ะจะได้ tableNo = 0 (ช่องว่างในชีต)
+  // ห้ามจับกลุ่มด้วยเลข 0 เด็ดขาด ไม่งั้นทุกคนที่ยังไม่มีโต๊ะจะถูกยัดเป็น
+  // "ร่วมโต๊ะกับ 40 ท่าน" ทั้งที่ไม่รู้จักกันเลย และแตะเช็คอินให้กันได้ด้วย
+  const hasTable = validTableNo(g.tableNo);
   const meta = DATA.tables.find(function (t) { return t.no === g.tableNo; }) || {};
-  const side = tableSide(g.tableNo, DATA.tables);
-  const p = tablePos(g.tableNo);
-  const mates = INDEX.filter(function (x) { return x.tableNo === g.tableNo; })
-                     .sort(function (a, b) { return a.fullName.localeCompare(b.fullName, 'th'); });
+  const side = hasTable ? tableSide(g.tableNo, DATA.tables) : '';
+  const p = hasTable ? tablePos(g.tableNo) : null;
+  const mates = hasTable
+    ? INDEX.filter(function (x) { return x.tableNo === g.tableNo; })
+           .sort(function (a, b) { return a.fullName.localeCompare(b.fullName, 'th'); })
+    : [];
 
   els.page.innerHTML = '' +
     '<div class="found">' +
@@ -940,35 +1009,45 @@ function viewGuest(g, quiet) {
       '<div class="big-label">โต๊ะ</div>' +
 
       '<div class="side-pill ' + (side || '') + '">' +
-        esc([SIDE_LABEL[side], meta.group].filter(Boolean).join(' · ') || 'โต๊ะสำรอง') + '</div>' +
+        esc([SIDE_LABEL[side], meta.group].filter(Boolean).join(' · ') ||
+            (hasTable ? 'โต๊ะสำรอง' : 'ยังไม่ได้จัดโต๊ะ')) + '</div>' +
 
-      (p ? '<div class="wayfind"><b>วิธีเดินไปโต๊ะ</b>' + esc(wayfinding(g.tableNo)) + '</div>' : '') +
+      (p ? '<div class="wayfind"><b>วิธีเดินไปโต๊ะ</b>' + esc(wayfinding(g.tableNo)) + '</div>'
+         : '<div class="wayfind"><b>ยังไม่ได้จัดโต๊ะ</b>' +
+           'กรุณาแจ้งชื่อที่โต๊ะต้อนรับ เจ้าหน้าที่จะจัดที่นั่งให้ครับ</div>') +
 
-      (g.checkedIn
+      (!hasTable ? ''
+        : g.checkedIn
         ? '<div class="notice notice-ok" style="margin-top:18px">✓ คุณแจ้งว่ามาถึงแล้ว</div>' +
           '<div class="btn-row no-print"><button class="btn btn-sm" ' +
             'data-undo="' + esc(g.id) + '">ยกเลิกการแจ้ง</button></div>'
         : '<div class="btn-row no-print"><button class="btn btn-primary btn-lg" ' +
             'data-checkin="' + esc(g.id) + '">✓ ฉันมาถึงแล้ว</button></div>') +
 
+      (!hasTable ? '' :
       '<div class="tablemates">' +
         '<h4>ร่วมโต๊ะกับ ' + Math.max(0, mates.length - 1) + ' ท่าน</h4>' +
         '<ul class="mate-list">' + mates.map(function (m) {
           return mateRowHtml(m, g.id);
         }).join('') + '</ul>' +
         '<p class="mate-note">แตะชื่อคนที่มาด้วยกันเพื่อแจ้งว่ามาถึงแล้วได้เลย</p>' +
-      '</div>' +
+      '</div>') +
 
-      '<div class="btn-row no-print">' +
-        '<button class="btn" id="toTableBtn">ดูโต๊ะนี้ทั้งหมด</button>' +
-      '</div>' +
+      // ปุ่มนี้เคยพาไป ?t=0 ซึ่ง render() ไม่รับ เลยเด้งกลับหน้าแรกเงียบ ๆ
+      // แถมทิ้งประวัติไว้อีกครั้ง ทำให้ต้องกดย้อนกลับสองทีถึงจะออก
+      (hasTable
+        ? '<div class="btn-row no-print">' +
+            '<button class="btn" id="toTableBtn">ดูโต๊ะนี้ทั้งหมด</button>' +
+          '</div>'
+        : '') +
     '</div>';
 
   els.page.hidden = false;
   els.mapSec.hidden = false;
   drawMap(g.tableNo);
 
-  $('toTableBtn').addEventListener('click', function () { navigate('t=' + g.tableNo); });
+  const toTable = $('toTableBtn');
+  if (toTable) toTable.addEventListener('click', function () { navigate('t=' + g.tableNo); });
   bindMateRows();
 }
 
