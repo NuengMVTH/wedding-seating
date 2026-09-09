@@ -811,3 +811,159 @@ function healthCheck() {
   if (!problems.length) Logger.log('✅ ตรวจแล้วไม่พบปัญหา พร้อมใช้งาน');
   else problems.forEach(function (p) { Logger.log(p); });
 }
+
+
+/* ─────────────────────────────────────────────────────────────
+   ย้าย/สลับโต๊ะทั้งใบ  (รันจากหน้าจอ Apps Script เท่านั้น ไม่ผ่านเว็บ)
+
+   "ยกทั้งโต๊ะ" = ชื่อกลุ่ม + ฝั่ง + จำนวนที่นั่ง + หมายเหตุ + ยอดนับหัว
+   + รายชื่อแขกทุกคนในโต๊ะนั้น ย้ายไปพร้อมกันหมด แขกไม่ต้องแก้ทีละคน
+
+   วิธีใช้:
+     1. แก้ TABLE_MOVES ข้างล่างให้ตรงกับที่ต้องการ
+     2. รัน previewTableMoves()  → ดูใน Log ว่าจะเกิดอะไรขึ้น (ยังไม่แตะข้อมูล)
+     3. ถ้าถูกต้องแล้วค่อยรัน applyTableMoves()
+   ───────────────────────────────────────────────────────────── */
+
+// [จากโต๊ะ, ไปโต๊ะ] — ใส่ได้หลายคู่ สลับไขว้กันเป็นวงก็ได้
+const TABLE_MOVES = [
+  // [5, 12],
+  // [12, 5],
+];
+
+/** ตรวจแผนย้าย + เตรียมข้อมูลใหม่ของทุกโต๊ะที่ถูกแตะ */
+function planTableMoves(moves) {
+  const errors = [];
+  const map = {};        // from -> to
+  const usedTo = {};
+
+  moves.forEach(function (m) {
+    const from = Number(m[0]), to = Number(m[1]);
+    if (!validTable(from) || !validTable(to)) {
+      errors.push('เลขโต๊ะไม่ถูกต้อง: ' + from + ' → ' + to); return;
+    }
+    if (from === to) { errors.push('โต๊ะ ' + from + ' ย้ายไปที่เดิม ข้ามให้'); return; }
+    if (map[from] !== undefined) errors.push('โต๊ะ ' + from + ' ถูกสั่งย้ายซ้ำสองครั้ง');
+    if (usedTo[to])              errors.push('มีสองโต๊ะสั่งย้ายไปโต๊ะ ' + to + ' พร้อมกัน — ข้อมูลจะทับกัน');
+    map[from] = to; usedTo[to] = true;
+  });
+
+  const tables = readTables();
+  const guests = readGuests();
+  const byNo = {};
+  tables.forEach(function (t) { byNo[t.no] = t; });
+
+  const perTable = {};
+  guests.forEach(function (g) { perTable[g.tableNo] = (perTable[g.tableNo] || 0) + 1; });
+
+  // โต๊ะปลายทางที่ไม่ได้ถูกย้ายออก = ของเดิมจะถูกลบทิ้ง ต้องเตือน
+  Object.keys(usedTo).forEach(function (k) {
+    const to = Number(k);
+    if (map[to] !== undefined) return;                       // โต๊ะนี้ก็ย้ายออกด้วย ไม่ทับ
+    const t = byNo[to];
+    if ((perTable[to] || 0) > 0 || (t && t.group))
+      errors.push('โต๊ะ ' + to + ' ปลายทางยังมีของอยู่ (' + (t.group || 'ไม่มีชื่อกลุ่ม') +
+                  ' · ' + (perTable[to] || 0) + ' รายชื่อ) แต่ไม่ได้สั่งย้ายออก — จะถูกทับหาย');
+  });
+
+  // โต๊ะที่ถูกแตะทั้งหมด = ต้นทาง ∪ ปลายทาง
+  const touched = {};
+  Object.keys(map).forEach(function (k) { touched[Number(k)] = true; });
+  Object.keys(usedTo).forEach(function (k) { touched[Number(k)] = true; });
+
+  const rev = {};   // to -> from
+  Object.keys(map).forEach(function (k) { rev[map[Number(k)]] = Number(k); });
+
+  const plan = Object.keys(touched).map(function (k) {
+    const no  = Number(k);
+    const src = rev[no];                                     // โต๊ะที่จะย้ายเข้ามา (ถ้ามี)
+    const before = byNo[no];
+    const after  = src !== undefined ? byNo[src] : null;     // ไม่มีของเข้า = กลายเป็นโต๊ะว่าง
+    return {
+      no: no, from: src,
+      before: { group: before.group, side: before.side, guests: perTable[no] || 0 },
+      after: after
+        ? { group: after.group, side: after.side, seats: after.seats, note: after.note,
+            arrived: after.arrived, guests: perTable[src] || 0 }
+        : { group: '', side: '', seats: 10, note: '', arrived: 0, guests: 0 }
+    };
+  }).sort(function (a, b) { return a.no - b.no; });
+
+  return { errors: errors, map: map, plan: plan, tables: tables, guests: guests };
+}
+
+function previewTableMoves() { runTableMoves(TABLE_MOVES, true); }
+function applyTableMoves()   { runTableMoves(TABLE_MOVES, false); }
+
+function runTableMoves(moves, dryRun) {
+  if (!moves || !moves.length) {
+    Logger.log('ยังไม่ได้ใส่คู่โต๊ะใน TABLE_MOVES — ไม่มีอะไรให้ทำ');
+    return;
+  }
+
+  const p = planTableMoves(moves);
+
+  Logger.log(dryRun ? '🔎 ดูตัวอย่าง — ยังไม่แตะข้อมูลจริง' : '✍️ กำลังย้ายจริง');
+  p.plan.forEach(function (r) {
+    Logger.log('โต๊ะ ' + r.no + ': ' +
+      (r.before.group || '(ว่าง)') + ' [' + r.before.guests + ' คน]' +
+      '  →  ' + (r.after.group || '(ว่าง)') + ' [' + r.after.guests + ' คน]' +
+      (r.from !== undefined ? '  (ยกมาจากโต๊ะ ' + r.from + ')' : '  (ย้ายออก เหลือว่าง)'));
+  });
+
+  if (p.errors.length) {
+    Logger.log('');
+    p.errors.forEach(function (e) { Logger.log('❌ ' + e); });
+    Logger.log('❌ แผนนี้ยังไม่ปลอดภัย — ไม่ได้ทำอะไรทั้งสิ้น แก้ TABLE_MOVES แล้วลองใหม่');
+    return;
+  }
+
+  if (dryRun) {
+    Logger.log('');
+    Logger.log('✅ แผนใช้ได้ ถ้าถูกต้องแล้วให้รัน applyTableMoves()');
+    return;
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const tb = sheetOf(SH_TABLES, HDR_TABLES);
+    ensureArrivedColumn(tb);
+
+    // เขียนข้อมูลโต๊ะ (อ่านครบทุกใบไว้ก่อนแล้ว จึงสลับไขว้เป็นวงได้ไม่พัง)
+    p.plan.forEach(function (r) {
+      const row = p.tables.find(function (t) { return t.no === r.no; })._row;
+      if (!row) return;
+      tb.getRange(row, 2).setValue(r.after.group);
+      tb.getRange(row, 3).setValue(r.after.side);
+      tb.getRange(row, 4).setValue(r.after.seats);
+      tb.getRange(row, 5).setValue(r.after.note);
+      tb.getRange(row, COL_ARRIVED).setValue(r.after.arrived);
+    });
+
+    // ย้ายเลขโต๊ะของแขก
+    const gs = sheetOf(SH_GUESTS, HDR_GUESTS);
+    let moved = 0;
+    p.guests.forEach(function (g) {
+      const to = p.map[g.tableNo];
+      if (to === undefined) return;
+      gs.getRange(g._row, 4).setValue(to);
+      gs.getRange(g._row, 7).setValue(nowIso());
+      moved++;
+    });
+
+    p.plan.forEach(function (r) {
+      if (r.from === undefined) return;
+      logIt('moveTable', 'editor', { tableNo: r.no },
+            'ยกโต๊ะ ' + r.from + ' → ' + r.no + ' · ' + (r.after.group || '(ว่าง)') +
+            ' · ' + r.after.guests + ' รายชื่อ');
+    });
+
+    dropCache();
+    Logger.log('');
+    Logger.log('✅ เสร็จแล้ว — ย้ายแขก ' + moved + ' คน · แตะโต๊ะ ' + p.plan.length + ' ใบ');
+    Logger.log('   ตรวจซ้ำด้วย healthCheck() ได้เลย');
+  } finally {
+    lock.releaseLock();
+  }
+}
