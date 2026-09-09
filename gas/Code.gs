@@ -872,6 +872,19 @@ function planTableMoves(moves) {
                   ' · ' + (perTable[to] || 0) + ' รายชื่อ) แต่ไม่ได้สั่งย้ายออก — จะถูกทับหาย');
   });
 
+  // โต๊ะที่ไม่มีแถวจริงในชีต (readTables เติมให้เป็น _row: 0) เขียนข้อมูลโต๊ะไม่ได้
+  // เดิมโค้ดตอนเขียนแค่ `if (!row) return;` ข้ามเงียบ ๆ แต่ยังย้ายแขกไปโต๊ะนั้นอยู่ดี
+  // ผลคือชื่อกลุ่ม/ฝั่ง/ที่นั่ง/ยอดนับหัวหายไป โต๊ะต้นทางถูกล้าง แล้วยังขึ้น "✅ เสร็จแล้ว"
+  // ต้องหยุดตั้งแต่ตอนวางแผน ไม่ใช่ไปเงียบตอนเขียน
+  const noRow = [];
+  Object.keys(map).forEach(function (k) { noRow.push(Number(k)); });
+  Object.keys(usedTo).forEach(function (k) { noRow.push(Number(k)); });
+  noRow.forEach(function (no) {
+    const t = byNo[no];
+    if (!t || !t._row)
+      errors.push('โต๊ะ ' + no + ' ไม่มีแถวอยู่จริงในชีต Tables — รัน setup() ก่อนแล้วค่อยย้าย');
+  });
+
   // โต๊ะที่ถูกแตะทั้งหมด = ต้นทาง ∪ ปลายทาง
   const touched = {};
   Object.keys(map).forEach(function (k) { touched[Number(k)] = true; });
@@ -938,8 +951,11 @@ function runTableMoves(moves, dryRun) {
 
     // เขียนข้อมูลโต๊ะ (อ่านครบทุกใบไว้ก่อนแล้ว จึงสลับไขว้เป็นวงได้ไม่พัง)
     p.plan.forEach(function (r) {
-      const row = p.tables.find(function (t) { return t.no === r.no; })._row;
-      if (!row) return;
+      const t = p.tables.find(function (x) { return x.no === r.no; });
+      // planTableMoves กันไว้แล้วว่าทุกโต๊ะต้องมีแถวจริง ถ้ามาถึงตรงนี้แล้วยังไม่มี
+      // แปลว่ามีอะไรผิดปกติ ต้องหยุดทั้งชุด ไม่ใช่ข้ามใบเดียวแล้วย้ายแขกต่อ
+      if (!t || !t._row) throw new Error('โต๊ะ ' + r.no + ' ไม่มีแถวในชีต Tables — หยุดกลางคัน ไม่ได้ย้ายแขก');
+      const row = t._row;
       tb.getRange(row, 2).setValue(r.after.group);
       tb.getRange(row, 3).setValue(r.after.side);
       tb.getRange(row, 4).setValue(r.after.seats);

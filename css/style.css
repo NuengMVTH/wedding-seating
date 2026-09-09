@@ -116,6 +116,16 @@
   to   { opacity: 1; }
 }
 
+/* วาดเงียบจาก auto-refresh — ห้ามเล่นแอนิเมชันซ้ำ
+   เนื้อหาถูกสร้างใหม่ทั้งก้อนทุกครั้ง ถ้าไม่ปิด การ์ดจะจางหายแล้วลอยกลับขึ้นมาใหม่
+   ทุกครั้งที่มีใครสักคนในงานเช็คอิน = จอแขกกะพริบนาทีละครั้งตลอดงาน */
+body.quiet-draw .found,
+body.quiet-draw .found .big-table,
+body.quiet-draw .tablemates,
+body.quiet-draw .counter,
+body.quiet-draw .map-holder,
+body.quiet-draw .empty-state { animation: none !important; }
+
 /* เคารพคนที่ตั้งเครื่องว่าไม่เอาแอนิเมชัน — บางคนเวียนหัวจริง ๆ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

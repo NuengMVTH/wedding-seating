@@ -527,7 +527,9 @@ function previewImport() {
   PENDING = parseImport($('impText').value, Number($('impTable').value));
 
   // เลขโต๊ะที่พิมพ์นอกช่วง ต้องหยุดไว้ก่อน ไม่ใช่นำเข้าแล้วค่อยไปตามแก้ทีหลัง
-  const bad = PENDING.filter(function (x) { return x.badTable; });
+  // ต้องเทียบกับ undefined — เลขโต๊ะ 0 เป็นค่าที่ผิดเหมือนกัน แต่ 0 เป็น falsy
+  // ถ้าใช้ if (x.badTable) เฉย ๆ คนพิมพ์ 0 จะหลุดตัวกรองไปลงโต๊ะตั้งต้นเงียบ ๆ
+  const bad = PENDING.filter(function (x) { return x.badTable !== undefined; });
   if (bad.length) {
     $('impMsg').innerHTML = note('error',
       'เลขโต๊ะไม่ถูกต้อง ' + bad.length + ' บรรทัด (ต้องอยู่ระหว่าง 1-' + CONFIG.totalTables + '): ' +

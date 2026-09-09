@@ -251,9 +251,15 @@ const els = {
   document.title = 'ค้นหาโต๊ะของคุณ — งานแต่ง ' + (B.nick || B.name) + ' & ' + (G.nick || G.name);
   // วันที่ย้ายขึ้นไปเป็นบรรทัดบนสุดในรูปตัวเลข — เป็นจุดที่สายตาแตะก่อนชื่อ
   // และตัวเลขละตินใน Cormorant คือของที่สวยที่สุดในชุดฟอนต์นี้
-  if (CONFIG.weddingDate) {
-    const d = CONFIG.weddingDate.split('-');
+  // ต้องตรวจรูปแบบก่อน — ถ้าใครแก้ CONFIG.weddingDate เป็นรูปแบบอื่น
+  // การ split('-') จะได้ undefined แล้วบรรทัดเด่นที่สุดของหน้าแรกจะขึ้นว่า
+  // "undefined · undefined · undefined" ให้แขกทั้งงานเห็น
+  const wd = String(CONFIG.weddingDate || '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(wd)) {
+    const d = wd.split('-');
     $('heroDate').innerHTML = d[2] + ' &middot; ' + d[1] + ' &middot; ' + d[0];
+  } else {
+    $('heroDate').textContent = wd;
   }
   $('venueLine').innerHTML =
     esc(B.name) + ' &amp; ' + esc(G.name) + '<br>' + esc(CONFIG.venue);
@@ -373,8 +379,9 @@ function refreshView() {
   if (gid) {
     const g = INDEX.find(function (x) { return x.id === gid; });
     if (g) { viewGuest(g, true); return true; }
-    drawMap(MAP_HI);
-    return true;
+    // หา id ไม่เจอ → render() ปล่อยตกไปหน้าแรก ที่นี่ต้องตกด้วย
+    // เดิมวาดแค่แผนผังแล้ว return true ทำให้ตัวเลขบนหน้าแรกค้างทั้งงาน
+    // เมื่อมีคนเปิดลิงก์ ?g= เก่าที่ชื่อถูกลบไปแล้ว
   }
   if (validTableNo(t)) {
     // ถ้าแขกกำลังเลือกดรอปดาวน์อยู่ อย่าเพิ่งวาดทับ — รอรอบหน้า
@@ -529,6 +536,13 @@ function chrome(isHome, quiet) {
   els.hero.classList.toggle('compact', !isHome);
   // ปุ่ม "เริ่มใหม่" โผล่เฉพาะตอนหลงอยู่หน้าลึก ๆ — หน้าแรกไม่ต้องมีให้รก
   $('restartBtn').hidden = !KIOSK || isHome;
+
+  // ⚠️ ปิดแอนิเมชันตอนวาดเงียบ (auto-refresh) — สำคัญกว่าที่คิด
+  // การ์ดถูกสร้างใหม่ทั้งก้อนด้วย innerHTML ทุกครั้ง แอนิเมชัน rise จึงเล่นใหม่เสมอ
+  // และตั้งแต่ลายนิ้วมือข้อมูลนับสถานะแขกด้วย มันจะเปลี่ยนทุกครั้งที่มีใครเช็คอิน
+  // ที่ไหนก็ตามในงาน = มือถือแขกทุกเครื่องกะพริบเป็นหน้าว่างแล้วจางกลับ นาทีละครั้งทั้งงาน
+  document.body.classList.toggle('quiet-draw', !!quiet);
+
   if (!quiet) {
     armIdle();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -792,6 +806,15 @@ function mateRowHtml(m, meId) {
   if (meId && m.id === meId) cls.push('me');
 
   const name = esc(m.fullName) + (m.nickname ? ' (' + esc(m.nickname) + ')' : '');
+
+  // แถวที่พิมพ์ชื่อลงชีตตรง ๆ โดยไม่มี ID กดไม่ได้ — เดิมยังวาดเป็นปุ่ม
+  // แตะแล้วยิง selfArrive ด้วย id ว่าง เซิร์ฟเวอร์ปฏิเสธ แล้วเด้ง alert ใส่หน้าแขก
+  // (guestCardHtml กันไว้แล้ว แต่ลืมกันตรงนี้)
+  if (!m.id) return '<li class="' + cls.join(' ') + '">' +
+    '<span class="mate-btn" style="cursor:default">' +
+      '<span class="mate-name">' + name + '</span>' +
+      '<span class="mate-cta">แจ้งที่โต๊ะต้อนรับ</span>' +
+    '</span></li>';
 
   return '<li class="' + cls.join(' ') + '">' +
     '<button class="mate-btn" data-' + (done ? 'undo' : 'checkin') + '="' + esc(m.id) + '">' +

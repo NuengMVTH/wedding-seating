@@ -157,6 +157,13 @@ t('นำเข้า: เลขโต๊ะนอกช่วง ต้อง�
   ok(r[0].nickname !== '45', 'ห้ามเอาเลขโต๊ะไปเป็นชื่อเล่น');
 });
 
+t('นำเข้า: เลขโต๊ะ 0 ต้องถูกจับ (0 เป็น falsy — เคยหลุดตัวกรอง)', function () {
+  const r = parseImport('ก ข, ค, 0', 1);
+  eq(r[0].badTable, 0, 'ต้องจำ 0 ไว้ว่าผิด');
+  ok(r.filter(function (x) { return x.badTable !== undefined; }).length === 1,
+     'ตัวกรองต้องใช้ !== undefined ไม่ใช่ truthy');
+});
+
 t('นำเข้า: เลขสามหลักก็ต้องจับได้ (เผลอพิมพ์เกิน)', function () {
   eq(parseImport('ก ข, ค, 120', 1)[0].badTable, 120);
 });
