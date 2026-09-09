@@ -142,7 +142,11 @@ function bumpArrived(tableNo, delta) {
      ต้องเรียกหลังเขียน checkedInAt เสมอ ค่าที่นับได้จะได้เป็นค่าล่าสุด */
   const floor = countCheckedIn(Number(tableNo));
 
-  const next = Math.min(t.seats, Math.max(floor, t.arrived + delta));
+  /* ⚠️ ลำดับสำคัญ — พื้นล่างต้องชนะเพดานเสมอ
+     เดิมเขียน Math.min(seats, Math.max(floor, ...)) ซึ่งเอาเพดานทับพื้นล่าง
+     พอโต๊ะมีคนแจ้งชื่อเกินจำนวนที่นั่ง (ไม่มีอะไรห้ามไว้เลยตอนกรอกรายชื่อ)
+     ฟังก์ชันนี้จะเขียนค่าต่ำกว่าพื้น = ตัวมันเองละเมิดกฎที่มันมีหน้าที่ปกป้อง */
+  const next = Math.max(floor, Math.min(t.seats, t.arrived + delta));
   if (next !== t.arrived) tb.getRange(t._row, COL_ARRIVED).setValue(next);
   return { arrived: next, seats: t.seats, floor: floor };
 }
@@ -186,9 +190,20 @@ function checkPin(data, need) {
   if (pin && pin === String(ADMIN_PIN)) return null;
   if (need === 'staff' && STAFF_PIN && pin && pin === String(STAFF_PIN)) return null;
 
-  Utilities.sleep(1500);   // หน่วงเวลาให้การไล่เดารหัสช้าลงมาก
+  // ⚠️ ห้ามหน่วงเวลาในนี้ — เดิมมี Utilities.sleep(1500) ซึ่งทำงาน "ขณะถือล็อกอยู่"
+  // ใครยิงคำสั่งรหัสผิดรัว ๆ จะกินล็อกไปรอบละ 1.5 วิ พนักงานและแขกทั้งงานเช็คอินไม่ได้
+  // ตอนนี้ย้ายการหน่วงไปไว้ที่ doPost ก่อนจับล็อกแทน
   return 'รหัสผ่านไม่ถูกต้อง';
 }
+
+/* รหัสที่แต่ละคำสั่งต้องใช้ — ใช้กั้นตั้งแต่ก่อนจับล็อก
+   ไม่ระบุไว้ = คำสั่งของแขก ไม่ต้องใช้รหัส (arrive / selfArrive / selfUndo) */
+const PIN_NEEDED = {
+  checkIn: 'staff', undoCheckIn: 'staff',
+  saveGuest: 'admin', bulkImport: 'admin', deleteGuest: 'admin',
+  saveTable: 'admin', setArrived: 'admin', adminData: 'admin',
+  clearAllCheckIns: 'admin'
+};
 
 /** ระดับสิทธิ์ของ pin ที่ส่งมา — ใช้บอกหน้าเว็บว่าจะเปิดปุ่มอะไรให้ */
 function roleOf(pin) {
@@ -319,7 +334,12 @@ function doGet(e) {
 
 /* ═══════════════════ เขียนข้อมูล ═══════════════════ */
 
+/* ⚠️ ต้องปฏิเสธ id ว่าง/ไม่ใช่ข้อความก่อนเสมอ
+   readGuests เก็บแถวที่มีชื่อแต่ไม่มี ID ไว้ด้วย (คนพิมพ์ชื่อลงชีตตรง ๆ)
+   ถ้าปล่อยผ่าน String('') === String(rows[i][0]) จะไปตรงกับแถวแรกที่ ID ว่าง
+   แล้วคำสั่งที่ไม่ต้องใช้รหัสอย่าง selfUndo จะไปแก้ข้อมูลของคนที่ไม่ได้ตั้งใจ */
 function findGuestRow(sh, id) {
+  if (typeof id !== 'string' || !id.trim()) return 0;
   const rows = sh.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
     if (String(rows[i][0]).trim() === String(id).trim()) return i + 1;
@@ -327,12 +347,51 @@ function findGuestRow(sh, id) {
   return 0;
 }
 
+/* ตัวนับในรอบการทำงานเดียว — bulkImport วนสร้าง id ในมิลลิวินาทีเดียวกันหมด
+   Date.now() จึงค้างค่าเดิม เหลือความสุ่มแค่ 4 ตัว (36^4 ≈ 1.68 ล้าน)
+   วาง 500 แถวมีโอกาสชนกัน ~7% และ id ซ้ำ = เช็คอินคนหนึ่งไปติดอีกคนหนึ่ง
+   เพราะ findGuestRow คืนแถวแรกที่เจอ */
+var ID_SEQ = 0;
+
 function newId() {
-  return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  ID_SEQ++;
+  return 'g' + Date.now().toString(36) + ID_SEQ.toString(36) +
+         Math.random().toString(36).slice(2, 6);
 }
 
 function doPost(e) {
   // ล็อกกันสองเครื่องเขียนชนกัน — หน้างานมีทั้งแอดมินและโต๊ะต้อนรับยิงพร้อมกัน
+  /* ── ด่านตรวจรหัส ทำให้จบก่อนจับล็อก ───────────────────────────
+     สองอย่างนี้ต้องอยู่นอกล็อก:
+       1. การหน่วงเวลาเมื่อรหัสผิด — ไม่งั้นคนยิงมั่วจะกินล็อกทั้งงาน
+       2. verifyPin — เป็นแค่การอ่าน Script Properties ไม่ได้แตะชีตเลย
+     checkPin อ่านจาก PROPS อย่างเดียว จึงปลอดภัยที่จะทำก่อนล็อก        */
+  let data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return jsonOut({ ok: false, error: 'รูปแบบคำขอไม่ถูกต้อง' });
+  }
+  const type  = data.type;
+  const actor = String(data.actor || roleOf(data.pin) || '?');
+
+  if (type === 'verifyPin') {
+    const role = roleOf(data.pin);
+    if (!role) {
+      Utilities.sleep(1500);
+      return jsonOut({ ok: false, error: 'รหัสผ่านไม่ถูกต้อง' });
+    }
+    return jsonOut({ ok: true, role: role });
+  }
+
+  if (PIN_NEEDED[type]) {
+    const gate = checkPin(data, PIN_NEEDED[type]);
+    if (gate) {
+      Utilities.sleep(1500);   // หน่วงการไล่เดารหัส — อยู่นอกล็อกแล้ว
+      return jsonOut({ ok: false, error: gate });
+    }
+  }
+
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(20000);
@@ -341,19 +400,6 @@ function doPost(e) {
   }
 
   try {
-    const data  = JSON.parse(e.postData.contents);
-    const type  = data.type;
-    const actor = String(data.actor || roleOf(data.pin) || '?');
-
-    /* ── ตรวจรหัสตอนเข้าสู่ระบบ (ไม่แตะข้อมูลใด ๆ) ── */
-    if (type === 'verifyPin') {
-      const role = roleOf(data.pin);
-      if (!role) {
-        Utilities.sleep(1500);
-        return jsonOut({ ok: false, error: 'รหัสผ่านไม่ถูกต้อง' });
-      }
-      return jsonOut({ ok: true, role: role });
-    }
 
     /* ── แขกกดนับหัวเอง — คำสั่งเดียวในไฟล์นี้ที่ "ไม่ต้องใช้รหัส" ─────
 
@@ -438,7 +484,10 @@ function doPost(e) {
       const row = findGuestRow(sh, data.id);
       if (!row) return jsonOut({ ok: false, error: 'ไม่พบรายชื่อนี้' });
 
-      const already = String(sh.getRange(row, 6).getValue() || '').trim();
+      // ต้องผ่าน fmtStamp — Google Sheets แปลงข้อความ ISO เป็นชนิด Date เงียบ ๆ
+      // ถ้าอ่านดิบ ค่าที่ส่งกลับจะกลายเป็น "Sun Sep 20 2026 ..." แทนรูปแบบ ISO
+      // (บรรทัดอื่นในไฟล์นี้ทำถูกอยู่แล้ว หลุดไปจุดเดียว)
+      const already = fmtStamp(sh.getRange(row, 6).getValue());
       const tableNo = Number(sh.getRange(row, 4).getValue()) || 0;
       const name    = String(sh.getRange(row, 2).getValue() || '');
 
@@ -558,14 +607,30 @@ function doPost(e) {
         if (!row) return jsonOut({ ok: false, error: 'ไม่พบแขกรหัส ' + data.id });
 
         const before = sh.getRange(row, 1, 1, HDR_GUESTS.length).getValues()[0];
+        const fromTable = Number(before[3]) || 0;
+        const wasIn     = !!fmtStamp(before[5]);
+
         sh.getRange(row, 2, 1, 3).setValues([[fullName, nickname, tableNo]]);
         sh.getRange(row, 5).setValue(note);
         sh.getRange(row, 7).setValue(nowIso());
 
+        /* ⚠️ ย้ายโต๊ะแขกที่แจ้งชื่อว่ามาถึงแล้ว ต้องขยับยอดนับหัวตามไปด้วย
+           เดิมไม่ทำเลย ผลคือโต๊ะเดิมค้างเกินถาวร โต๊ะใหม่มีคนแจ้งชื่อมากกว่ายอดนับหัว
+           = ละเมิดกฎที่ bumpArrived มีหน้าที่ปกป้อง และการย้ายโต๊ะกลางงานเป็นเรื่องปกติมาก
+
+           ต้องเรียก "หลัง" เขียนแถวเสร็จแล้วเสมอ เพราะพื้นล่างนับจากค่าล่าสุดในชีต */
+        let moved = null;
+        if (wasIn && fromTable !== tableNo) {
+          const a = validTable(fromTable) ? bumpArrived(fromTable, -1) : null;
+          const b = bumpArrived(tableNo, 1);
+          moved = { from: fromTable, fromArrived: a && a.arrived, to: tableNo, toArrived: b && b.arrived };
+        }
+
         logIt('edit', actor, { id: data.id, fullName: fullName, nickname: nickname, tableNo: tableNo },
-              'เดิม: ' + before[1] + ' / ' + before[2] + ' / โต๊ะ ' + before[3]);
+              'เดิม: ' + before[1] + ' / ' + before[2] + ' / โต๊ะ ' + before[3] +
+              (moved ? ' · ขยับยอดนับหัว ' + moved.from + '→' + moved.to : ''));
         dropCache();
-        return jsonOut({ ok: true, id: data.id });
+        return jsonOut({ ok: true, id: data.id, moved: moved });
       }
 
       const id = newId();
@@ -618,9 +683,18 @@ function doPost(e) {
       logIt('delete', actor,
             { id: r[0], fullName: r[1], nickname: r[2], tableNo: r[3] },
             'กู้คืนได้จากแถวนี้ · note: ' + (r[4] || '-'));
+
+      const delTable = Number(r[3]) || 0;
+      const delWasIn = !!fmtStamp(r[5]);
       sh.deleteRow(row);
+
+      // ลบคนที่แจ้งชื่อไว้แล้ว ต้องลดยอดนับหัวด้วย ไม่งั้นโต๊ะนั้นค้างเกินถาวร
+      // เรียกหลัง deleteRow เพราะพื้นล่างนับจากแถวที่ยังอยู่จริง
+      let after = null;
+      if (delWasIn && validTable(delTable)) after = bumpArrived(delTable, -1);
+
       dropCache();
-      return jsonOut({ ok: true });
+      return jsonOut({ ok: true, arrived: after && after.arrived, tableNo: delTable });
     }
 
     /* ── แก้ชื่อกลุ่ม / จำนวนที่นั่งของโต๊ะ ── */
@@ -658,15 +732,27 @@ function doPost(e) {
       ensureArrivedColumn(sh);
       const all = readTables();
 
-      // ไม่ระบุโต๊ะ = รีเซ็ตทั้งงานเป็น 0 (ใช้ตอนซ้อม/ทดสอบเสร็จ)
+      /* ไม่ระบุโต๊ะ = รีเซ็ตทั้งงาน (ใช้ตอนซ้อม/ทดสอบเสร็จ)
+
+         ⚠️ ต้องเคารพพื้นล่างเหมือน bumpArrived
+         เดิมเขียน 0 ทับทุกโต๊ะดื้อ ๆ กดปุ่มนี้หลังเริ่มเช็คอินแล้ว
+         ทุกโต๊ะที่มีคนแจ้งชื่อจะขัดกันเองทันที ("นับหัว 0 แต่มีป้ายมาถึงแล้ว")
+         และไม่มีอะไรกู้กลับให้เลย ต้องนับหัวใหม่ทั้งงานเอง */
       if (data.tableNo === 'all') {
-        let n = 0;
+        let n = 0, kept = [];
         all.forEach(function (t) {
-          if (t._row && t.arrived !== 0) { sh.getRange(t._row, COL_ARRIVED).setValue(0); n++; }
+          if (!t._row) return;
+          const floor = countCheckedIn(t.no);
+          if (t.arrived === floor) return;
+          sh.getRange(t._row, COL_ARRIVED).setValue(floor);
+          n++;
+          if (floor > 0) kept.push(t.no + ':' + floor);
         });
-        logIt('resetArrived', actor, null, 'รีเซ็ต ' + n + ' โต๊ะเป็น 0');
+        logIt('resetArrived', actor, null,
+              'รีเซ็ต ' + n + ' โต๊ะ' +
+              (kept.length ? ' · คงยอดตามคนที่แจ้งชื่อไว้ ' + kept.join(', ') : ' เป็น 0'));
         dropCache();
-        return jsonOut({ ok: true, reset: n });
+        return jsonOut({ ok: true, reset: n, kept: kept });
       }
 
       if (!validTable(data.tableNo))
@@ -675,11 +761,53 @@ function doPost(e) {
       const t = all.find(function (x) { return x.no === Number(data.tableNo); });
       if (!t || !t._row) return jsonOut({ ok: false, error: 'ไม่พบโต๊ะ ' + data.tableNo });
 
-      const v = Math.min(t.seats, Math.max(0, Number(data.arrived) || 0));
+      // ตัวเลขที่ไม่ใช่ตัวเลข ต้องปฏิเสธ ไม่ใช่กลายเป็น 0 เงียบ ๆ
+      const want = Number(data.arrived);
+      if (!Number.isFinite(want) || want < 0)
+        return jsonOut({ ok: false, error: 'จำนวนต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป' });
+
+      // พื้นล่างเดียวกับ bumpArrived — แอดมินก็ตั้งต่ำกว่าคนที่แจ้งชื่อไว้ไม่ได้
+      const floor = countCheckedIn(t.no);
+      const v = Math.max(floor, Math.min(t.seats, Math.round(want)));
       sh.getRange(t._row, COL_ARRIVED).setValue(v);
       logIt('setArrived', actor, { tableNo: t.no }, 'จาก ' + t.arrived + ' → ' + v);
       dropCache();
-      return jsonOut({ ok: true, arrived: v });
+      return jsonOut({ ok: true, arrived: v, floor: floor,
+                       clamped: v !== Math.round(want) });
+    }
+
+    /* ── กู้คืน: ล้างการแจ้งชื่อ "มาถึงแล้ว" ทั้งงาน ──────────────
+
+       มีไว้เพราะ selfArrive/selfUndo เป็นคำสั่งที่ไม่ต้องใช้รหัส และ id ของแขก
+       ทุกคนเปิดสาธารณะอยู่ในข้อมูลหน้าเว็บ ถ้ามีใครยิงล้างหมดหรือแจ้งมาถึงหมด
+       เดิมเราไม่มีทางกู้เลย ต้องไปลบทีละช่องในชีต 400 ช่องกลางงาน
+
+       ล้างเวลาเช็คอินก่อน แล้วค่อยตั้งยอดนับหัวตามพื้นล่างใหม่ (= 0)
+       ประวัติทั้งหมดยังอยู่ครบในชีต Log ตามหลัก "ไม่มีอะไรถูกลบ"        */
+    if (type === 'clearAllCheckIns') {
+      const sh = sheetOf(SH_GUESTS, HDR_GUESTS);
+      const rows = sh.getDataRange().getValues();
+      let n = 0;
+      for (let i = 1; i < rows.length; i++) {
+        if (!fmtStamp(rows[i][5])) continue;
+        sh.getRange(i + 1, 6).setValue('');
+        sh.getRange(i + 1, 7).setValue(nowIso());
+        n++;
+      }
+
+      const tb = sheetOf(SH_TABLES, HDR_TABLES);
+      ensureArrivedColumn(tb);
+      let z = 0;
+      if (data.alsoResetArrived) {
+        readTables().forEach(function (t) {
+          if (t._row && t.arrived !== 0) { tb.getRange(t._row, COL_ARRIVED).setValue(0); z++; }
+        });
+      }
+
+      logIt('clearAllCheckIns', actor, null,
+            'ล้างการแจ้งชื่อ ' + n + ' คน' + (data.alsoResetArrived ? ' · ล้างยอดนับหัว ' + z + ' โต๊ะ' : ''));
+      dropCache();
+      return jsonOut({ ok: true, cleared: n, tablesReset: z });
     }
 
     /* ── ข้อมูลเต็มสำหรับหน้าแอดมิน (มี note + เวลาเช็คอินครบ) ── */
@@ -690,7 +818,10 @@ function doPost(e) {
     return jsonOut({ ok: false, error: 'ไม่รู้จักคำสั่ง: ' + type });
 
   } catch (err) {
-    return jsonOut({ ok: false, error: err.message });
+    // ไม่ส่งข้อความดิบของระบบกลับไป — มันเผยโครงสร้างภายในให้คนนอกเห็น
+    // รายละเอียดจริงเก็บไว้ใน Execution log ของ Apps Script
+    Logger.log('doPost error: ' + (err && err.stack ? err.stack : err));
+    return jsonOut({ ok: false, error: 'ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง' });
   } finally {
     lock.releaseLock();
   }
@@ -920,6 +1051,14 @@ function runTableMoves(moves, dryRun) {
     return;
   }
 
+  /* ⚠️ ตอนลงมือจริงต้องจับล็อกก่อนอ่านข้อมูล
+     เดิมอ่านแผน (รวมเลขแถวของแขกทุกคน) ก่อน แล้วค่อยจับล็อกตอนจะเขียน
+     ถ้ามีคำสั่งลบแขกแทรกเข้ามาระหว่างนั้น เลขแถวทุกแถวที่อยู่ใต้แถวที่ถูกลบจะเลื่อนขึ้นหนึ่ง
+     แล้วเราจะเขียนเลขโต๊ะทับผิดคนแบบเงียบ ๆ — Log จะบันทึกว่าย้ายถูกต้องด้วย
+     และยอดนับหัวที่อ่านมาก่อนล็อกก็จะทับค่าที่คนอื่นเพิ่งกดไประหว่างนั้น */
+  const lock0 = dryRun ? null : LockService.getScriptLock();
+  if (lock0) lock0.waitLock(30000);
+
   const p = planTableMoves(moves);
 
   Logger.log(dryRun ? '🔎 ดูตัวอย่าง — ยังไม่แตะข้อมูลจริง' : '✍️ กำลังย้ายจริง');
@@ -934,6 +1073,7 @@ function runTableMoves(moves, dryRun) {
     Logger.log('');
     p.errors.forEach(function (e) { Logger.log('❌ ' + e); });
     Logger.log('❌ แผนนี้ยังไม่ปลอดภัย — ไม่ได้ทำอะไรทั้งสิ้น แก้ TABLE_MOVES แล้วลองใหม่');
+    if (lock0) lock0.releaseLock();
     return;
   }
 
@@ -943,8 +1083,7 @@ function runTableMoves(moves, dryRun) {
     return;
   }
 
-  const lock = LockService.getScriptLock();
-  lock.waitLock(30000);
+  const lock = lock0;   // ใช้ล็อกตัวเดิมที่จับไว้ตั้งแต่ก่อนอ่านแผน
   try {
     const tb = sheetOf(SH_TABLES, HDR_TABLES);
     ensureArrivedColumn(tb);

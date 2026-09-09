@@ -147,11 +147,15 @@
       <b>ซ้าย/ขวา</b> คือที่ตั้งจริงในฮอลล์ แก้ไม่ได้ (ผูกกับเลขโต๊ะตามแปลนของทางร้าน)
     </p>
     <div class="btn-row" style="margin-top:0;margin-bottom:12px">
-      <button class="btn btn-danger" id="resetArrivedBtn">↺ รีเซ็ตยอดนับหัวทั้งงานเป็น 0</button>
+      <button class="btn btn-danger" id="resetArrivedBtn">↺ รีเซ็ตยอดนับหัวทั้งงาน</button>
+      <button class="btn btn-danger" id="clearCheckInsBtn">⚠ ล้างการแจ้ง “มาถึงแล้ว” ทั้งงาน</button>
     </div>
     <p class="hint" style="margin-top:-6px">
-      ใช้ตอนทดสอบเสร็จแล้วก่อนเริ่มงานจริง หรือถ้ามีคนกดมั่วจนตัวเลขเพี้ยน ·
-      ทุกครั้งที่แขกกดถูกบันทึกไว้ในชีต <b>Log</b> อยู่แล้ว ย้อนดูได้
+      <b>รีเซ็ตยอดนับหัว</b> — ใช้ตอนทดสอบเสร็จก่อนเริ่มงานจริง หรือมีคนกดมั่วจนเพี้ยน ·
+      โต๊ะที่มีคนแจ้งชื่อไว้จะลงมาเท่าจำนวนคนนั้น ไม่ลงถึง 0 เพราะจะขัดกันเอง<br>
+      <b>ล้างการแจ้งมาถึง</b> — ปุ่มกู้คืนกรณีฉุกเฉิน ใช้ตอนมีคนไล่กดแจ้ง/ยกเลิกให้คนอื่นจนตัวเลขพัง
+      (คำสั่งนี้แขกกดเองได้โดยไม่ต้องใช้รหัส) ล้างทีเดียวทั้งงาน แทนการไปลบทีละช่องในชีต ·
+      ทุกอย่างยังอยู่ครบในชีต <b>Log</b> ย้อนดูได้
     </p>
     <div id="resetMsg"></div>
 
@@ -330,19 +334,47 @@ function bind() {
   $('printCardsBtn').addEventListener('click', function () { buildPrint('cards'); });
   $('printListBtn').addEventListener('click', function () { buildPrint('list'); });
   $('resetArrivedBtn').addEventListener('click', resetArrived);
+  $('clearCheckInsBtn').addEventListener('click', clearCheckIns);
 }
 
 /** รีเซ็ตยอดนับหัวทั้งงาน — ถามยืนยันก่อน เพราะกดพลาดกลางงานคือย้อนไม่ได้ทันที */
 async function resetArrived() {
   const head = DATA.tables.reduce(function (s, t) { return s + (t.arrived || 0); }, 0);
-  if (!confirm('รีเซ็ตยอดนับหัวทั้ง 40 โต๊ะเป็น 0?\n\n' +
-               'ตอนนี้มียอดรวม ' + head + ' คน\n' +
-               'ประวัติการกดยังอยู่ครบในชีต Log แต่ตัวเลขบนเว็บจะกลับไปเป็น 0 ทันที')) return;
+  const named = DATA.guests.filter(function (g) { return g.checkedInAt; }).length;
+  if (!confirm('รีเซ็ตยอดนับหัวทั้ง 40 โต๊ะ?\n\n' +
+               'ตอนนี้มียอดรวม ' + head + ' คน · มีคนแจ้งชื่อไว้ ' + named + ' คน\n' +
+               (named ? 'โต๊ะที่มีคนแจ้งชื่อจะลงมาเท่าจำนวนคนนั้น ไม่ลงถึง 0\n' : '') +
+               'ประวัติการกดยังอยู่ครบในชีต Log')) return;
 
   $('resetMsg').innerHTML = '<div class="spinner"></div>';
   try {
     const res = await postGAS({ type: 'setArrived', pin: PIN, actor: 'admin', tableNo: 'all' });
-    $('resetMsg').innerHTML = note('ok', 'รีเซ็ตแล้ว ' + res.reset + ' โต๊ะ');
+    $('resetMsg').innerHTML = note('ok', 'รีเซ็ตแล้ว ' + res.reset + ' โต๊ะ' +
+      (res.kept && res.kept.length ? ' · คงยอดตามคนที่แจ้งชื่อไว้: ' + res.kept.join(', ') : ''));
+    await refresh();
+  } catch (err) {
+    $('resetMsg').innerHTML = note('error', err.message);
+  }
+}
+
+/* ปุ่มกู้คืนกรณีฉุกเฉิน — ถามยืนยันสองชั้นเพราะมันล้างของทั้งงาน
+   มีไว้เพราะ selfArrive/selfUndo ไม่ต้องใช้รหัส และ id แขกทุกคนเปิดสาธารณะ
+   ถ้ามีคนไล่กดให้คนอื่นจนพัง เดิมต้องไปลบทีละช่องในชีต 400 ช่องกลางงาน */
+async function clearCheckIns() {
+  const named = DATA.guests.filter(function (g) { return g.checkedInAt; }).length;
+  if (!named) { $('resetMsg').innerHTML = note('info', 'ยังไม่มีใครแจ้งว่ามาถึง ไม่มีอะไรให้ล้าง'); return; }
+
+  if (!confirm('ล้างการแจ้ง "มาถึงแล้ว" ของทั้งงาน?\n\n' +
+               'ตอนนี้มีคนแจ้งไว้ ' + named + ' คน — ป้ายจะหายหมดทุกคน\n' +
+               'ใช้เฉพาะตอนตัวเลขพังจนกู้เองไม่ไหวเท่านั้น')) return;
+  if (prompt('พิมพ์คำว่า  ล้าง  เพื่อยืนยัน') !== 'ล้าง') return;
+
+  $('resetMsg').innerHTML = '<div class="spinner"></div>';
+  try {
+    const res = await postGAS({ type: 'clearAllCheckIns', pin: PIN, actor: 'admin',
+                                alsoResetArrived: true });
+    $('resetMsg').innerHTML = note('ok',
+      'ล้างแล้ว ' + res.cleared + ' คน · ยอดนับหัว ' + res.tablesReset + ' โต๊ะ');
     await refresh();
   } catch (err) {
     $('resetMsg').innerHTML = note('error', err.message);
