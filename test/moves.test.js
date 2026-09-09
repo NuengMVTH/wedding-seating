@@ -11,7 +11,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '..', 'gas', 'Code.gs'), 'utf8');
+// git บน Windows คืนไฟล์มาเป็น CRLF — regex ที่จับท้ายฟังก์ชันจะพลาดทันที
+// เคยตกมาแล้วทั้งที่โค้ดไม่ได้พัง ต้องปรับให้เป็น LF ก่อนเสมอ
+const src = fs.readFileSync(path.join(__dirname, '..', 'gas', 'Code.gs'), 'utf8').replace(/\r\n/g, '\n');
 
 // ดึงฟังก์ชันจริงจาก Code.gs ไม่ใช่พิมพ์ตรรกะซ้ำ — ของจริงเปลี่ยน เทสต์ต้องรู้
 const raw = src.match(/function planTableMoves\(moves\) \{[\s\S]*?\n\}\n/);

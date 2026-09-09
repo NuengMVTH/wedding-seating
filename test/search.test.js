@@ -3,7 +3,7 @@ const fs = require('fs');
 const vm = require('vm');
 
 const src = fs.readFileSync(
-  require('path').join(__dirname, '..', 'js', 'core.js'), 'utf8');
+  require('path').join(__dirname, '..', 'js', 'core.js'), 'utf8').replace(/\r\n/g, '\n');
 
 const ctx = {
   localStorage: { getItem: () => null, setItem: () => {} },

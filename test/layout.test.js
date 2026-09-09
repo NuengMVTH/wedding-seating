@@ -9,7 +9,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'seatmap.js'), 'utf8');
+// git บน Windows คืนไฟล์มาเป็น CRLF — regex ที่จับท้ายฟังก์ชันจะพลาดทันที
+// เคยตกมาแล้วทั้งที่โค้ดไม่ได้พัง ต้องปรับให้เป็น LF ก่อนเสมอ
+const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'seatmap.js'), 'utf8').replace(/\r\n/g, '\n');
 
 // ดึงค่า MAP จากไฟล์จริง ไม่ใช่พิมพ์ซ้ำให้ตรงกับที่คิดเอง
 const raw = src.match(/const MAP = \{[\s\S]*?\n\};/);
