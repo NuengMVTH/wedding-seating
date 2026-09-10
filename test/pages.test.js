@@ -187,5 +187,48 @@ t('นำเข้า: ชื่อเปล่า ๆ ไม่มีเลข�
   eq(r[0].nickname, '');
 });
 
+/* ── kiosk: เคยล้าง query ทั้งก้อนจน ?t= หายไป ──────────────────── */
+const LF = String.fromCharCode(10);
+function bodyOf(src, head) {
+  const a = src.indexOf(head);
+  if (a < 0) throw new Error('หา ' + head + ' ไม่เจอ');
+  return src.slice(a, src.indexOf(LF + '}', a));
+}
+
+t('โหมด kiosk ต้องไม่ล้าง query อื่นทิ้ง', function () {
+  const src = script('index.html');
+  ok(src.indexOf("replaceState({ d: 0 }, '', location.pathname)") < 0,
+     'ห้ามใช้ replaceState ที่ทิ้ง query ทั้งก้อน — ?t= ?g= ?side= จะหายไปด้วย');
+  ok(src.indexOf("q.delete('kiosk')") > 0,
+     'ต้องลบเฉพาะพารามิเตอร์ kiosk แล้วคงตัวอื่นไว้');
+});
+
+t('kiosk เริ่มใหม่ ต้องล้างประวัติของแขกคนก่อน', function () {
+  const body = bodyOf(script('index.html'), 'function resetKiosk');
+  ok(body.indexOf('history.go') > 0,
+     'ต้องถอยประวัติกลับให้สุด ไม่ใช่แค่เขียนทับรายการปัจจุบัน — ' +
+     'ไม่งั้นคนถัดไปกด Back เห็นชื่อและโต๊ะของแขกคนก่อนหน้า');
+});
+
+/* ── โต๊ะต้อนรับ: เน็ตหลุดแล้วต้องยังเข้าใช้งานได้ ─────────────── */
+t('แยก "รหัสผิด" ออกจาก "เน็ตไม่ถึง" ได้', function () {
+  ok(read('js/core.js').indexOf('err.fromServer = true') > 0,
+     'core.js ต้องติดธง fromServer เมื่อเซิร์ฟเวอร์ตอบว่าไม่ผ่าน');
+
+  const body = bodyOf(script('staff.html'), 'async function verify');
+  const guard = body.indexOf('if (err.fromServer)');
+  const rm = body.indexOf("removeItem('staff_pin')");
+  ok(guard > 0, 'staff.html ต้องเช็คธงก่อนตัดสินใจลบรหัสที่จำไว้');
+  ok(rm > guard,
+     'การลบรหัสต้องอยู่หลังด่าน fromServer เท่านั้น — ' +
+     'เดิมลบทุกครั้งที่ยิงพลาด ทำให้เน็ตหลุดแล้วล็อกอินไม่ได้ทั้งงาน');
+});
+
+t('start() ของหน้าโต๊ะต้อนรับ ทำงานครั้งเดียว', function () {
+  const body = bodyOf(script('staff.html'), 'async function start()');
+  ok(body.indexOf('if (STARTED) return') > 0,
+     'ต้องมีธงกันเรียกซ้ำ — ไม่งั้นได้ตัวจับเวลา 45 วิสองตัวและ handler ซ้อน');
+});
+
 console.log(fail ? '\n❌ ตก ' + fail + ' เคส' : '\n✅ ผ่านหมด');
 process.exit(fail ? 1 : 0);

@@ -154,7 +154,15 @@ async function postGAS(payload) {
   if (!res.ok) throw new Error('เซิร์ฟเวอร์ตอบ ' + res.status);
 
   const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'ทำรายการไม่สำเร็จ');
+  if (!json.ok) {
+    /* ⚠️ ติดธงว่า "เซิร์ฟเวอร์ตอบมาแล้วว่าไม่ผ่าน" ไม่ใช่ "ส่งไปไม่ถึง"
+       สองอย่างนี้ต้องแยกกันให้ออก — หน้าโต๊ะต้อนรับเคยลบรหัสที่จำไว้ทิ้ง
+       ทุกครั้งที่ยิงพลาด รวมถึงตอนเน็ตหลุด ทำให้พนักงานล็อกอินไม่ได้เลย
+       ทั้งที่รายชื่อยังอยู่ใน cache ครบ */
+    const err = new Error(json.error || 'ทำรายการไม่สำเร็จ');
+    err.fromServer = true;
+    throw err;
+  }
   return json;
 }
 

@@ -115,6 +115,8 @@ let DATA  = { tables: [], guests: [] };
 let INDEX = [];
 let PIN   = '';
 let ROLE  = '';
+let STARTED = false;      // กัน start() ทำงานซ้ำ — ไม่งั้น handler และ timer ซ้อนกัน
+let OFFLINE_ENTRY = false; // เข้าใช้งานทั้งที่ยืนยันรหัสกับเซิร์ฟเวอร์ไม่ได้
 // เคยมี RECENT เก็บรายการที่กดในเครื่องนี้ — ตัดออกแล้ว
 // เพราะทำให้แต่ละเครื่องเห็นไม่ตรงกัน ตอนนี้อ่านจากข้อมูลกลางอย่างเดียว
 
@@ -142,16 +144,49 @@ async function verify(pin, silent) {
   try {
     const res = await postGAS({ type: 'verifyPin', pin: pin });
     PIN = pin; ROLE = res.role;
+    OFFLINE_ENTRY = false;
     sessionStorage.setItem('staff_pin', pin);
-    $('gateView').hidden = true;
-    $('appView').hidden = false;
-    msg.innerHTML = '';
-    start();
+    sessionStorage.setItem('staff_role', res.role);
+    enterApp();
   } catch (err) {
-    sessionStorage.removeItem('staff_pin');
-    msg.innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
-    $('pin').value = '';
+    /* ⚠️ แยกสองกรณีนี้ให้ออก — เดิมรวมเป็นกรณีเดียวแล้วลบรหัสทิ้งทุกครั้ง
+
+       1. เซิร์ฟเวอร์ตอบมาว่ารหัสผิด → ลบรหัสที่จำไว้ ถูกต้องแล้ว
+       2. ส่งไปไม่ถึง (เน็ตห้องจัดเลี้ยงหลุด) → ห้ามลบ
+          เดิมลบทิ้ง แล้วพนักงานล็อกอินไม่ได้เลยทั้งงาน ทั้งที่รายชื่อ
+          ยังอยู่ใน cache ครบ และหน้านี้มีแบนเนอร์ออฟไลน์รออยู่แล้ว
+          แต่ไปไม่ถึงเพราะติดด่านรหัสก่อน */
+    if (err.fromServer) {
+      sessionStorage.removeItem('staff_pin');
+      sessionStorage.removeItem('staff_role');
+      msg.innerHTML = '<div class="notice notice-error">' + esc(err.message) + '</div>';
+      $('pin').value = '';
+      return;
+    }
+
+    // เน็ตไม่ถึง — ให้เข้าได้เฉพาะรหัสที่เคยยืนยันสำเร็จมาแล้วในแท็บนี้
+    // (ไม่ปล่อยให้พิมพ์อะไรก็ได้เข้ามาตอนออฟไลน์)
+    // เขียนข้อมูลยังทำไม่ได้อยู่ดี เพราะเซิร์ฟเวอร์ตรวจรหัสเองอีกชั้น
+    if (pin && pin === sessionStorage.getItem('staff_pin')) {
+      PIN = pin;
+      ROLE = sessionStorage.getItem('staff_role') || 'staff';
+      OFFLINE_ENTRY = true;
+      enterApp();
+      return;
+    }
+
+    msg.innerHTML = '<div class="notice notice-warn">📶 ต่อเน็ตไม่ได้ ' +
+      'จึงยืนยันรหัสไม่ได้<br>ถ้าเครื่องนี้เคยเข้าใช้งานแล้วในแท็บนี้ ให้กดโหลดหน้าใหม่ ' +
+      'ระบบจะพาเข้าโหมดออฟไลน์ให้เอง</div>';
   }
+}
+
+/** เปิดหน้าใช้งาน — เรียกได้จากทั้งทางออนไลน์และออฟไลน์ */
+function enterApp() {
+  $('gateView').hidden = true;
+  $('appView').hidden = false;
+  $('gateMsg').innerHTML = '';
+  start();
 }
 
 $('logoutBtn').addEventListener('click', function () {
@@ -162,6 +197,14 @@ $('logoutBtn').addEventListener('click', function () {
 /* ── โหลดข้อมูล ───────────────────────────────────────────── */
 
 async function start() {
+  /* ⚠️ ต้องทำงานครั้งเดียวเท่านั้น
+     ตอนเปิดหน้า ถ้ามีรหัสจำไว้ ระบบจะยิง verify เองทันที (บรรทัด if (saved))
+     ถ้าพนักงานพิมพ์รหัสแล้วกดเข้าสู่ระบบทันระหว่างที่คำขอนั้นยังลอยอยู่
+     start() จะถูกเรียกสองครั้ง → ผูก handler ซ้ำทั้งชุด และได้ตัวจับเวลา
+     45 วิสองตัว ยิงซ้อนกันไปตลอดงาน */
+  if (STARTED) return;
+  STARTED = true;
+
   bind();
   await refresh();
 
@@ -367,7 +410,7 @@ async function checkIn(g, btn) {
     drawStats(); drawTables(); drawRecent(); runSearch();
   } catch (err) {
     btn.disabled = false; btn.textContent = label;
-    alert('เช็คอินไม่สำเร็จ: ' + err.message);
+    alert(failMsg('เช็คอิน', err));
   }
 }
 
@@ -379,8 +422,22 @@ async function undo(g, btn) {
     drawStats(); drawTables(); drawRecent(); runSearch();
   } catch (err) {
     if (btn) { btn.disabled = false; btn.textContent = 'ยกเลิก'; }
-    alert('ยกเลิกไม่สำเร็จ: ' + err.message);
+    alert(failMsg('ยกเลิก', err));
   }
+}
+
+/**
+ * ข้อความบอกสาเหตุที่ทำไม่สำเร็จ
+ *
+ * "Failed to fetch" ไม่ได้บอกอะไรกับพนักงานที่ยืนอยู่หน้าคิวแขก
+ * ต้องแยกให้ออกว่า "เซิร์ฟเวอร์ปฏิเสธ" (มีเหตุผลจริงให้อ่าน)
+ * กับ "ส่งไปไม่ถึง" (ปัญหาเน็ต ให้รอแล้วลองใหม่ ข้อมูลยังไม่ถูกบันทึก)
+ */
+function failMsg(action, err) {
+  if (err && err.fromServer) return action + 'ไม่สำเร็จ: ' + err.message;
+  return action + 'ไม่สำเร็จ — ส่งข้อมูลไม่ถึงเซิร์ฟเวอร์\n\n' +
+         'เน็ตน่าจะหลุดอยู่ ยังไม่มีอะไรถูกบันทึก\n' +
+         'รอสักครู่แล้วกดใหม่อีกครั้งได้เลย';
 }
 
 /** แก้สถานะในหน่วยความจำให้ตรงกับที่เพิ่งส่งไป

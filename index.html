@@ -185,11 +185,20 @@ const $ = function (id) { return document.getElementById(id); };
 
 const KIOSK = (function () {
   try {
-    const p = new URLSearchParams(location.search).get('kiosk');
+    const q = new URLSearchParams(location.search);
+    const p = q.get('kiosk');
     if (p === '1') localStorage.setItem('kiosk', '1');
     if (p === '0') localStorage.removeItem('kiosk');
-    // ล้าง ?kiosk ออกจาก URL ทันที ไม่ให้ไปปนกับ route จริง (?t= ?g= ?side=)
-    if (p !== null) history.replaceState({ d: 0 }, '', location.pathname);
+
+    /* ⚠️ ลบเฉพาะ ?kiosk ออก ไม่ใช่ล้างทั้ง query
+       เดิมเขียน replaceState(..., location.pathname) ซึ่งทิ้ง ?t= ?g= ?side= ไปด้วย
+       เปิด ?t=5&kiosk=1 แล้วเลขโต๊ะหายเงียบ ๆ เด้งกลับหน้าแรก
+       (ยืนยันด้วยการเปิดจริงแล้ว) */
+    if (p !== null) {
+      q.delete('kiosk');
+      const rest = q.toString();
+      history.replaceState({ d: 0 }, '', location.pathname + (rest ? '?' + rest : ''));
+    }
     return localStorage.getItem('kiosk') === '1';
   } catch (e) {
     return false;   // โหมดส่วนตัว/ปิด storage — ถือว่าไม่ใช่ kiosk
@@ -210,7 +219,30 @@ function armIdle() {
 function resetKiosk() {
   els.q.value = '';
   els.clear.hidden = true;
-  navigate('', true);   // replace ไม่ push — ประวัติจะได้ไม่บวมตลอดงาน
+
+  /* ⚠️ ต้องล้างประวัติของแขกคนก่อนหน้าด้วย ไม่ใช่แค่เขียนทับรายการปัจจุบัน
+     เดิมใช้ replace อย่างเดียว รายการที่แขกคนก่อน push ไว้ยังค้างอยู่
+     คนถัดไปเดินมากดปุ่มย้อนกลับของ iPad จะเห็นชื่อและโต๊ะของคนก่อนหน้า
+     ซึ่งเป็นเรื่องความเป็นส่วนตัวบนเครื่องที่ใช้ร่วมกันทั้งงาน
+
+     ถอยกลับไปให้สุดก่อน แล้วค่อยเขียนทับด้วยหน้าแรก
+     go(-n) เป็นคำสั่งแบบไม่รอผล จึงต้องรอ popstate จบก่อนค่อย replace */
+  const depth = (history.state && history.state.d) || 0;
+  if (depth > 0) {
+    const done = function () {
+      window.removeEventListener('popstate', done);
+      navigate('', true);
+    };
+    window.addEventListener('popstate', done);
+    history.go(-depth);
+    // เผื่อเบราว์เซอร์ไม่ยิง popstate (เช่นไม่มีอะไรให้ถอยจริง)
+    setTimeout(function () {
+      window.removeEventListener('popstate', done);
+      navigate('', true);
+    }, 400);
+    return;
+  }
+  navigate('', true);
 }
 
 /** กันจอ iPad ดับระหว่างงาน — ต้องขอใหม่ทุกครั้งที่กลับมาเห็นหน้าจอ */
