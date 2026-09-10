@@ -600,7 +600,11 @@ body::after {
 
 .mate-list .mate-btn {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  width: 100%; padding: 11px 14px;
+  /* ⚠️ ขั้นต่ำ 44px — นี่คือแถวที่แขกแตะเพื่อแจ้งว่ามาถึง
+     เดิมสูง ~37px และในโต๊ะเดียวกันมีชื่อที่เกือบเหมือนกันอยู่ติดกัน
+     ("ประภัสสร จันทร์เที่ยง" กับ "ประภัสสร จันทร์เที่ยง (ผู้ติดตาม1)")
+     เป้าเล็ก + ชื่อคล้ายกัน = แขกกดเช็คอินให้คนผิดในวันงาน */
+  width: 100%; min-height: 46px; padding: 13px 15px;
   font-family: inherit; font-size: 15px; color: inherit; text-align: left;
   background: var(--cream); border: 1px solid var(--line-soft);
   border-radius: var(--radius-sm); cursor: pointer;
@@ -684,7 +688,7 @@ body::after {
    จะได้ไม่มีใครเผลอกดผิดแถวตอนรีบ ๆ */
 .count-row-sub { margin-top: 9px; }
 .count-row-sub select { flex: 0 0 106px; padding: 9px 10px; font-size: 14px; }
-.count-row-sub .btn { min-height: 42px; font-size: 14px; color: var(--ink-soft); }
+.count-row-sub .btn { min-height: 44px; font-size: 14px; color: var(--ink-soft); }
 
 .count-note { font-size: 12px; color: var(--ink-soft); margin: 13px 0 0; line-height: 1.65; }
 
@@ -748,7 +752,7 @@ body::after {
 .btn-danger:hover { background: #3A1E1C; border-color: var(--danger); }
 
 .btn-lg { width: 100%; padding: 17px; font-size: 16px; }
-.btn-sm { padding: 9px 16px; min-height: 38px; font-size: 12.5px; }
+.btn-sm { padding: 11px 16px; min-height: 44px; font-size: 12.5px; }
 
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
 .btn-row .btn { flex: 1; min-width: 140px; }
@@ -853,7 +857,7 @@ body::after {
 
 .chip {
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 14px; min-height: 38px;
+  padding: 11px 15px; min-height: 44px;   /* ชิปตัวกรองใต้ผัง กดได้ ต้องถึงเกณฑ์ */
   font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink-soft);
   background: var(--paper); border: 1px solid var(--line);
   border-radius: 999px; cursor: pointer;
