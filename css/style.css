@@ -91,8 +91,12 @@
   --serif:   'Bai Jamjuree', system-ui, sans-serif;
   --sans:    'Bai Jamjuree', system-ui, sans-serif;
 
-  --gap:    22px;
-  --gap-lg: 38px;
+  /* ช่องไฟ — ข้อเดียวที่ VibeCurb ชี้ถูกกับโค้ดชุดนี้
+     "ช่องไฟแน่นคือลายเซ็นของงานสมัครเล่น ช่องไฟใจกว้างคือลายเซ็นของงานพรีเมียม"
+     ขยายขึ้นจาก 22/38 และเพิ่มขั้นสำหรับระยะระหว่างบล็อกใหญ่ */
+  --gap-sm: 14px;
+  --gap:    26px;
+  --gap-lg: 52px;
 }
 
 * { box-sizing: border-box; }
@@ -196,10 +200,13 @@ body::after {
 
 /* ชื่อบ่าวสาว — น้ำหนักบาง ขนาดใหญ่ ปล่อยให้ที่ว่างรอบตัวทำงาน
    น้ำหนัก 300 บนขนาดใหญ่ให้ความรู้สึกแพงกว่าน้ำหนักหนาเสมอ */
+/* หัวข้อขนาดใหญ่ต้องบีบทั้ง tracking และ line-height
+   ค่าปกติของเบราว์เซอร์ตั้งมาเพื่อขนาดเนื้อความ พอเอามาใช้กับตัวใหญ่จะดูหลวมและเป็นมือสมัครเล่น */
 .hero h1 {
   font-family: var(--serif);
-  font-size: clamp(34px, 9vw, 46px); font-weight: 300; letter-spacing: .015em;
-  margin: 20px 0 10px; line-height: 1.28;
+  font-size: clamp(36px, 9.5vw, 50px); font-weight: 300; letter-spacing: -.01em;
+  margin: 22px 0 12px; line-height: 1.18;
+  text-wrap: balance;
 }
 
 /* หัวใจคั่นชื่อบ่าวสาว — ทองเพื่อให้เข้าธีม
@@ -309,7 +316,7 @@ body::after {
   background: transparent;
   border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
   box-shadow: none;
-  padding: 16px 2px;
+  padding: 20px 2px;
 }
 
 .guest-card {
@@ -370,7 +377,7 @@ body::after {
 
 .pick-row {
   display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-  width: 100%; padding: 20px 2px;
+  width: 100%; padding: 23px 2px;
   border: 0; border-bottom: 1px solid var(--line);
   background: transparent; color: var(--ink);
   font-family: inherit; font-size: 19px; font-weight: 400; text-align: left;
@@ -452,8 +459,9 @@ body::after {
   border-bottom: 1px solid var(--line-soft);
 }
 .browse-head h2 {
-  font-family: var(--serif); font-size: 25px; font-weight: 400;
-  margin: 0; flex: 1; line-height: 1.35; letter-spacing: .01em;
+  font-family: var(--serif); font-size: clamp(25px, 6vw, 30px); font-weight: 400;
+  margin: 0; flex: 1; line-height: 1.24; letter-spacing: -.005em;
+  text-wrap: balance;
 }
 .browse-head .count {
   font-family: var(--sans); font-size: 13px;
@@ -497,7 +505,7 @@ body::after {
   background: var(--paper);
   border: 1px solid var(--line); border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 46px 26px 34px; margin-top: var(--gap);
+  padding: 54px 30px 40px; margin-top: var(--gap);
   animation: rise .5s cubic-bezier(.2,.7,.3,1) both;
 }
 /* เส้นทองล้อมแบบแผ่นป้ายสลัก — ของจริงที่ตั้งอยู่บนโต๊ะในงาน
@@ -561,7 +569,7 @@ body::after {
 /* กล่องบอกทาง — เดิมเป็นบล็อกทองทึบ ตอนนี้เป็นพื้นครีมกับเส้นทองคาดซ้าย
    เส้นเดียวบอกได้ว่า "นี่คือคำแนะนำ" โดยไม่ต้องถมสีทั้งกล่อง */
 .wayfind {
-  margin-top: 22px; padding: 15px 18px;
+  margin-top: var(--gap); padding: 18px 20px;
   background: var(--cream);
   border: 1px solid var(--line-soft);
   border-left: 2px solid var(--gold-shine);
@@ -574,7 +582,7 @@ body::after {
   font-weight: 600; padding-left: .3em;
 }
 
-.tablemates { margin-top: 26px; text-align: left;
+.tablemates { margin-top: var(--gap-lg); text-align: left;
   animation: rise .5s cubic-bezier(.2,.7,.3,1) .2s both; }
 .tablemates h4 {
   margin: 0 0 12px; font-size: 9.5px; letter-spacing: .32em;
@@ -600,7 +608,10 @@ body::after {
 
 .mate-list .mate-btn {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  width: 100%; padding: 11px 14px;
+  /* ⚠️ ขั้นต่ำ 44px — นี่คือแถวที่แขกแตะเพื่อแจ้งว่ามาถึง
+     เดิมสูง ~37px ซึ่งต่ำกว่าเกณฑ์ และชื่อในโต๊ะเดียวกันอยู่ติดกันมาก
+     ("ผู้ติดตาม1" / "ผู้ติดตาม2" หน้าตาเหมือนกัน) แตะพลาดคนข้าง ๆ ได้ง่าย */
+  width: 100%; min-height: 46px; padding: 13px 15px;
   font-family: inherit; font-size: 15px; color: inherit; text-align: left;
   background: var(--cream); border: 1px solid var(--line-soft);
   border-radius: var(--radius-sm); cursor: pointer;
@@ -637,7 +648,7 @@ body::after {
 /* ── แผงนับหัว ───────────────────────────────────────────── */
 
 .counter {
-  margin-top: 24px; padding: 24px 20px;
+  margin-top: var(--gap); padding: 28px 22px;
   background: var(--cream); border: 1px solid var(--line-soft);
   border-radius: var(--radius-sm);
   animation: rise .5s cubic-bezier(.2,.7,.3,1) .14s both;
@@ -684,7 +695,7 @@ body::after {
    จะได้ไม่มีใครเผลอกดผิดแถวตอนรีบ ๆ */
 .count-row-sub { margin-top: 9px; }
 .count-row-sub select { flex: 0 0 106px; padding: 9px 10px; font-size: 14px; }
-.count-row-sub .btn { min-height: 42px; font-size: 14px; color: var(--ink-soft); }
+.count-row-sub .btn { min-height: 44px; font-size: 14px; color: var(--ink-soft); }
 
 .count-note { font-size: 12px; color: var(--ink-soft); margin: 13px 0 0; line-height: 1.65; }
 
@@ -706,7 +717,7 @@ body::after {
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 13px 26px; min-height: 50px;
+  padding: 13px 26px; min-height: 50px;   /* ผ่านเกณฑ์ 44px */
   font-family: inherit; font-size: 14.5px; font-weight: 500;
   letter-spacing: .04em;
   border-radius: var(--radius-sm); border: 1px solid var(--line);
@@ -748,7 +759,7 @@ body::after {
 .btn-danger:hover { background: #3A1E1C; border-color: var(--danger); }
 
 .btn-lg { width: 100%; padding: 17px; font-size: 16px; }
-.btn-sm { padding: 9px 16px; min-height: 38px; font-size: 12.5px; }
+.btn-sm { padding: 11px 16px; min-height: 44px; font-size: 12.5px; }
 
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
 .btn-row .btn { flex: 1; min-width: 140px; }
@@ -853,7 +864,7 @@ body::after {
 
 .chip {
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 14px; min-height: 38px;
+  padding: 11px 15px; min-height: 44px;   /* ชิปตัวกรองใต้ผัง — กดได้ ต้องถึงเกณฑ์ด้วย */
   font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink-soft);
   background: var(--paper); border: 1px solid var(--line);
   border-radius: 999px; cursor: pointer;
