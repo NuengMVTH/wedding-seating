@@ -290,7 +290,9 @@ function fillTableSelects() {
   for (let n = 1; n <= CONFIG.totalTables; n++) {
     const t = (DATA.tables || []).find(function (x) { return x.no === n; }) || {};
     const tag = [SIDE_LABEL[tableSide(n, DATA.tables)], t.group].filter(Boolean).join(' · ');
-    opts += '<option value="' + n + '">โต๊ะ ' + n + (tag ? ' — ' + tag : '') + '</option>';
+    // ⚠️ ชื่อกลุ่มมาจากช่องกรอกของแอดมิน ถ้ามี " หรือ < ปนมา ดรอปดาวน์จะพัง
+    // จุดนี้เป็นที่เดียวในสามหน้าที่ลืมผ่าน esc()
+    opts += '<option value="' + n + '">โต๊ะ ' + n + (tag ? ' — ' + esc(tag) : '') + '</option>';
   }
 
   $('gTable').innerHTML = opts;

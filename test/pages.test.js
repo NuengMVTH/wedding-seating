@@ -230,5 +230,16 @@ t('start() ของหน้าโต๊ะต้อนรับ ทำงา�
      'ต้องมีธงกันเรียกซ้ำ — ไม่งั้นได้ตัวจับเวลา 45 วิสองตัวและ handler ซ้อน');
 });
 
+t('ดรอปดาวน์เลือกโต๊ะหน้าแอดมิน ต้องผ่าน esc()', function () {
+  // ชื่อกลุ่มมาจากช่องกรอกของแอดมิน ถ้ามีเครื่องหมายคำพูดปนมา ดรอปดาวน์จะพัง
+  // จุดนี้เคยเป็นที่เดียวในสามหน้าที่ลืมผ่าน esc()
+  const src = script('admin.html');
+  const a = src.indexOf("opts += '<option value=");
+  ok(a > 0, 'หาบรรทัดสร้างดรอปดาวน์ไม่เจอ');
+  const line = src.slice(a, src.indexOf(String.fromCharCode(10), a));
+  ok(line.indexOf('esc(tag)') > 0,
+     'ชื่อกลุ่มต้องผ่าน esc() ก่อนต่อเข้า innerHTML');
+});
+
 console.log(fail ? '\n❌ ตก ' + fail + ' เคส' : '\n✅ ผ่านหมด');
 process.exit(fail ? 1 : 0);

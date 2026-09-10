@@ -14,7 +14,8 @@ const ctx = {
 vm.createContext(ctx);
 vm.runInContext(src, ctx);
 
-const { buildIndex, searchGuests, tablePos, wayfinding, normTh, skeleton } = ctx;
+const { buildIndex, searchGuests, tablePos, wayfinding, normTh, skeleton,
+        firstLetter, lettersOf } = ctx;
 
 const tables = [
   { no: 7,  group: 'ญาติเจ้าสาว (บางหญ้าแพรก)', side: 'bride', seats: 10 },
@@ -204,6 +205,51 @@ console.log((sumOk ? '  ✅' : '  ❌') + ' จำนวนบนปุ่มร
 
 console.log('\n── ตัวอย่างคำบอกทางที่แขกจะเห็นจริง ───────────────');
 [1, 8, 23, 40].forEach(n => console.log('  โต๊ะ ' + String(n).padStart(2) + ': ' + wayfinding(n)));
+
+const LF = String.fromCharCode(10);
+console.log(LF + '── ตัวอักษรล่องหนที่ติดมากับการคัดลอก ─────────────');
+
+/* ⚠️ เทสต์ชุดนี้ต้องตกถ้าถอด INVISIBLE_RE ออกจาก normTh
+   เคยเขียนเป็นเคสค้นหาแล้วพบว่ามันผ่านทั้งที่ยังไม่ได้แก้ —
+   การค้นหาแบบยืดหยุ่นกลบปัญหาไว้ (คะแนนตกจาก 100 เหลือ 46 แต่ยังอันดับ 1)
+   จุดที่พังจริงคือ normTh ตรง ๆ และ firstLetter ซึ่งไม่มีอะไรมากลบให้ */
+
+const INV = [
+  ['zero-width space',      0x200B],
+  ['zero-width non-joiner', 0x200C],
+  ['zero-width joiner',     0x200D],
+  ['byte-order mark',       0xFEFF],
+  ['word joiner',           0x2060],
+  ['soft hyphen',           0x00AD]
+];
+
+INV.forEach(function (pair) {
+  const label = pair[0], ch = String.fromCharCode(pair[1]);
+  const got = normTh('สมชาย' + ch + 'ใจดี');
+  const want = normTh('สมชายใจดี');
+  const okk = got === want;
+  if (okk) pass++; else fail++;
+  console.log((okk ? '  ✅' : '  ❌') + ' normTh ตัด ' + label.padEnd(24) +
+              (okk ? '' : ' → ได้ "' + got + '" ควรเป็น "' + want + '"'));
+});
+
+/* หน้า ก–ฮ จัดหมวดจากอักษรตัวแรกที่ normTh คืนมา
+   ถ้าตัวล่องหนไม่ถูกตัด มันจะกลายเป็น "อักษรตัวแรก" เสียเอง
+   แขกคนนั้นจะไปโผล่ในหมวดที่ไม่มีใครกดดู และหาไม่เจอทั้งงาน */
+INV.forEach(function (pair) {
+  const label = pair[0], ch = String.fromCharCode(pair[1]);
+  const got = firstLetter(ch + 'ปรีชา สุขใจ');
+  const okk = got === 'ป';
+  if (okk) pass++; else fail++;
+  console.log((okk ? '  ✅' : '  ❌') + ' อักษรตัวแรกไม่เพี้ยนเพราะ ' + label.padEnd(22) +
+              (okk ? '' : ' → ได้ "' + got + '" ควรเป็น "ป"'));
+});
+
+const bucket = lettersOf([{ fullName: String.fromCharCode(0xFEFF) + 'ปรีชา สุขใจ' }]);
+const bucketOk = bucket.length === 1 && bucket[0].letter === 'ป';
+if (bucketOk) pass++; else fail++;
+console.log((bucketOk ? '  ✅' : '  ❌') + ' แขกที่ชื่อมี BOM นำหน้า ถูกจัดเข้าหมวด "ป"' +
+            (bucketOk ? '' : ' → ได้ ' + JSON.stringify(bucket)));
 
 console.log('\n════════════════════════════════════════════════════');
 console.log(fail === 0 ? `✅ ผ่านทั้งหมด ${pass} เคส` : `❌ ผ่าน ${pass} · ตก ${fail}`);

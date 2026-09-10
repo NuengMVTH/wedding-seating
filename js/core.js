@@ -200,6 +200,14 @@ const CONSONANT_FOLD = {
 };
 
 /** ระดับที่ 1 — เก็บสระไว้ ตัดแค่สิ่งที่ไม่ได้เปลี่ยนเสียง */
+/* ตัวอักษรล่องหน — มองไม่เห็น ไม่กินที่ แต่ทำให้ค้นหาไม่เจอ
+   ติดมากับข้อความที่ก๊อปจาก LINE, Word, PDF, เว็บ เป็นเรื่องปกติมาก
+   \s ของ JavaScript ไม่จับตัวพวกนี้ ชื่อจึงนำเข้าได้ปกติแต่หาไม่เจอหน้างาน
+     200B zero-width space · 200C/200D zero-width non-joiner/joiner
+     FEFF byte-order mark · 2060 word joiner · 00AD soft hyphen
+     180E Mongolian vowel separator (เคยถูกจัดเป็นช่องว่าง) */
+const INVISIBLE_RE = /[\u200B-\u200D\uFEFF\u2060\u00AD\u180E]/g;
+
 function normTh(s) {
   return String(s || '')
     .trim()
@@ -208,6 +216,7 @@ function normTh(s) {
     .replace(TONE_RE, '')
     .replace(REPEAT_RE, '')
     .replace(/ใ/g, 'ไ')
+    .replace(INVISIBLE_RE, '')
     .replace(/[\s\-.'"()]/g, '');
 }
 
