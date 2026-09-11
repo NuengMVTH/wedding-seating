@@ -14,77 +14,79 @@
 ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* ═══ พาเลตต์งานแต่ง — ถอดจากภาพช่อดอกไม้ที่ Nueng ส่งมา ═══════
+  /* ═══ วัสดุ: รักสมุก + ทองคำเปลว ═══════════════════════════════
 
-     สี่สีจากภาพ ทุกสีมีหน้าที่จริง ไม่ได้ใส่ไว้เฉย ๆ:
-       #FBD5CE บลัช        → พื้นวงโต๊ะฝั่งเจ้าสาว · พื้นป้าย
-       #DE9188 โรสหม่น     → เส้นขอบฝั่งเจ้าสาว
-       #C0652F ดินเผา      → เส้นขอบฝั่งเจ้าบ่าว · เส้นคั่น
-       #8B4A2B น้ำตาลสนิม  → ตัวอักษรเด่น · เส้นตกแต่ง
+     ธีมนี้ไม่ได้มาจาก "โหมดมืดดูทันสมัย" แต่มาจากของจริงสองอย่าง:
 
-     ⚠️ งานนี้เป็น "งานเช้า" (Nueng ยืนยันเอง 11 ก.ย.)
-     ธีมพื้นมืดก่อนหน้านี้ผมตั้งอยู่บนสมมติฐานว่าเป็นงานเย็นในห้องไฟสลัว
-     ซึ่งผมสมมติเอาเองและผิด — แสงเช้าจ้า จอมืดจะสะท้อนแสงและอ่านยากกว่า
+     1. ห้องจัดเลี้ยงตอนกลางคืนมันมืด — จอครีมสว่างจ้าคือไฟฉายส่องหน้าแขก
+        และทำลายบรรยากาศห้อง ป้ายบอกทางในที่มืดทุกที่ในโลก (เลขที่นั่งโรงละคร
+        เลขห้องโรงแรม) เป็นพื้นมืดตัวเลขสว่าง
+     2. ทองคำเปลวบนรักสมุก — ประตูโบสถ์ เครื่องใช้ในพิธี พื้นรักสีแดงเข้ม
+        เกือบดำ ทองเปลวด้าน ๆ ไม่วาว นี่คือคู่สีของงานพิธีไทยจริง ๆ
 
-     ⚠️ ปัญหาที่ต้องระวังกับพาเลตต์ชุดนี้:
-     ทุกสีอยู่ในตระกูลส้ม-แดงเหมือนกันหมด ถ้าเอาสีฝั่งมาวางคู่กันตรง ๆ
-     จะต่างกันแค่ 1.03:1 ซึ่งคือความผิดพลาดเดิมที่เคยปล่อยไปแล้วครั้งหนึ่ง
-     ทางแก้: กลับหัวฝั่งเดียว — เจ้าสาวพื้นอ่อนเลขเข้ม เจ้าบ่าวพื้นเข้มเลขอ่อน
-     ได้ความต่าง 4.04:1 โดยยังใช้สีจากภาพตรง ๆ ทั้งคู่                     */
+     ผลพลอยได้ที่วัดได้: ทองบนพื้นรัก 10.84:1 เทียบกับทองบนครีมที่ทำได้ดีสุด
+     3.54:1 ปัญหาความคมชัดที่สู้กันมาทั้งวันหายไปเองเพราะพื้นมืด            */
 
   /* พื้นและแผง */
-  --cream:    #FDF2EE;   /* บลัชจาง — พื้นหลังทั้งหน้า */
-  --paper:    #FFFAF8;   /* แผงยกระดับ — การ์ด กล่อง ช่องกรอก */
-  --sand:     #FBE9E3;   /* ยกอีกชั้น */
+  --cream:    #2A1216;   /* พื้นรัก — พื้นหลังทั้งหน้า */
+  --paper:    #3B1A1E;   /* แผงยกระดับ — การ์ด กล่อง ช่องกรอก */
+  --sand:     #4A2429;   /* ยกอีกชั้น */
 
-  /* ตัวอักษร — น้ำตาลสนิมเข้ม ไม่ใช่ดำ */
-  --ink:      #4A2416;   /* หลัก — 12.29:1 บนพื้น */
-  --ink-soft: #6B4436;   /* รอง — 7.63:1 (ธีมก่อน ๆ เคยตกเกณฑ์ที่ 4.08) */
-  --line:     #EBD3C9;   /* เส้นคั่น */
-  --line-soft:#F5E4DD;   /* เส้นจาง */
+  /* ตัวอักษร */
+  --ink:      #F2EBDD;   /* หลัก — 14.79:1 บนพื้นรัก */
+  --ink-soft: #D8C9B0;   /* รอง — 10.78:1 (เดิม 4.08:1 บนครีม ตกเกณฑ์มาตลอด) */
+  --line:     #5A3A2E;   /* เส้นคั่น */
+  --line-soft:#46262A;   /* เส้นจาง */
 
-  /* ดินเผา — แทนที่ทองในธีมเดิม ชื่อตัวแปรคงไว้เพื่อไม่ต้องไล่แก้ทุกกฎ */
-  --gold:      #C0652F;  /* ดินเผาจากภาพ */
-  --gold-deep: #8B4A2B;  /* น้ำตาลสนิมจากภาพ — 6.52:1 ใช้กับตัวอักษรเด่น */
-  --gold-lt:   #FBE9E1;  /* พื้นอ่อน */
-  --gold-shine:#DE9188;  /* โรสหม่นจากภาพ */
-  --gold-ln:   #D9A98F;  /* เส้นขอบโทนดินเผา — เคยใช้ผ่าน fallback มาตลอด ประกาศให้ชัด */
+  /* ทองคำเปลว — ด้าน ไม่วาว
+     ⚠️ --gold-deep ใช้กับ "ตัวอักษรเด่น" จึงต้องสว่างที่สุดในชุด (กลับหัวจากธีมครีม) */
+  --gold:      #C9A85E;
+  --gold-deep: #E8C87A;  /* ทองเปลว — 10.84:1 */
+  --gold-lt:   #46262A;  /* พื้นอ่อนของทอง = แผงอมทอง ไม่ใช่สีอ่อน */
+  --gold-shine:#E8C87A;
 
-  /* ฝั่งเจ้าสาว = โรส · เจ้าบ่าว = ดินเผา
-     ตัวที่ลงท้าย -lt/-ln ใช้กับป้ายและชิป · ตัวเปล่าใช้กับ "ตัวอักษร" จึงต้องเข้มพอ */
-  --bride:    #A34E3E;   /* 5.14:1 */
-  --bride-lt: #FBE3DE;
-  --bride-ln: #DE9188;   /* โรสหม่นจากภาพ */
-  --groom:    #A85024;   /* 4.98:1 */
-  --groom-lt: #F7E2CE;
-  --groom-ln: #C0652F;   /* ดินเผาจากภาพ */
+  /* ฝั่งเจ้าสาว = โรส · เจ้าบ่าว = ทองเหลือง
+     ⚠️ ต้องต่างกันทั้งสีและความสว่าง — เคยพลาดตอนต่างกันแค่ 1.01:1
+     ตอนนี้ต่างกัน 1.91:1 · เจ้าสาว 10.79:1 · เจ้าบ่าว 5.65:1 บนพื้นรัก */
+  --bride:    #F2C0AC;
+  --bride-lt: #4A2A28;
+  --bride-ln: #8C5648;
+  --groom:    #BC8934;
+  --groom-lt: #3E2E1A;
+  --groom-ln: #7A5C24;
 
-  /* ชุด -map ใช้เฉพาะวงกลมบนแผนผัง — กลับหัวกันคนละฝั่ง
-     เจ้าสาว: พื้นอ่อน (บลัชจากภาพ) เลขเข้ม · เจ้าบ่าว: พื้นเข้ม เลขอ่อน
-     พื้นสองฝั่งต่างกัน 4.04:1 แยกออกทันทีแม้มองผ่าน ๆ จากระยะยืนห่างจอ */
-  --bride-map:    #FBD5CE;
-  --bride-map-ln: #C77A69;
-  --bride-map-tx: #8E4030;   /* 5.30:1 บนพื้นวง */
-  --groom-map:    #A85024;
-  --groom-map-ln: #8A4018;
-  --groom-map-tx: #FFF3EC;   /* 5.02:1 บนพื้นวง */
+  /* ชุด -map ใช้เฉพาะวงกลมบนแผนผัง
+     บนพื้นมืดใช้ "วงแหวนสี + เลขสี" แทนการถมสีทั้งวง — ถมสีบนพื้นมืด
+     จะกลายเป็นจุดสว่างเรียงกัน 40 จุดจนลายตา */
+  --bride-map:    #4A2A28;   /* พื้นในวง */
+  --bride-map-ln: #F2C0AC;   /* วงแหวน — 10.79:1 */
+  --bride-map-tx: #F2C0AC;   /* ตัวเลข */
+  --groom-map:    #3E2E1A;
+  --groom-map-ln: #BC8934;   /* 5.65:1 บนพื้นรัก */
+  --groom-map-tx: #BC8934;
 
-  --ok:     #4E7A55;   /* เขียวใบไม้จากช่อดอกไม้ — ใช้เฉพาะสถานะ "มาถึงแล้ว" */
-  --warn:   #9A5A1C;
-  --danger: #A8402F;
+  --ok:     #9DBFA8;   /* สังคโลก — ใช้เฉพาะสถานะ "มาถึงแล้ว" 8.73:1 */
+  --warn:   #E0A860;
+  --danger: #E39182;
 
-  /* ปุ่มหลัก: ดินเผาทึบ ตัวอักษรขาว 4.74:1 */
-  --espresso:    #B45A28;
-  --espresso-lt: #C0652F;
+  /* ปุ่มหลักกลับหัว: บนพื้นมืด ของที่ "สว่าง" คือของที่กดได้
+     ทองทึบตัวอักษรสีรัก = 10.84:1 และเป็นจุดสว่างที่สุดของหน้า */
+  --espresso:    #E8C87A;
+  --espresso-lt: #F0D48C;
 
   --radius:    3px;
   --radius-sm: 2px;
 
-  --shadow:    0 1px 2px rgba(122, 62, 34, .06), 0 4px 14px rgba(122, 62, 34, .06);
-  --shadow-lg: 0 2px 6px rgba(122, 62, 34, .09), 0 14px 40px rgba(122, 62, 34, .10);
+  /* บนพื้นมืดเงาแทบมองไม่เห็น ใช้เส้นขอบและการยกพื้นแทน
+     เก็บชื่อตัวแปรไว้เพื่อไม่ให้กฎเดิมพัง แต่ทำให้แทบไม่มีผล */
+  --shadow:    0 1px 2px rgba(0, 0, 0, .28);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, .34), 0 14px 40px rgba(0, 0, 0, .3);
 
+  /* ตระกูลเดียวทั้งเว็บ — Bai Jamjuree มีทั้งไทยและละติน
+     ต่างกันด้วย "ขนาดและน้ำหนัก" ไม่ใช่ด้วยการสลับตระกูล
+     ชื่อตัวแปรเดิมคงไว้ทั้งสามตัวเพื่อไม่ต้องไล่แก้ทุกกฎ */
   --display: 'Bai Jamjuree', system-ui, sans-serif;
   --serif:   'Bai Jamjuree', system-ui, sans-serif;
   --sans:    'Bai Jamjuree', system-ui, sans-serif;
@@ -160,19 +162,20 @@ body {
 /* ผิวกระดาษ + แสงอุ่นจากมุมบน — สองชั้นบาง ๆ ที่ตาไม่ทันจับว่ามีอะไร
    แต่ทำให้พื้นครีมไม่เป็นแผ่นสีแบน ๆ ซึ่งเป็นสิ่งที่แยกงานพิมพ์ดี ๆ ออกจากงานทั่วไป
    pointer-events: none สำคัญมาก ไม่งั้นมันบังทั้งหน้าจนกดอะไรไม่ได้เลย */
-/* แสงเช้า — งานนี้เป็นงานเช้า ไม่ใช่งานเย็น
-   ไล่จากมุมบนลงมาเหมือนแสงจากหน้าต่าง พื้นบลัชจะได้ไม่เป็นแผ่นสีแบน */
+/* แสงอุ่นจากไฟดาวน์ไลต์ด้านบน — ห้องจัดเลี้ยงไม่ได้มืดสม่ำเสมอ
+   มันมีไฟส่องลงมาเป็นวง พื้นรักเลยไม่ใช่แผ่นสีแบน */
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(120% 60% at 50% -8%, rgba(251, 213, 206, .55), transparent 62%),
-    radial-gradient(95% 45% at 50% 108%, rgba(222, 145, 136, .16), transparent 64%);
+    radial-gradient(130% 62% at 50% -12%, rgba(232, 200, 122, .13), transparent 62%),
+    radial-gradient(100% 46% at 50% 112%, rgba(140, 86, 72, .10), transparent 64%);
 }
-/* ผิวกระดาษบาง ๆ — multiply เพราะพื้นสว่าง ต้องลดแสงไม่ใช่เพิ่ม */
+/* ผิวรัก — รักสมุกจริงไม่เรียบ มีเนื้อทรายละเอียด
+   screen แทน multiply เพราะบนพื้นมืดต้องเพิ่มแสง ไม่ใช่ลดแสง */
 body::after {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  opacity: .45; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  opacity: .30; mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");
 }
 .wrap, .kiosk-reset { position: relative; z-index: 1; }
 
@@ -188,8 +191,7 @@ body::after {
 .hero-mark {
   font-family: var(--sans);
   font-size: 10px; letter-spacing: .48em; text-transform: uppercase;
-  /* ใช้ --gold-deep ไม่ใช่ --gold — ดินเผาสดได้แค่ 3.72:1 ตกเกณฑ์ตัวอักษรเล็ก */
-  color: var(--gold-deep); font-weight: 500; padding-left: .48em;
+  color: var(--gold); font-weight: 500; padding-left: .48em;
 }
 
 /* ชื่อบ่าวสาว — น้ำหนักบาง ขนาดใหญ่ ปล่อยให้ที่ว่างรอบตัวทำงาน
@@ -351,8 +353,8 @@ body::after {
   display: inline-block; padding: 1px 9px; border-radius: 999px;
   font-size: 11px; font-weight: 600; vertical-align: middle;
 }
-.badge-in   { background: #E7F0E6; color: var(--ok); }
-.badge-warn { background: #FBEDDC; color: var(--warn); }
+.badge-in   { background: #23322A; color: var(--ok); }
+.badge-warn { background: #3A2A18; color: var(--warn); }
 
 /* ── เลือกฝั่งด้วยการจิ้ม ─────────────────────────────────── */
 
@@ -384,7 +386,7 @@ body::after {
   flex: 0 0 auto; font-size: 14px; font-weight: 300; color: var(--ink-soft);
   font-variant-numeric: lining-nums tabular-nums;
 }
-.pick-row:hover .s { color: var(--gold-deep); }
+.pick-row:hover .s { color: var(--gold); }
 
 /* สีฝั่งเป็นขีดสั้นทางซ้าย ไม่ใช่พื้นทั้งแถว
    ถมสีทั้งแถวบนพื้นมืดจะกลายเป็นแถบสว่างแย่งสายตาจากเลขโต๊ะ */
@@ -621,10 +623,10 @@ body::after {
 
 /* คนที่แจ้งชื่อแล้ว — เขียวจาง แตะซ้ำเพื่อยกเลิกได้ */
 .mate-list li.is-in .mate-btn {
-  background: #EDF4EC; border-color: #CCE0CA;
+  background: #23322A; border-color: #3B5244;
 }
 .mate-list li.is-in .mate-btn:hover {
-  background: #E1EDDF; border-color: var(--ok);
+  background: #2A3B31; border-color: var(--ok);
 }
 .mate-list li.is-in .mate-name { color: var(--ok); }
 .mate-list li.me .mate-name { font-weight: 700; }
@@ -727,14 +729,14 @@ body::after {
 .btn-primary {
   position: relative; overflow: hidden;
   background: linear-gradient(168deg, var(--espresso-lt), var(--espresso));
-  border-color: var(--espresso); color: #FFF8F4;
+  border-color: var(--espresso); color: #2A1216;
   letter-spacing: .1em; font-weight: 500;
-  box-shadow: 0 2px 12px rgba(180, 90, 40, .22);
+  box-shadow: 0 2px 14px rgba(232, 200, 122, .13);
 }
 .btn-primary:hover {
-  background: linear-gradient(168deg, #C86E36, #AE5426);
-  border-color: var(--espresso-lt); color: #FFF8F4;
-  box-shadow: 0 4px 18px rgba(180, 90, 40, .3);
+  background: linear-gradient(168deg, #F6DEA0, #E8C87A);
+  border-color: var(--espresso-lt); color: #2A1216;
+  box-shadow: 0 3px 20px rgba(232, 200, 122, .22);
 }
 /* ประกายทองพาดผ่านตอนชี้ — เห็นแวบเดียวแล้วหายไป
    รายละเอียดแบบนี้คือสิ่งที่ทำให้ปุ่มรู้สึก "ถูกทำมา" ไม่ใช่ "ถูกวางไว้" */
@@ -746,8 +748,8 @@ body::after {
 .btn-primary:hover::after { left: 125%; }
 .btn-primary:disabled::after { display: none; }
 
-.btn-danger { color: var(--danger); border-color: #F0CDC6; }
-.btn-danger:hover { background: #FBE8E4; border-color: var(--danger); }
+.btn-danger { color: var(--danger); border-color: #5C312C; }
+.btn-danger:hover { background: #3A1E1C; border-color: var(--danger); }
 
 .btn-lg { width: 100%; padding: 17px; font-size: 16px; }
 .btn-sm { padding: 11px 16px; min-height: 44px; font-size: 12.5px; }
@@ -771,21 +773,20 @@ body::after {
 /* เวทีเป็นแผงยกระดับมีเส้นทองล้อม ไม่ใช่บล็อกสว่าง
    ของเดิมเป็นครีม #f3ecdf ซึ่งบนพื้นรักกลายเป็นแผ่นสว่างจ้า
    แย่งความสนใจไปจากเลขโต๊ะซึ่งเป็นข้อมูลชิ้นเดียวที่แขกต้องการ */
-.sm-stage   { fill: var(--gold-lt); stroke: var(--gold-ln); stroke-width: 1; }
+.sm-stage   { fill: #4A2429; stroke: var(--gold-ln, #7A5C24); stroke-width: 1; }
 .sm-stage-t { fill: var(--gold-deep); font-size: 12px; font-weight: 500;
   letter-spacing: .3em; text-transform: uppercase; }
 
 /* ทางเดินกลางเคยเป็น #faf5ea = เสาสีขาวสูงกลางจอ สว่างที่สุดในหน้า
    บนพื้นมืดมันต้องเป็น "ช่องว่าง" ไม่ใช่ "วัตถุ" — เข้มกว่าพื้นเล็กน้อยพอ */
-/* ทางเดินกลางเป็น "ช่องว่าง" ไม่ใช่วัตถุ — อ่อนกว่าพื้นเล็กน้อย */
-.sm-runway   { fill: #FFFCFB; stroke: var(--line-soft); stroke-width: 1; }
-.sm-runway-t { fill: #A98374; font-size: 11px; letter-spacing: .2em; }
+.sm-runway   { fill: #240F13; stroke: var(--line-soft); stroke-width: 1; }
+.sm-runway-t { fill: #8A7355; font-size: 11px; letter-spacing: .2em; }
 
 .sm-side { fill: var(--ink-soft); font-size: 10px; letter-spacing: .28em; font-weight: 500; }
 
 /* ทางขึ้นฮอลล์ — ใช้สีสังคโลกซึ่งเป็นสีเดียวในธีมที่ไม่ใช่โทนอุ่น
    จึงอ่านออกทันทีว่า "นี่คือทางเข้า ไม่ใช่โต๊ะ" */
-.sm-entry   { fill: #E7EFE6; stroke: #A8C2A6; stroke-width: 1; }
+.sm-entry   { fill: #24322A; stroke: #4E6B58; stroke-width: 1; }
 .sm-entry-t { fill: var(--ok); font-size: 13px; font-weight: 500; }
 .sm-hint    { fill: var(--ink-soft); font-size: 11px; }
 
@@ -798,7 +799,7 @@ body::after {
 .sm-table { cursor: pointer; }
 /* วงกลมบนพื้นมืดใช้ "วงแหวนสี + เลขสี" ไม่ถมสีทั้งวง
    ถมสี 40 วงบนพื้นมืด = จุดสว่าง 40 จุดเรียงกันจนลายตา */
-.sm-table circle { fill: var(--paper); stroke: var(--line); stroke-width: 1.6; transition: all .18s; }
+.sm-table circle { fill: #351A1E; stroke: var(--line); stroke-width: 1.6; transition: all .18s; }
 .sm-table text   {
   fill: var(--ink-soft); font-size: 15px; font-weight: 500;
   font-family: var(--display); font-variant-numeric: lining-nums tabular-nums;
@@ -819,20 +820,25 @@ body::after {
 .sm-table:focus { outline: none; }
 
 .sm-table.is-over circle { stroke: var(--warn); stroke-width: 3; }
-.sm-table.is-done circle { fill: #DCE9DA; stroke: var(--ok); }
+.sm-table.is-done circle { fill: #2A3B31; stroke: var(--ok); }
 .sm-table.is-done text   { fill: var(--ok); }
 
-/* โต๊ะที่เลือก — ขยายวง เพิ่มขอบหนา และเงา
-   ⚠️ สีขอบต้องตัดกับ "พื้นวงของฝั่งนั้น" ไม่ใช่สีเดียวใช้ได้ทั้งคู่
-   เพราะสองฝั่งกลับหัวกัน: เจ้าสาวพื้นอ่อน เจ้าบ่าวพื้นเข้ม
-   ขอบสีหมึกบนพื้นเจ้าสาวได้ 9.97:1 แต่บนพื้นเจ้าบ่าวเหลือ 2.47:1 */
+/* โต๊ะที่เลือก: กลับหัวจากวงอื่น — ถมสีฝั่งทึบ ตัวเลขเป็นสีรัก
+   บนพื้นมืด ของที่ "สว่างทึบ" คือของที่เด่นที่สุด และมีอยู่ชิ้นเดียวในจอ
+   วงอื่นทั้ง 39 วงเป็นวงแหวนโปร่ง จึงไม่มีอะไรมาแข่ง
+
+   ⚠️ สองฝั่งต้องต่างกันทั้งสีและความสว่าง (เคยพลาดตอนต่างกันแค่ 1.01:1)
+   ตอนนี้ต่างกัน 1.91:1 · ตัวเลขสีรักบนเจ้าสาว 10.79:1 บนเจ้าบ่าว 7.83:1 */
 .sm-table.is-hi circle {
-  stroke-width: 4; r: 24;
-  stroke: var(--ink);
-  filter: drop-shadow(0 2px 8px rgba(74, 36, 22, .28));
+  fill: var(--groom); stroke: var(--cream); stroke-width: 3.5; r: 24;
+  filter: drop-shadow(0 0 10px rgba(188, 137, 52, .5));
 }
-.sm-table.sm-groom.is-hi circle { stroke: var(--paper); }
-.sm-table.is-hi text { font-size: 18px; font-weight: 600; }
+.sm-table.is-hi text { fill: #2A1216; font-size: 18px; font-weight: 600; }
+
+.sm-table.sm-bride.is-hi circle {
+  fill: var(--bride);
+  filter: drop-shadow(0 0 10px rgba(242, 192, 172, .45));
+}
 
 /* ตอนเปิดตัวกรอง: ตัวที่เข้าเงื่อนไขเส้นหนาขึ้น · ตัวที่ไม่เข้าจางลงมาก
    จางแค่ครึ่งเดียวไม่พอ ตายังไล่มองทุกวงอยู่ดี ต้องจางจนสมองข้ามไปเอง */
@@ -884,8 +890,8 @@ body::after {
 
 .lg-bride { background: var(--bride-map); border-color: var(--bride-map-ln); }
 .lg-groom { background: var(--groom-map); border-color: var(--groom-map-ln); }
-.lg-free  { background: var(--paper);     border-color: var(--ink-soft); }
-.lg-done  { background: #DCE9DA;          border-color: var(--ok); }
+.lg-free  { background: #351A1E;          border-color: var(--ink-soft); }
+.lg-done  { background: #2A3B31;          border-color: var(--ok); }
 
 /* ── สถานะ / แจ้งเตือน ───────────────────────────────────── */
 
@@ -896,10 +902,10 @@ body::after {
 }
 /* กล่องแจ้งเตือนบนพื้นมืด: พื้นเข้มอมสี + ตัวอักษรสีสว่างของหมวดนั้น
    ทุกคู่เกิน 7:1 บนพื้นของตัวเอง */
-.notice-info  { background: #F3EFEC; color: #5A4A42;      border-color: #E4DAD3; }
-.notice-warn  { background: #FBEDDC; color: var(--warn);   border-color: #F0D9BC; }
-.notice-error { background: #FBE8E4; color: var(--danger); border-color: #F2CFC8; }
-.notice-ok    { background: #E7F0E6; color: var(--ok);     border-color: #CCE0CA; }
+.notice-info  { background: #23282E; color: #A8C4D2; border-color: #3A434C; }
+.notice-warn  { background: #3A2A18; color: var(--warn);   border-color: #5C4324; }
+.notice-error { background: #3A1E1C; color: var(--danger); border-color: #5C312C; }
+.notice-ok    { background: #23322A; color: var(--ok);     border-color: #3B5244; }
 
 .empty-state { text-align: center; padding: 46px 20px 34px; color: var(--ink-soft);
   animation: fade .7s ease both; }
@@ -998,12 +1004,12 @@ table.data tbody tr:hover { background: var(--gold-lt); }
 .restart {
   position: fixed; right: 20px; bottom: 20px; z-index: 50;
   padding: 16px 28px; min-height: 58px;
-  /* ⚠️ เคยพลาดสองรอบแล้วที่ปุ่มนี้ — ขาวบนทองอ่อน 2.25:1 · ขาวบนทองเปลว 1.62:1
-     ตอนนี้พื้นเป็นดินเผาเข้ม ตัวอักษรขาวจึงได้ 4.74:1 ผ่านเกณฑ์ */
-  font-family: inherit; font-size: 17px; font-weight: 600; color: #FFF8F4;
+  /* ⚠️ ตัวอักษรต้องเป็นสีรัก ไม่ใช่ขาว — ขาวบนทองได้แค่ 1.72:1 อ่านไม่ออก
+     เคยพลาดจุดนี้มาแล้วตอนธีมครีม (ขาวบนทองอ่อน 2.25:1) */
+  font-family: inherit; font-size: 17px; font-weight: 600; color: #2A1216;
   background: linear-gradient(160deg, var(--espresso-lt), var(--espresso));
   border: 0; border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(180, 90, 40, .32);
+  box-shadow: 0 8px 26px rgba(232, 200, 122, .28);
   cursor: pointer;
 }
 .restart:active { transform: scale(.97); }
@@ -1043,7 +1049,7 @@ table.data tbody tr:hover { background: var(--gold-lt); }
   font-family: inherit; font-size: inherit; color: var(--gold-deep);
   text-decoration: underline; cursor: pointer;
 }
-.linkbtn:hover { color: var(--gold-deep); }
+.linkbtn:hover { color: var(--gold); }
 .linkbtn:disabled { color: var(--ink-soft); text-decoration: none; cursor: default; }
 
 .mini-nav { text-align: center; margin-top: var(--gap-lg); font-size: 12.5px; letter-spacing: .04em; }
@@ -1053,12 +1059,14 @@ table.data tbody tr:hover { background: var(--gold-lt); }
 /* ── การพิมพ์ (ป้ายโต๊ะ / รายชื่อให้ทีมงาน) ───────────────── */
 
 @media print {
-  /* ธีมนี้พื้นสว่างอยู่แล้ว การพิมพ์จึงแทบไม่ต้องบังคับอะไร
-     เหลือแค่ปิดผิวกระดาษกับแสงพื้นหลัง ซึ่งไม่มีประโยชน์บนกระดาษจริง
-     (ตอนธีมพื้นมืดต้องบังคับสีตัวอักษรทุกตัว ไม่งั้นพิมพ์ออกมาซีดจนอ่านไม่ออก) */
-  body { background: #fff !important; }
+  /* ⚠️ ตอนพิมพ์ต้องกลับเป็นพื้นขาวหมึกเข้ม — เบราว์เซอร์ตัดพื้นหลังทิ้งเป็นค่าตั้งต้น
+     ถ้าไม่บังคับสีตัวอักษร ธีมมืดจะพิมพ์ออกมาเป็นตัวหนังสือสีอ่อนบนกระดาษขาว = อ่านไม่ออก */
+  body { background: #fff !important; color: #221 !important; }
   body::before, body::after { display: none !important; }
-  .card, .found, .counter, .map-holder { background: #fff !important; }
+  .card, .found, .counter, .map-holder, .wayfind, .notice { background: #fff !important; }
+  .found .big-table, .tno, .sm-table text { color: #6b5220 !important; }
+  h1, h2, h4, .guest-name, .mate-name, .count-big b { color: #221 !important; }
+  .guest-meta, .hint, .foot, .side-pill, .count-head { color: #555 !important; }
   .no-print, .tabs, .search-box, .btn, .mini-nav, .foot, .restart, .backbar { display: none !important; }
   .card, .table-scroll { box-shadow: none; border-color: #ccc; }
   .print-page { page-break-after: always; }
